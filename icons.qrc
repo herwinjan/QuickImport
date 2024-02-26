@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/">
+        <file>QuickImportLogo-klein.png</file>
+        <file>QuickImportLogo-1024.icns</file>
+    </qresource>
+</RCC>
