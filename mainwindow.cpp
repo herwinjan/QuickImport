@@ -110,8 +110,6 @@ void MainWindow::on_checkSelected_clicked()
                         node->isSelected = true;
 
                         if (!node->isFile) {
-                            qDebug() << "Hier";
-
                             static_cast<FileInfoModel *>(ui->deviceWidget->model())->setSelect(node);
                         }
                         emit ui->deviceWidget->model()->dataChanged(QModelIndex(), QModelIndex());
@@ -140,7 +138,6 @@ void MainWindow::on_uncheckSelected_clicked()
                         TreeNode *node = static_cast<TreeNode *>(sourceIndex.internalPointer());
                         node->isSelected = false;
                         if (!node->isFile) {
-                            qDebug() << "Hier";
                             static_cast<FileInfoModel *>(ui->deviceWidget->model())
                                 ->setDeselect(node);
                         }
@@ -168,7 +165,6 @@ void MainWindow::on_selectCard_clicked()
     ui->deviceWidget->setEnabled(false);
 
     foreach (const QStorageInfo &storage, QStorageInfo::mountedVolumes()) {
-        qDebug() << storage.rootPath();
         if (storage.isReadOnly())
             qDebug() << "isReadOnly:" << storage.isReadOnly();
 
@@ -176,7 +172,8 @@ void MainWindow::on_selectCard_clicked()
         qDebug() << "fileSystemType:" << storage.fileSystemType();
         qDebug() << "size:" << storage.bytesTotal() / 1000 / 1000 << "MB";
         qDebug() << "availableSize:" << storage.bytesAvailable() / 1000 / 1000 << "MB";
-        if (storage.fileSystemType() == "exfat" || storage.fileSystemType() == "fat") {
+        if ((storage.fileSystemType() == "exfat" || storage.fileSystemType() == "fat")
+            && !storage.isReadOnly()) {
             cardList.append(storage);
         }
     }
@@ -329,7 +326,6 @@ void MainWindow::on_moveButton_clicked()
     if (ui->deviceWidget->model()) {
         QList<QFileInfo> list;
         list = qobject_cast<FileInfoModel *>(ui->deviceWidget->model())->getSelectedFiles();
-        qDebug() << list;
 
         if (list.count() <= 0) {
             QMessageBox msgBox;
