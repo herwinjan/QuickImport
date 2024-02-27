@@ -222,7 +222,26 @@ int FileInfoModel::countSelected()
     count = getCountSelectedItems(this->rootItem, count);
     return count;
 }
+qint64 FileInfoModel::countSelectedSize()
+{
+    qint64 size = 0;
+    size = getCountSelectedSize(this->rootItem, size);
+    qDebug() << "2" << size;
+    return size;
+}
+qint64 FileInfoModel::getCountSelectedSize(TreeNode *node, qint64 size)
 
+{
+    qint64 newsize = size;
+    for (TreeNode *child : node->children) {
+        if (child->isSelected && child->isFile) {
+            newsize += child->info.size();
+        }
+        if (child->children.count() > 0)
+            newsize = getCountSelectedSize(child, newsize);
+    }
+    return newsize;
+}
 QList<QFileInfo> FileInfoModel::getSelectedFiles()
 {
     QList<QFileInfo> list;

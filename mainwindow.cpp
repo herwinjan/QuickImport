@@ -56,7 +56,10 @@ MainWindow::MainWindow(QWidget *parent)
     ui->ejectBox->setCheckState(ejectAfterImport ? Qt::Checked : Qt::Unchecked);
     ui->mdCheckBox->setCheckState(md5Check ? Qt::Checked : Qt::Unchecked);
 
-    connect(ui->deviceWidget, SIGNAL(selectedUpdated(int)), this, SLOT(selectedUpdated(int)));
+    connect(ui->deviceWidget,
+            SIGNAL(selectedUpdated(int, qint64)),
+            this,
+            SLOT(selectedUpdated(int, qint64)));
     connect(ui->deviceWidget, SIGNAL(spaceButtonPressed()), this, SLOT(spaceButtonPressed()));
     this->show();
 
@@ -76,10 +79,17 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-
-void MainWindow::selectedUpdated(int cnt)
+void MainWindow::selectedUpdated(int cnt, qint64 size)
 {
+    totalSelectedSize = size;
+    ui->spaceFilesCopy->setText(
+        QString("%1 GB").arg(((float) size / 1000 / 1000 / 1000), 0, 'f', 2));
     ui->updateLabel->setText(QString("%1 selected").arg(cnt));
+
+    if (cnt <= 0)
+        ui->moveButton->setDisabled(true);
+    else
+        ui->moveButton->setDisabled(false);
 }
 
 void MainWindow::on_checkSelected_clicked()
@@ -181,8 +191,8 @@ void MainWindow::on_selectCard_clicked()
     window.setCards(cardList);
     if (window.exec()) {
         selectedCard = window.getSelected();
-        reloadCard();
     }
+    reloadCard();
 }
 void MainWindow::reloadCard()
 {
@@ -191,7 +201,14 @@ void MainWindow::reloadCard()
         QString label;
         statusBar()->showMessage("Loading card...");
         label = selectedCard.name();
-        ui->cardLabel->setText(label);
+        ui->cardLabel->setText(
+            label
+            + QString("  (Used space: %1 GB)")
+                  .arg(((float) (selectedCard.bytesTotal() - selectedCard.bytesAvailable()) / 1000
+                        / 1000 / 1000),
+                       0,
+                       'f',
+                       2));
         files = getFiles(selectedCard.rootPath());
         ui->deviceWidget->setFiles(files);
         ui->deviceWidget->setEnabled(true);
@@ -199,7 +216,9 @@ void MainWindow::reloadCard()
         QPixmap pixmap = ExternalDriveIconFetcher::getExternalDrivePixmap(selectedCard.rootPath());
 
         ui->pixmapLabel->setPixmap(pixmap.scaled(32, 32, Qt::KeepAspectRatio));
-        selectedUpdated(0);
+        selectedUpdated(0, 0);
+        totalSelectedSize = 0;
+        ui->moveButton->setDisabled(true);
     }
 }
 
@@ -282,6 +301,12 @@ void MainWindow::on_projectName_textChanged(const QString &arg1)
 void MainWindow::updateImportToLabel()
 {
     ui->importToLabel->setText(QString("%1/%2").arg(importFolder, projectName));
+    QDir folder(importFolder);
+    QStorageInfo info(folder);
+
+    ui->freeDiskSpace->setText(
+        QString("%1 GB").arg(((float) info.bytesAvailable() / 1000 / 1000 / 1000), 0, 'f', 2));
+    freeProjectSpace = info.bytesAvailable();
 }
 
 void MainWindow::on_moveButton_clicked()
@@ -293,6 +318,14 @@ void MainWindow::on_moveButton_clicked()
         msgBox.exec();
         return;
     }
+    if (freeProjectSpace > totalSelectedSize) {
+        QMessageBox msgBox;
+        msgBox.setText("Not enough diskspace available on project location!");
+        msgBox.setIcon(QMessageBox::Critical);
+        msgBox.exec();
+        return;
+    }
+
     if (ui->deviceWidget->model()) {
         QList<QFileInfo> list;
         list = qobject_cast<FileInfoModel *>(ui->deviceWidget->model())->getSelectedFiles();
@@ -342,7 +375,7 @@ void MainWindow::on_moveButton_clicked()
                 ui->deviceWidget->setModel(nullptr);
                 selectedCard = QStorageInfo();
                 on_selectCard_clicked();
-                selectedUpdated(0);
+                selectedUpdated(0, 0);
 
             } else {
                 // Error occurred

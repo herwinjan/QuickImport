@@ -61,6 +61,10 @@ public:
 
     QList<QFileInfo> getSelectedFiles();
 
+    qint64 countSelectedSize();
+
+    qint64 getCountSelectedSize(TreeNode *node, qint64 size);
+
 private:
     TreeNode* findOrCreateNode(const QString& text, TreeNode* parent) ;
 

@@ -59,8 +59,9 @@ void deviceList::setFiles(QList<QFileInfo> files)
 }
 
 void deviceList::updateSelectedCount(const QModelIndex &topLeft, const QModelIndex &bottomRight, const QList<int> &roles) {
-    int cnt=fileModel->countSelected();
-    emit selectedUpdated(cnt);
+    int cnt = fileModel->countSelected();
+    qint64 size = fileModel->countSelectedSize();
+    emit selectedUpdated(cnt, size);
 }
 
 void deviceList::keyPressEvent(QKeyEvent *event)

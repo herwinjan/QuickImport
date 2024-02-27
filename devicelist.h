@@ -32,7 +32,7 @@ public:
 protected:
     void keyPressEvent(QKeyEvent *event);
 signals:
-    void selectedUpdated(int);
+    void selectedUpdated(int, qint64);
     void spaceButtonPressed();
 public slots:
     void updateSelectedCount(const QModelIndex &topLeft, const QModelIndex &bottomRight, const QList<int> &roles = QList<int>());

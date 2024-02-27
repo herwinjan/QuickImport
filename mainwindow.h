@@ -33,14 +33,15 @@ private:
     bool md5Check;
     bool deleteAfterImport;
     bool ejectAfterImport;
-
+    qint64 totalSelectedSize = 0;
+    qint64 freeProjectSpace = 0;
     Ui::MainWindow *ui;
 public slots:
 
 private slots:
     void on_checkSelected_clicked();
     void on_uncheckSelected_clicked();
-    void selectedUpdated(int);
+    void selectedUpdated(int, qint64);
     void on_selectCard_clicked();
     void on_checkAll_clicked();
     void on_uncheckAll_clicked();
