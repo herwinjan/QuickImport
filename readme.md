@@ -1,16 +1,17 @@
 # Quick Import #
 
-Welcome to Quick Import, the efficient import utility designed to streamline your workflow from card to project folder.
-This utility simplifies the process of importing your photos directly to a designated import folder on your (external) hard disk.
+**Streamline your workflow:** Quickly and efficiently transfer your photos from memory card to your chosen project folder with Quick Import, your dedicated photo import utility.
 
-It supports the following workflow:
-- Capture your photos.
-- Import them swiftly to your hard disk using Quick Import.
-- Select your best shots using your preferred culling application.
-- Edit with your favorite image editor.
+**Effortless Photo workflow:**
+- Capture your photos
+- Seamless import your photos your hard disk using Quick Import
+- Select your best shots using your preferred culling application
+- Edit with your favorite image editor
 
-**bold**Key Features:**bold**
-- Select specific photos for import.
-- Quickly preview your photos (simply press enter on a photo).
-- Choose the appropriate import/project folder as the destination for your imports.
 
+**Key Features:**
+- Selective Import: Choose the specific photos you want to import.
+- Quick Preview: Press Enter on any image for a rapid preview (optional).
+- Flexible Destination: Select the ideal import folder for your project organization.
+
+Experience the efficiency and ease of managing your photos with Quick Import!

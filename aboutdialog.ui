@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>541</width>
-    <height>403</height>
+    <width>619</width>
+    <height>530</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -35,7 +35,7 @@
          </sizepolicy>
         </property>
         <property name="text">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Welcome to Quick Import, the efficient import utility designed to streamline your workflow from card to project folder.&lt;/p&gt;&lt;p&gt;This utility simplifies the process of importing your photos directly to a designated import folder on your (external) hard disk.&lt;/p&gt;&lt;p&gt;It supports the following workflow:&lt;/p&gt;&lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Capture your photos.&lt;/li&gt;&lt;li style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Import them swiftly to your hard disk using Quick Import.&lt;/li&gt;&lt;li style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Select your best shots using your preferred culling application.&lt;/li&gt;&lt;li style=&quot; margin-top:0px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Edit with your favorite image editor.&lt;/li&gt;&lt;/ul&gt;&lt;p&gt;Key Features:&lt;/p&gt;&lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Select specific photos for import.&lt;/li&gt;&lt;li style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Quickly preview your photos (simply press enter on a photo).&lt;/li&gt;&lt;li style=&quot; margin-top:0px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Choose the appropriate import/project folder as the destination for your imports.&lt;/li&gt;&lt;/ul&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:18pt; font-weight:700;&quot;&gt;Quick Import&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Streamline your workflow:&lt;/span&gt; Quickly and efficiently transfer your photos from memory card to your chosen project folder with Quick Import, your dedicated photo import utility.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Effortless Photo workflow:&lt;/span&gt;&lt;/p&gt;&lt;p&gt;- Capture your photos&lt;/p&gt;&lt;p&gt;- Seamless import your photos your hard disk using Quick Import&lt;/p&gt;&lt;p&gt;- Select your best shots using your preferred culling application&lt;/p&gt;&lt;p&gt;- Edit with your favorite image editor&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Key Features:&lt;/span&gt;&lt;/p&gt;&lt;p&gt;- Selective Import: Choose the specific photos you want to import.&lt;/p&gt;&lt;p&gt;- Quick Preview: Press Enter on any image for a rapid preview (optional).&lt;/p&gt;&lt;p&gt;- Flexible Destination: Select the ideal import folder for your project organization.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;Experience the efficiency and ease of managing your photos with Quick Import!&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="wordWrap">
          <bool>true</bool>
