@@ -19,6 +19,7 @@ isEqual(Q_DEVICE_WATCHER_DEBUG, 1) {
 ICON = QuickImportLogo-1024.icns
 
 SOURCES += \
+    aboutdialog.cpp \
     externDriveFetcher.mm \
     filecopydialog.cpp \
     filecopyworker.cpp \
@@ -36,6 +37,7 @@ SOURCES += \
 
 
 HEADERS += \
+    aboutdialog.h \
     devicelist.h \
     externalDriveFetcher.h \
     filecopydialog.h \
@@ -48,6 +50,7 @@ HEADERS += \
     selectcarddialog.h
 
 FORMS += \
+    aboutdialog.ui \
     filecopydialog.ui \
     mainwindow.ui \
     selectcarddialog.ui
@@ -67,7 +70,8 @@ INCLUDEPATH += $$PWD/../../../../../../opt/homebrew/Cellar/libraw/0.21.2/include
 DEPENDPATH += $$PWD/../../../../../../opt/homebrew/Cellar/libraw/0.21.2/include/
 
 DISTFILES += \
-    QuickImportLogo-1024.icns
+    QuickImportLogo-1024.icns \
+    readme.md
 
 RESOURCES += \
     icons.qrc

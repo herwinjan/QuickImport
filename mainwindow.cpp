@@ -9,6 +9,7 @@
 #include <QSettings>
 #include <QStorageInfo>
 
+#include "aboutdialog.h"
 #include "externalDriveFetcher.h"
 #include "filecopydialog.h"
 #include "filelistmodel.h"
@@ -61,7 +62,6 @@ MainWindow::MainWindow(QWidget *parent)
             this,
             SLOT(selectedUpdated(int, qint64)));
     connect(ui->deviceWidget, SIGNAL(spaceButtonPressed()), this, SLOT(spaceButtonPressed()));
-    this->show();
 
     QKeySequence shortcutKey(Qt::CTRL | Qt::Key_Return);
 
@@ -71,7 +71,27 @@ MainWindow::MainWindow(QWidget *parent)
     // Connect the activated() signal of the shortcut to your function
     connect(shortcut, &QShortcut::activated, this, &MainWindow::on_moveButton_clicked);
 
+    QMenu *aboutMenu = new QMenu("&About");
+    QAction *aboutAction = aboutMenu->addAction("About Quick Import",
+                                                this,
+                                                &MainWindow::showAboutDialog);
+
+    aboutAction->setMenuRole(QAction::ApplicationSpecificRole);
+
+    setMenuBar(ui->menubar);
+    ui->menubar->addMenu(aboutMenu);
+
+    show();
+    if (!settings.value("dontShowAboutDialog", false).toBool()) {
+        showAboutDialog();
+    }
     on_selectCard_clicked();
+}
+
+void MainWindow::showAboutDialog()
+{
+    aboutDialog about;
+    about.exec();
 }
 
 MainWindow::~MainWindow()

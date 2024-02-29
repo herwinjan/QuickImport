@@ -38,7 +38,9 @@ private:
     Ui::MainWindow *ui;
 public slots:
 
+protected:
 private slots:
+    void showAboutDialog();
     void on_checkSelected_clicked();
     void on_uncheckSelected_clicked();
     void selectedUpdated(int, qint64);
