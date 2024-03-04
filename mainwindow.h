@@ -46,6 +46,7 @@ private:
     void emptyMainWindow();
     imageLoader *imageLoaderObject;
     QThread *imageLoaderThread;
+    TreeNode *imageShown, *imageSelected;
 
 private slots:
     void showImage(const QImage &image);
@@ -66,6 +67,7 @@ private slots:
     void on_quickViewButton_clicked();
     void spaceButtonPressed();
     void returnButtonPressed();
+    void finshedImageLoading();
 
     void on_ejectButton_clicked();
 

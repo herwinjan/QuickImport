@@ -356,6 +356,7 @@ void MainWindow::emptyMainWindow()
 
 void MainWindow::selectedNode(TreeNode *image)
 {
+    imageSelected = image;
     if (image && previewImage)
         if (image->isFile) {
             if (imageLoaderThread) {
@@ -378,6 +379,7 @@ void MainWindow::selectedNode(TreeNode *image)
             imageLoaderThread = new QThread(this);
 
             imageLoaderObject->moveToThread(imageLoaderThread);
+            imageShown = image;
 
             QObject::connect(imageLoaderThread,
                              &QThread::started,
@@ -389,10 +391,10 @@ void MainWindow::selectedNode(TreeNode *image)
                              imageLoaderThread,
                              &QThread::quit);
 
-            /*QObject::connect(imageLoaderObject,
+            QObject::connect(imageLoaderObject,
                              &imageLoader::finished,
-                             imageLoaderObject,
-                             &imageLoader::deleteLater);*/
+                             this,
+                             &MainWindow::finshedImageLoading);
 
             /*QObject::connect(imageLoaderObject,
                                    &imageLoader::finished,
@@ -415,6 +417,15 @@ void MainWindow::selectedNode(TreeNode *image)
             //                ui->groupBoxImport->width() - 10);
         }
 }
+
+void MainWindow::finshedImageLoading()
+{
+    imageLoaderThread->wait();
+    qDebug() << "Finished loading.. is latest slected? " << imageSelected << imageShown;
+    if (imageSelected != imageShown)
+        selectedNode(imageSelected);
+}
+
 void MainWindow::showImage(const QImage &image)
 {
     ui->image->setPixmap(QPixmap::fromImage(image.scaled(ui->groupBoxImport->width() - 30,
