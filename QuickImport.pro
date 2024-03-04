@@ -15,6 +15,9 @@ isEqual(Q_DEVICE_WATCHER_DEBUG, 1) {
     DEFINES += CONFIG_DEBUG
 }
 
+CONFIG += lrelease
+
+TRANSLATIONS = quickimport_en.ts quickimport_nl.ts
 
 ICON = QuickImportLogo-1024.icns
 
@@ -24,6 +27,7 @@ SOURCES += \
     filecopydialog.cpp \
     filecopyworker.cpp \
     filelistmodel.cpp \
+    imageloader.cpp \
     qborderlessdialog.cpp \
     selectcarddialog.cpp
 LIBS += -framework DiskArbitration -framework Foundation
@@ -44,6 +48,7 @@ HEADERS += \
     filecopyworker.h \
     filelistmodel.h \
     filesmodel.h \
+    imageloader.h \
     mainwindow.h \
     qborderlessdialog.h \
     hotplugwatcher.h \
@@ -71,7 +76,12 @@ DEPENDPATH += $$PWD/../../../../../../opt/homebrew/Cellar/libraw/0.21.2/include/
 
 DISTFILES += \
     QuickImportLogo-1024.icns \
+    quickimport_en.qm \
+    quickimport_en.ts \
+    quickimport_nl.qm \
+    quickimport_nl.ts \
     readme.md
 
 RESOURCES += \
-    icons.qrc
+    icons.qrc \
+    translations.qrc

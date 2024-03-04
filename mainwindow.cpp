@@ -62,6 +62,12 @@ MainWindow::MainWindow(QWidget *parent)
             this,
             SLOT(selectedUpdated(int, qint64)));
     connect(ui->deviceWidget, SIGNAL(spaceButtonPressed()), this, SLOT(spaceButtonPressed()));
+    connect(ui->deviceWidget, SIGNAL(returnButtonPressed()), this, SLOT(returnButtonPressed()));
+
+    connect(ui->deviceWidget,
+            SIGNAL(selectedNode(TreeNode *)),
+            this,
+            SLOT(selectedNode(TreeNode *)));
 
     QKeySequence shortcutKey(Qt::CTRL | Qt::Key_Return);
 
@@ -80,6 +86,8 @@ MainWindow::MainWindow(QWidget *parent)
 
     setMenuBar(ui->menubar);
     ui->menubar->addMenu(aboutMenu);
+
+    emptyMainWindow();
 
     show();
     if (!settings.value("dontShowAboutDialog", false).toBool()) {
@@ -104,7 +112,7 @@ void MainWindow::selectedUpdated(int cnt, qint64 size)
     totalSelectedSize = size;
     ui->spaceFilesCopy->setText(
         QString("%1 GB").arg(((float) size / 1000 / 1000 / 1000), 0, 'f', 2));
-    ui->updateLabel->setText(QString("%1 selected").arg(cnt));
+    ui->updateLabel->setText(QString("%1 selected photos").arg(cnt));
 
     if (cnt <= 0)
         ui->moveButton->setDisabled(true);
@@ -139,7 +147,39 @@ void MainWindow::on_checkSelected_clicked()
         }
     }
 }
+void MainWindow::flipSelectedItems()
+{
+    if (ui->deviceWidget->model()) {
+        //QModelIndexList list = ui->deviceWidget->selectionModel()->selectedIndexes();
+        QItemSelectionModel *selectionModel = ui->deviceWidget->selectionModel();
+        if (selectionModel) {
+            QModelIndexList selectedIndexes = selectionModel->selectedIndexes();
+            bool selected = true;
+            bool set = false;
+            for (const QModelIndex &index : selectedIndexes) {
+                if (index.isValid()) {
+                    // Map the index to get the corresponding QFileInfo
+                    QModelIndex sourceIndex = ui->deviceWidget->model()->index(index.row(),
+                                                                               0,
+                                                                               index.parent());
+                    if (sourceIndex.isValid()) {
+                        TreeNode *node = static_cast<TreeNode *>(sourceIndex.internalPointer());
+                        if (!set) {
+                            set = true;
+                            selected = !node->isSelected;
+                        }
+                        node->isSelected = selected;
 
+                        if (!node->isFile) {
+                            static_cast<FileInfoModel *>(ui->deviceWidget->model())->setSelect(node);
+                        }
+                        emit ui->deviceWidget->model()->dataChanged(QModelIndex(), QModelIndex());
+                    }
+                }
+            }
+        }
+    }
+}
 
 void MainWindow::on_uncheckSelected_clicked()
 {
@@ -236,10 +276,13 @@ void MainWindow::reloadCard()
         selectedUpdated(0, 0);
         totalSelectedSize = 0;
         ui->moveButton->setDisabled(true);
+        ui->ejectButton->setEnabled(true);
+    } else {
+        emptyMainWindow();
     }
 }
 
-QImage requestImage(const QString &id)
+QImage requestImage(const QString &id, int height = 0, int width = 0)
 {
     LibRaw rawProc;
 
@@ -257,30 +300,111 @@ QImage requestImage(const QString &id)
     }
     QScreen *screen = QGuiApplication::primaryScreen();
     QRect screenGeometry = screen->geometry();
-    int height = screenGeometry.height();
-    int width = screenGeometry.width();
+    if (width == 0 && height == 0) {
+        height = screenGeometry.height();
+        width = screenGeometry.width();
+    }
 
     return thumbnail.scaled(height / 2, width / 2, Qt::KeepAspectRatio);
 }
 
-void MainWindow::displayImage(QString rawFilePath)
+void MainWindow::displayImage(QString rawFilePath, bool window = true, int h = 0, int w = 0)
 {
     statusBar()->showMessage(tr("Loading image, please wait."));
-    QImage image = requestImage(rawFilePath);
-    BorderlessDialog dialog2(image);
-    statusBar()->showMessage(tr(""));
-    dialog2.exec();
-    int lastKey = dialog2.lastKey;
+    QImage image = requestImage(rawFilePath, h, w);
+    if (window) {
+        BorderlessDialog dialog2(image);
+        statusBar()->showMessage(tr(""));
+        dialog2.exec();
+        int lastKey = dialog2.lastKey;
 
-    if (lastKey == Qt::Key_Up || lastKey == Qt::Key_Down || lastKey == Qt::Key_Space) {
-        ui->deviceWidget->setFocus();
-        QString keyStr(QKeySequence(lastKey).toString()); // key is int with keycode
+        if (lastKey == Qt::Key_Up || lastKey == Qt::Key_Down || lastKey == Qt::Key_Space) {
+            ui->deviceWidget->setFocus();
+            QString keyStr(QKeySequence(lastKey).toString()); // key is int with keycode
 
-        QKeyEvent *key_press = new QKeyEvent(QKeyEvent::KeyPress, lastKey, Qt::NoModifier, keyStr);
-        QApplication::sendEvent(ui->deviceWidget, key_press);
+            QKeyEvent *key_press = new QKeyEvent(QKeyEvent::KeyPress,
+                                                 lastKey,
+                                                 Qt::NoModifier,
+                                                 keyStr);
+            QApplication::sendEvent(ui->deviceWidget, key_press);
+        }
+    } else {
+        ui->image->setPixmap(QPixmap::fromImage(image));
     }
 
     // Create a QDialog and set the label as its central widget
+}
+
+void MainWindow::emptyMainWindow()
+{
+    selectedUpdated(0, 0);
+    ui->ejectButton->setDisabled(true);
+    ui->moveButton->setDisabled(true);
+    ui->pixmapLabel->setPixmap(QPixmap());
+    ui->deviceWidget->setEnabled(false);
+    ui->cardLabel->setText(QString(tr("No card loaded.")));
+}
+
+void MainWindow::selectedNode(TreeNode *image)
+{
+    if (image)
+        if (image->isFile) {
+            if (imageLoaderThread) {
+                qDebug() << "term";
+                imageLoaderThread->terminate();
+                imageLoaderThread->wait();
+                delete imageLoaderThread;
+                delete imageLoaderObject;
+            }
+
+            //imageLoader imageLoaderObject;
+            imageLoaderObject = new imageLoader();
+
+            //imageLoaderObject.loadImageFile(image->file);
+
+            imageLoaderThread = new QThread(this);
+
+            imageLoaderObject->moveToThread(imageLoaderThread);
+
+            QObject::connect(imageLoaderThread,
+                             &QThread::started,
+                             imageLoaderObject,
+                             &imageLoader::loadImage);
+
+            /* QObject::connect(imageLoaderObject,
+                             &imageLoader::finished,
+                             imageLoaderThread,
+                             &QThread::quit);
+            QObject::connect(imageLoaderObject,
+                             &imageLoader::finished,
+                             imageLoaderObject,
+                             &imageLoader::deleteLater);
+            QObject::connect(imageLoaderObject,
+                             &imageLoader::finished,
+                             imageLoaderThread,
+                             &QThread::deleteLater);*/
+            QObject::connect(imageLoaderObject,
+                             &imageLoader::imageLoaded,
+                             this,
+                             &MainWindow::showImage);
+
+            imageLoaderObject->loadImageFile(image->filePath);
+            qDebug() << "start";
+            imageLoaderThread->start();
+
+            //   displayImage(image->info.absoluteFilePath(),
+            //                false,
+            //                ui->groupBoxImport->width() - 10,
+            //                ui->groupBoxImport->width() - 10);
+        }
+}
+void MainWindow::showImage(const QImage &image)
+{
+    ui->image->setPixmap(QPixmap::fromImage(image.scaled(ui->groupBoxImport->width(),
+                                                         ui->groupBoxImport->width(),
+                                                         Qt::KeepAspectRatio)));
+    //label.resize(image.size());
+    ui->image->show();
 }
 
 void MainWindow::on_checkAll_clicked()
@@ -335,7 +459,7 @@ void MainWindow::on_moveButton_clicked()
         msgBox.exec();
         return;
     }
-    if (freeProjectSpace > totalSelectedSize) {
+    if (freeProjectSpace < totalSelectedSize) {
         QMessageBox msgBox;
         msgBox.setText("Not enough diskspace available on project location!");
         msgBox.setIcon(QMessageBox::Critical);
@@ -374,30 +498,9 @@ void MainWindow::on_moveButton_clicked()
                                      .arg(delMsg)
                                      .arg(fail));*/
         if (ejectAfterImport && ok) {
-            // Construct the command to eject the USB drive
-            QString command = "diskutil";
-            QStringList args;
-            args << "unmountDisk" << selectedCard.rootPath();
-
-            // Create a QProcess object and start the process
-            QProcess process;
-            process.start(command, args);
-            process.waitForFinished();
-
-            // Check the exit code of the process
-            if (process.exitCode() == 0) {
-                // Command executed successfully
-                qDebug() << "USB drive ejected successfully.";
-                ui->deviceWidget->setModel(nullptr);
-                selectedCard = QStorageInfo();
-                on_selectCard_clicked();
-                selectedUpdated(0, 0);
-
-            } else {
-                // Error occurred
-                qWarning() << "Failed to eject USB drive. Error code:" << process.exitCode();
-            }
+            on_ejectButton_clicked();
         }
+
         reloadCard();
     }
 }
@@ -423,9 +526,15 @@ void MainWindow::on_ejectBox_stateChanged(int arg1)
     settings.setValue("ejectAfterImport", (bool) arg1);
 }
 
-void MainWindow::spaceButtonPressed()
+void MainWindow::returnButtonPressed()
 {
     on_quickViewButton_clicked();
+}
+
+void MainWindow::spaceButtonPressed()
+{
+    flipSelectedItems();
+    //on_checkSelected_clicked();
 }
 
 void MainWindow::on_quickViewButton_clicked()
@@ -451,12 +560,40 @@ void MainWindow::on_quickViewButton_clicked()
 
                         if (child) {
                             if (child->isFile) {
-                                displayImage(child->info.absoluteFilePath());
+                                displayImage(child->info.absoluteFilePath(), true);
                             }
                         }
                     }
                 }
             }
         }
+    }
+}
+
+void MainWindow::on_ejectButton_clicked()
+{
+    // Construct the command to eject the USB drive
+    QString command = "diskutil";
+    QStringList args;
+    args << "unmountDisk" << selectedCard.rootPath();
+
+    // Create a QProcess object and start the process
+    QProcess process;
+    process.start(command, args);
+    process.waitForFinished();
+
+    // Check the exit code of the process
+    if (process.exitCode() == 0) {
+        // Command executed successfully
+        qDebug() << "USB drive ejected successfully.";
+        emptyMainWindow();
+        ui->deviceWidget->setModel(nullptr);
+        selectedCard = QStorageInfo();
+        on_selectCard_clicked();
+        selectedUpdated(0, 0);
+
+    } else {
+        // Error occurred
+        qWarning() << "Failed to eject USB drive. Error code:" << process.exitCode();
     }
 }

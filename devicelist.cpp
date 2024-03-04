@@ -67,8 +67,28 @@ void deviceList::updateSelectedCount(const QModelIndex &topLeft, const QModelInd
 void deviceList::keyPressEvent(QKeyEvent *event)
 {
     if (event->key() == Qt::Key_Return) {
+        emit returnButtonPressed();
+        return;
+    }
+    if (event->key() == Qt::Key_Space) {
         emit spaceButtonPressed();
         return;
     }
     QTreeView::keyPressEvent(event);
+}
+
+void deviceList::selectionChanged(const QItemSelection &selected, const QItemSelection &deselected)
+{
+    if (!selected.isEmpty()) {
+        QModelIndex selectedFirst = selected.at(0).topLeft();
+        TreeNode *node = static_cast<TreeNode *>(selectedFirst.internalPointer());
+        if (node) {
+            if (node->isFile) {
+                qDebug() << node->filePath;
+                emit selectedNode(node);
+            }
+        }
+    }
+
+    QTreeView::selectionChanged(selected, deselected);
 }

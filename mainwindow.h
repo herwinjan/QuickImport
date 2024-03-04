@@ -1,9 +1,13 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include "filelistmodel.h"
+#include "imageloader.h"
+
 #include <QFileInfoList>
 #include <QMainWindow>
 #include <QStorageInfo>
+#include <QThread>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -24,7 +28,9 @@ public:
 
     void reloadCard();
 
-    void displayImage(QString rawFilePath);
+    void displayImage(QString rawFilePath, bool, int, int);
+
+    void flipSelectedItems();
 
 private:
     QString importFolder;
@@ -36,10 +42,13 @@ private:
     qint64 totalSelectedSize = 0;
     qint64 freeProjectSpace = 0;
     Ui::MainWindow *ui;
-public slots:
+    void emptyMainWindow();
+    imageLoader *imageLoaderObject;
+    QThread *imageLoaderThread;
 
-protected:
 private slots:
+    void showImage(const QImage &image);
+    void selectedNode(TreeNode *);
     void showAboutDialog();
     void on_checkSelected_clicked();
     void on_uncheckSelected_clicked();
@@ -55,5 +64,8 @@ private slots:
     void on_ejectBox_stateChanged(int arg1);
     void on_quickViewButton_clicked();
     void spaceButtonPressed();
+    void returnButtonPressed();
+
+    void on_ejectButton_clicked();
 };
 #endif // MAINWINDOW_H

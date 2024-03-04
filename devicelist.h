@@ -31,9 +31,13 @@ public:
 
 protected:
     void keyPressEvent(QKeyEvent *event);
+    void selectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
 signals:
     void selectedUpdated(int, qint64);
+    void returnButtonPressed();
     void spaceButtonPressed();
+
+    void selectedNode(TreeNode *);
 public slots:
     void updateSelectedCount(const QModelIndex &topLeft, const QModelIndex &bottomRight, const QList<int> &roles = QList<int>());
 };

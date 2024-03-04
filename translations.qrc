@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/translation">
+        <file>quickimport_nl.qm</file>
+        <file>quickimport_en.qm</file>
+    </qresource>
+</RCC>
