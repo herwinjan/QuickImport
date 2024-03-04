@@ -39,6 +39,7 @@ private:
     bool md5Check;
     bool deleteAfterImport;
     bool ejectAfterImport;
+    bool previewImage;
     qint64 totalSelectedSize = 0;
     qint64 freeProjectSpace = 0;
     Ui::MainWindow *ui;
@@ -67,5 +68,7 @@ private slots:
     void returnButtonPressed();
 
     void on_ejectButton_clicked();
+
+    void on_previewImageCheckBox_stateChanged(int arg1);
 };
 #endif // MAINWINDOW_H

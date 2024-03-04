@@ -44,6 +44,6 @@ void imageLoader::loadImage()
     } else {
         emit imageLoaded(thumbnail);
     }
-    qDebug() << "run..";
+    qDebug() << "finshed!";
     emit finished();
 }

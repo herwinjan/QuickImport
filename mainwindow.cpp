@@ -50,12 +50,15 @@ MainWindow::MainWindow(QWidget *parent)
     updateImportToLabel();
     setWindowTitle("Quick Import");
 
-    md5Check = settings.value("md5Check").toBool();
-    ejectAfterImport = settings.value("ejectAfterImport").toBool();
-    deleteAfterImport = settings.value("deleteAfterImport").toBool();
+    md5Check = settings.value("md5Check", false).toBool();
+    ejectAfterImport = settings.value("ejectAfterImport", false).toBool();
+    deleteAfterImport = settings.value("deleteAfterImport", false).toBool();
+    previewImage = settings.value("previewImage", true).toBool();
+
     ui->deleteAfterImportBox->setCheckState(deleteAfterImport ? Qt::Checked : Qt::Unchecked);
     ui->ejectBox->setCheckState(ejectAfterImport ? Qt::Checked : Qt::Unchecked);
     ui->mdCheckBox->setCheckState(md5Check ? Qt::Checked : Qt::Unchecked);
+    ui->previewImageCheckBox->setCheckState(previewImage ? Qt::Checked : Qt::Unchecked);
 
     connect(ui->deviceWidget,
             SIGNAL(selectedUpdated(int, qint64)),
@@ -171,7 +174,13 @@ void MainWindow::flipSelectedItems()
                         node->isSelected = selected;
 
                         if (!node->isFile) {
-                            static_cast<FileInfoModel *>(ui->deviceWidget->model())->setSelect(node);
+                            if (!selected) {
+                                static_cast<FileInfoModel *>(ui->deviceWidget->model())
+                                    ->setDeselect(node);
+                            } else {
+                                static_cast<FileInfoModel *>(ui->deviceWidget->model())
+                                    ->setSelect(node);
+                            }
                         }
                         emit ui->deviceWidget->model()->dataChanged(QModelIndex(), QModelIndex());
                     }
@@ -347,14 +356,18 @@ void MainWindow::emptyMainWindow()
 
 void MainWindow::selectedNode(TreeNode *image)
 {
-    if (image)
+    if (image && previewImage)
         if (image->isFile) {
             if (imageLoaderThread) {
-                qDebug() << "term";
-                imageLoaderThread->terminate();
-                imageLoaderThread->wait();
-                delete imageLoaderThread;
-                delete imageLoaderObject;
+                qDebug() << imageLoaderThread->isFinished() << imageLoaderThread->isRunning();
+                if (imageLoaderThread->isFinished()) {
+                    //imageLoaderThread->quit();
+                    imageLoaderThread->wait();
+                    delete imageLoaderThread;
+                    delete imageLoaderObject;
+                } else {
+                    return;
+                }
             }
 
             //imageLoader imageLoaderObject;
@@ -371,25 +384,29 @@ void MainWindow::selectedNode(TreeNode *image)
                              imageLoaderObject,
                              &imageLoader::loadImage);
 
-            /* QObject::connect(imageLoaderObject,
+            QObject::connect(imageLoaderObject,
                              &imageLoader::finished,
                              imageLoaderThread,
                              &QThread::quit);
-            QObject::connect(imageLoaderObject,
+
+            /*QObject::connect(imageLoaderObject,
                              &imageLoader::finished,
                              imageLoaderObject,
-                             &imageLoader::deleteLater);
-            QObject::connect(imageLoaderObject,
-                             &imageLoader::finished,
-                             imageLoaderThread,
-                             &QThread::deleteLater);*/
+                             &imageLoader::deleteLater);*/
+
+            /*QObject::connect(imageLoaderObject,
+                                   &imageLoader::finished,
+                                   imageLoaderThread,
+                                   &QThread::deleteLater);
+            */
+
             QObject::connect(imageLoaderObject,
                              &imageLoader::imageLoaded,
                              this,
                              &MainWindow::showImage);
 
             imageLoaderObject->loadImageFile(image->filePath);
-            qDebug() << "start";
+
             imageLoaderThread->start();
 
             //   displayImage(image->info.absoluteFilePath(),
@@ -400,8 +417,8 @@ void MainWindow::selectedNode(TreeNode *image)
 }
 void MainWindow::showImage(const QImage &image)
 {
-    ui->image->setPixmap(QPixmap::fromImage(image.scaled(ui->groupBoxImport->width(),
-                                                         ui->groupBoxImport->width(),
+    ui->image->setPixmap(QPixmap::fromImage(image.scaled(ui->groupBoxImport->width() - 30,
+                                                         ui->groupBoxImport->width() - 30,
                                                          Qt::KeepAspectRatio)));
     //label.resize(image.size());
     ui->image->show();
@@ -596,4 +613,13 @@ void MainWindow::on_ejectButton_clicked()
         // Error occurred
         qWarning() << "Failed to eject USB drive. Error code:" << process.exitCode();
     }
+}
+
+void MainWindow::on_previewImageCheckBox_stateChanged(int arg1)
+{
+    previewImage = arg1;
+    QSettings settings("HJ Steehouwer", "QuickImport");
+    settings.setValue("previewImage", (bool) arg1);
+    if (!previewImage)
+        ui->image->setPixmap(QPixmap());
 }
