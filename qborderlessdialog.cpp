@@ -13,8 +13,6 @@ BorderlessDialog::BorderlessDialog(QImage image, QWidget *parent)
     label->setPixmap(QPixmap::fromImage(image));
 
     layout->addWidget(label);
-
-    qDebug() << "Her";
 }
 void BorderlessDialog::mousePressEvent(QMouseEvent *event)
 {

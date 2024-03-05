@@ -17,7 +17,7 @@ fileCopyDialog::fileCopyDialog(const QList<QFileInfo> &list,
     m_thread = new QThread(this);
 
     ui->setupUi(this);
-    ui->status->setText(QString("Copy file %1 of %2.").arg(0).arg(list.count()));
+    ui->status->setText(QString(tr("Copy file %1 of %2.")).arg(0).arg(list.count()));
     ui->progressBar->setRange(0, 100);
 
     count = list.count();
@@ -50,15 +50,16 @@ void fileCopyDialog::handleProgress(int progress, int done, int cnt, int fail, i
 {
     QString err;
     if (cnt > 0)
-        err += QString("%1 copied. ").arg(cnt);
+        err += QString(tr("%1 copied. ")).arg(cnt);
 
     if (fail > 0)
-        err += QString("%1 failed. ").arg(fail);
+        err += QString(tr("%1 failed. ")).arg(fail);
 
     if (del > 0)
-        err += QString("%1 deleted. ").arg(del);
+        err += QString(tr("%1 deleted. ")).arg(del);
 
-    ui->status->setText(QString("Copying: %1 of %2 processed. %3").arg(done).arg(count).arg(err));
+    ui->status->setText(
+        QString(tr("Copying: %1 of %2 processed. %3")).arg(done).arg(count).arg(err));
     ui->progressBar->setValue(progress);
 }
 

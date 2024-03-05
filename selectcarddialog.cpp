@@ -17,7 +17,7 @@ void SelectCardDialog::setCards(QList<QStorageInfo> _cardList)
     foreach (const QStorageInfo &storage, cardList) {
         QListWidgetItem *item = new QListWidgetItem(
             storage.name()
-            + QString(" (size: %1 GB, %2 GB Free )")
+            + QString(tr(" (size: %1 GB, %2 GB Free )"))
                   .arg(storage.bytesTotal() / 1000 / 1000 / 1000)
                   .arg(storage.bytesFree() / 1000 / 1000 / 1000));
         item->setIcon(ExternalDriveIconFetcher::getExternalDriveIcon(storage.rootPath()));

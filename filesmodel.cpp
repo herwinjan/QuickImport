@@ -62,10 +62,10 @@ QVariant filesModel::headerData(int section, Qt::Orientation orientation, int ro
 
             switch (section) {
             case 0:
-                return QString("Selection");
+                return QString(tr("Selection"));
                 break;
             case 1:
-                return QString("Date");
+                return QString(tr("Date"));
                 break;
             }
         }
@@ -101,7 +101,53 @@ QModelIndex filesModel::index(int row, int column, const QModelIndex &parent) co
 QFileInfoList filesModel::getFileListFromDir(const QString &directory)
 {
     QDir qdir(directory);
-    QFileInfoList fileList = qdir.entryInfoList(QStringList() << "*.CR2" << "*.CR3", QDir::Files);
+    QFileInfoList fileList = qdir.entryInfoList(QStringList() << "*.3fr"
+                                                              << "*.ari"
+                                                              << "*.arw"
+                                                              << "*.arq"
+                                                              << "*.bay"
+                                                              << "*.braw"
+                                                              << "*.crw"
+                                                              << "*.cr2"
+                                                              << "*.cr3"
+                                                              << "*.cap"
+                                                              << "*.data"
+                                                              << "*.dcs"
+                                                              << "*.dcr"
+                                                              << "*.dng"
+                                                              << "*.drf"
+                                                              << "*.eip"
+                                                              << "*.erf"
+                                                              << "*.fff"
+                                                              << "*.gpr"
+                                                              << "*.iiq"
+                                                              << "*.k25"
+                                                              << "*.kdc"
+                                                              << "*.mdc"
+                                                              << "*.mef"
+                                                              << "*.mos"
+                                                              << "*.mrw"
+                                                              << "*.nef"
+                                                              << "*.nrw"
+                                                              << "*.obm"
+                                                              << "*.orf"
+                                                              << "*.pef"
+                                                              << "*.ptx"
+                                                              << "*.pxn"
+                                                              << "*.r3d"
+                                                              << "*.raf"
+                                                              << "*.raw"
+                                                              << "*.rwl"
+                                                              << "*.rw2"
+                                                              << "*.rwz"
+                                                              << "*.sr2"
+                                                              << "*.srf"
+                                                              << "*.srw"
+                                                              << "*.tif"
+                                                              << "*.x3f"
+                                                              << "*.jpg"
+                                                              << "*.jpeg",
+                                                QDir::Files);
 
     for (const QFileInfo &subdir : qdir.entryInfoList(QDir::AllDirs | QDir::NoDotAndDotDot))
     {

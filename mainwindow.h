@@ -32,6 +32,9 @@ public:
 
     void flipSelectedItems();
 
+protected:
+    void resizeEvent(QResizeEvent *event);
+
 private:
     QString importFolder;
     QString projectName;
@@ -72,5 +75,6 @@ private slots:
     void on_ejectButton_clicked();
 
     void on_previewImageCheckBox_stateChanged(int arg1);
+    void on_reloadButton_clicked();
 };
 #endif // MAINWINDOW_H

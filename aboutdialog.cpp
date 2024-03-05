@@ -11,6 +11,7 @@ aboutDialog::aboutDialog(QWidget *parent)
     QSettings settings("HJ Steehouwer", "QuickImport");
     ui->dontshowCheckBox->setCheckState(
         settings.value("dontShowAboutDialog", false).toBool() ? Qt::Checked : Qt::Unchecked);
+    ui->aboutBox->setTitle(tr("About Quick Import (version %1)").arg("0.5"));
 }
 
 aboutDialog::~aboutDialog()

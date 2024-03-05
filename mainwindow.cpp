@@ -24,7 +24,61 @@
 QFileInfoList MainWindow::getFileListFromDir(const QString &directory)
 {
     QDir qdir(directory);
-    QFileInfoList fileList = qdir.entryInfoList(QStringList() << "*.CR2" << "*.CR3", QDir::Files);
+    QFileInfoList fileList = qdir.entryInfoList(QStringList() << "*.3fr"
+                                                              << "*.ari"
+                                                              << "*.arw"
+                                                              << "*.arq"
+                                                              << "*.bay"
+                                                              << "*.braw"
+                                                              << "*.crw"
+                                                              << "*.cr2"
+                                                              << "*.cr3"
+                                                              << "*.cap"
+                                                              << "*.data"
+                                                              << "*.dcs"
+                                                              << "*.dcr"
+                                                              << "*.dng"
+                                                              << "*.drf"
+                                                              << "*.eip"
+                                                              << "*.erf"
+                                                              << "*.fff"
+                                                              << "*.gpr"
+                                                              << "*.iiq"
+                                                              << "*.k25"
+                                                              << "*.kdc"
+                                                              << "*.mdc"
+                                                              << "*.mef"
+                                                              << "*.mos"
+                                                              << "*.mrw"
+                                                              << "*.nef"
+                                                              << "*.nrw"
+                                                              << "*.obm"
+                                                              << "*.orf"
+                                                              << "*.pef"
+                                                              << "*.ptx"
+                                                              << "*.pxn"
+                                                              << "*.r3d"
+                                                              << "*.raf"
+                                                              << "*.raw"
+                                                              << "*.rwl"
+                                                              << "*.rw2"
+                                                              << "*.rwz"
+                                                              << "*.sr2"
+                                                              << "*.srf"
+                                                              << "*.srw"
+                                                              << "*.tif"
+                                                              << "*.x3f"
+                                                              << "*.jpg"
+                                                              << "*.jpeg"
+                                                              << "*.mov"
+                                                              << "*.mp4"
+                                                              << "*.flv"
+                                                              << "*.avi"
+                                                              << "*.wmv"
+                                                              << "*.avchd"
+                                                              << "*.heic"
+                                                              << "*.srt",
+                                                QDir::Files);
 
     for (const QFileInfo &subdir : qdir.entryInfoList(QDir::AllDirs | QDir::NoDotAndDotDot))
     {
@@ -44,7 +98,7 @@ MainWindow::MainWindow(QWidget *parent)
     QSettings settings("HJ Steehouwer", "QuickImport");
     importFolder = settings.value("Import Folder").toString();
     if (importFolder.length() <= 0)
-        ui->inportLocationLabel->setText("<no location set>");
+        ui->inportLocationLabel->setText(tr("<no location set>"));
     else
         ui->inportLocationLabel->setText(importFolder);
     updateImportToLabel();
@@ -114,8 +168,8 @@ void MainWindow::selectedUpdated(int cnt, qint64 size)
 {
     totalSelectedSize = size;
     ui->spaceFilesCopy->setText(
-        QString("%1 GB").arg(((float) size / 1000 / 1000 / 1000), 0, 'f', 2));
-    ui->updateLabel->setText(QString("%1 selected photos").arg(cnt));
+        QString(tr("%1 GB")).arg(((float) size / 1000 / 1000 / 1000), 0, 'f', 2));
+    ui->updateLabel->setText(QString(tr("%1 selected photos")).arg(cnt));
 
     if (cnt <= 0)
         ui->moveButton->setDisabled(true);
@@ -248,7 +302,7 @@ void MainWindow::on_selectCard_clicked()
     }
     if (cardList.count() < 1) {
         QMessageBox msgBox;
-        msgBox.setText("No Card found, please insert card.");
+        msgBox.setText(tr("No Card found, please insert card."));
         msgBox.setIcon(QMessageBox::Critical);
         msgBox.exec();
 
@@ -265,11 +319,11 @@ void MainWindow::reloadCard()
     if (selectedCard.isValid()) {
         QList<QFileInfo> files;
         QString label;
-        statusBar()->showMessage("Loading card...");
+        statusBar()->showMessage(tr("Loading card..."));
         label = selectedCard.name();
         ui->cardLabel->setText(
             label
-            + QString("  (Used space: %1 GB)")
+            + QString(tr("  (Used space: %1 GB)"))
                   .arg(((float) (selectedCard.bytesTotal() - selectedCard.bytesAvailable()) / 1000
                         / 1000 / 1000),
                        0,
@@ -278,7 +332,7 @@ void MainWindow::reloadCard()
         files = getFiles(selectedCard.rootPath());
         ui->deviceWidget->setFiles(files);
         ui->deviceWidget->setEnabled(true);
-        statusBar()->showMessage("Done loading card.", 5000);
+        statusBar()->showMessage(tr("Done loading card."), 5000);
         QPixmap pixmap = ExternalDriveIconFetcher::getExternalDrivePixmap(selectedCard.rootPath());
 
         ui->pixmapLabel->setPixmap(pixmap.scaled(32, 32, Qt::KeepAspectRatio));
@@ -286,6 +340,7 @@ void MainWindow::reloadCard()
         totalSelectedSize = 0;
         ui->moveButton->setDisabled(true);
         ui->ejectButton->setEnabled(true);
+        ui->reloadButton->setEnabled(true);
     } else {
         emptyMainWindow();
     }
@@ -348,6 +403,7 @@ void MainWindow::emptyMainWindow()
 {
     selectedUpdated(0, 0);
     ui->ejectButton->setDisabled(true);
+    ui->reloadButton->setDisabled(true);
     ui->moveButton->setDisabled(true);
     ui->pixmapLabel->setPixmap(QPixmap());
     ui->deviceWidget->setEnabled(false);
@@ -406,6 +462,10 @@ void MainWindow::selectedNode(TreeNode *image)
                              &imageLoader::imageLoaded,
                              this,
                              &MainWindow::showImage);
+            QObject::connect(imageLoaderObject, &imageLoader::loadingFailed, [=]() {
+                ui->image->setPixmap(QPixmap());
+                ui->image->setText(tr("Failed to load image."));
+            });
 
             imageLoaderObject->loadImageFile(image->filePath);
 
@@ -433,6 +493,16 @@ void MainWindow::showImage(const QImage &image)
                                                          Qt::KeepAspectRatio)));
     //label.resize(image.size());
     ui->image->show();
+}
+
+void MainWindow::resizeEvent(QResizeEvent *event)
+{
+    QMainWindow::resizeEvent(event);
+    // ui->image->setFixedSize((int) ui->groupBoxImport->width() - 30,
+    //                         ui->groupBoxImport->width() - 30);
+
+    // ui->image->show();
+    // qDebug() << ui->groupBoxImport->width() - 30;
 }
 
 void MainWindow::on_checkAll_clicked()
@@ -482,14 +552,14 @@ void MainWindow::on_moveButton_clicked()
 {
     if (importFolder.length() <= 0) {
         QMessageBox msgBox;
-        msgBox.setText("No Import folder set, please set one first.");
+        msgBox.setText(tr("No Import folder set, please set one first."));
         msgBox.setIcon(QMessageBox::Critical);
         msgBox.exec();
         return;
     }
     if (freeProjectSpace < totalSelectedSize) {
         QMessageBox msgBox;
-        msgBox.setText("Not enough diskspace available on project location!");
+        msgBox.setText(tr("Not enough diskspace available on project location!"));
         msgBox.setIcon(QMessageBox::Critical);
         msgBox.exec();
         return;
@@ -501,7 +571,7 @@ void MainWindow::on_moveButton_clicked()
 
         if (list.count() <= 0) {
             QMessageBox msgBox;
-            msgBox.setText("No files selected, please check files to move/copy.");
+            msgBox.setText(tr("No files selected, please check files to move/copy."));
             msgBox.setIcon(QMessageBox::Critical);
             msgBox.exec();
             return;
@@ -633,4 +703,9 @@ void MainWindow::on_previewImageCheckBox_stateChanged(int arg1)
     settings.setValue("previewImage", (bool) arg1);
     if (!previewImage)
         ui->image->setPixmap(QPixmap());
+}
+
+void MainWindow::on_reloadButton_clicked()
+{
+    reloadCard();
 }

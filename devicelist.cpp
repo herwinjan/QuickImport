@@ -28,18 +28,21 @@ void deviceList::setFiles(QList<QFileInfo> files)
     this->expandAll();
     resizeColumnToContents(0);
     // Expand only year and month levels
-    QModelIndex rootIndex = fileModel->index(0, 0);
-    this->expand(rootIndex);
-    for (int i = 0; i < fileModel->rowCount(rootIndex); ++i) {
-        QModelIndex yearIndex = fileModel->index(i, 0, rootIndex);
-        this->expand(yearIndex);
+    qDebug() << fileModel->rowCount();
+    for (int ri = 0; ri < fileModel->rowCount(); ++ri) {
+        QModelIndex rootIndex = fileModel->index(ri, 0);
+        this->expand(rootIndex);
+        for (int i = 0; i < fileModel->rowCount(rootIndex); ++i) {
+            QModelIndex yearIndex = fileModel->index(i, 0, rootIndex);
+            this->expand(yearIndex);
 
-        for (int j = 0; j < fileModel->rowCount(yearIndex); ++j) {
-            QModelIndex monthIndex = fileModel->index(j, 0, yearIndex);
-            this->expand(monthIndex);
-            for (int j = 0; j < fileModel->rowCount(monthIndex); ++j) {
-                QModelIndex dayIndex = fileModel->index(j, 0, monthIndex);
-                this->collapse(dayIndex);
+            for (int j = 0; j < fileModel->rowCount(yearIndex); ++j) {
+                QModelIndex monthIndex = fileModel->index(j, 0, yearIndex);
+                this->expand(monthIndex);
+                for (int t = 0; t < fileModel->rowCount(monthIndex); ++t) {
+                    QModelIndex dayIndex = fileModel->index(t, 0, monthIndex);
+                    this->collapse(dayIndex);
+                }
             }
         }
     }

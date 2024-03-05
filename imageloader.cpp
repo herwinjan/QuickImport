@@ -7,21 +7,17 @@
 imageLoader::imageLoader(QObject *parent)
     : QObject(parent)
 
-{
-    qDebug() << "load Image()";
-}
+{}
 void imageLoader::loadImageFile(const QString &imagePath)
 
 {
-    qDebug() << "load Image Init" << imagePath;
     m_imagePath = imagePath;
 }
 
 void imageLoader::loadImage()
 {
-    qDebug() << "start";
     LibRaw *rawProc = new LibRaw();
-    qDebug() << "load Image nu" << m_imagePath;
+
     auto state = rawProc->open_file(m_imagePath.toLatin1().data());
 
     QImage thumbnail;
@@ -44,6 +40,6 @@ void imageLoader::loadImage()
     } else {
         emit imageLoaded(thumbnail);
     }
-    qDebug() << "finshed!";
+
     emit finished();
 }

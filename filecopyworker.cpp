@@ -68,7 +68,9 @@ void fileCopyWorker::copyImages()
 
             // Compare MD5 hashes
             if (sourceMd5 != destinationMd5) {
-                QMessageBox::critical(nullptr, "Error", "MD5 check failed (files are different).");
+                QMessageBox::critical(nullptr,
+                                      tr("Error"),
+                                      tr("MD5 check failed (files are different)."));
 
                 goDelete = false;
             }
