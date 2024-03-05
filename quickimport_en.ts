@@ -315,17 +315,4 @@
         <translation type="unfinished"></translation>
     </message>
 </context>
-<context>
-    <name>filesModel</name>
-    <message>
-        <location filename="filesmodel.cpp" line="65"/>
-        <source>Selection</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="filesmodel.cpp" line="68"/>
-        <source>Date</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
 </TS>

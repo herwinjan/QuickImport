@@ -318,14 +318,12 @@
 <context>
     <name>filesModel</name>
     <message>
-        <location filename="filesmodel.cpp" line="65"/>
         <source>Selection</source>
-        <translation>Selectie</translation>
+        <translation type="vanished">Selectie</translation>
     </message>
     <message>
-        <location filename="filesmodel.cpp" line="68"/>
         <source>Date</source>
-        <translation>Datum</translation>
+        <translation type="vanished">Datum</translation>
     </message>
 </context>
 </TS>
