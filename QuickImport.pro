@@ -35,7 +35,6 @@ LIBS += -framework DiskArbitration -framework Foundation
 
 SOURCES += \
     devicelist.cpp \
-    filesmodel.cpp \
     main.cpp \
     mainwindow.cpp
 
@@ -47,7 +46,6 @@ HEADERS += \
     filecopydialog.h \
     filecopyworker.h \
     filelistmodel.h \
-    filesmodel.h \
     imageloader.h \
     mainwindow.h \
     qborderlessdialog.h \

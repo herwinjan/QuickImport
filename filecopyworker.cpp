@@ -88,7 +88,8 @@ void fileCopyWorker::copyImages()
         }
         //TODOui->status->setText(
         //QString("Copy file %1 of %2. %3").arg(cnt).arg(list.count()).arg(err));
-        emit progressUpdated((done++ * 100) / totalFiles, done, cnt, fail, del);
+        done = done + 1;
+        emit progressUpdated((done * 100) / totalFiles, done, cnt, fail, del);
     }
 
     emit copyingFinished();

@@ -62,6 +62,9 @@ void deviceList::setFiles(QList<QFileInfo> files)
 }
 
 void deviceList::updateSelectedCount(const QModelIndex &topLeft, const QModelIndex &bottomRight, const QList<int> &roles) {
+    Q_UNUSED(topLeft);
+    Q_UNUSED(bottomRight);
+    Q_UNUSED(roles);
     int cnt = fileModel->countSelected();
     qint64 size = fileModel->countSelectedSize();
     emit selectedUpdated(cnt, size);

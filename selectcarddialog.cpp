@@ -50,5 +50,6 @@ SelectCardDialog::~SelectCardDialog()
 
 void SelectCardDialog::on_listBox_itemDoubleClicked(QListWidgetItem *item)
 {
+    Q_UNUSED(item);
     accept();
 }
