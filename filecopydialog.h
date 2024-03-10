@@ -20,6 +20,7 @@ public:
                    const QString &projectName,
                    const bool &md5Check,
                    const bool &deleteAfterImport,
+                   const bool &deleteExisting,
                    QWidget *parent = nullptr);
     ~fileCopyDialog();
 

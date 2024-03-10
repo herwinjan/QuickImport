@@ -89,10 +89,7 @@ void deviceList::selectionChanged(const QItemSelection &selected, const QItemSel
         QModelIndex selectedFirst = selected.at(0).topLeft();
         TreeNode *node = static_cast<TreeNode *>(selectedFirst.internalPointer());
         if (node) {
-            if (node->isFile) {
-                qDebug() << node->filePath;
-                emit selectedNode(node);
-            }
+            emit selectedNode(node);
         }
     }
 

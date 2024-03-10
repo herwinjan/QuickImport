@@ -9,12 +9,14 @@ fileCopyWorker::fileCopyWorker(const QList<QFileInfo> &list,
                                const QString &importFolder,
                                const QString &projectName,
                                const bool &md5Check,
-                               const bool &deleteAfterImport)
+                               const bool &deleteAfterImport,
+                               const bool &deleteExisting)
     : list(list)
     , importFolder(importFolder)
     , projectName(projectName)
     , md5Check(md5Check)
     , deleteAfterImport(deleteAfterImport)
+    , deleteExisting(deleteExisting)
 {}
 
 void fileCopyWorker::cancel()
@@ -37,6 +39,7 @@ void fileCopyWorker::copyImages()
         }
         QString newFile = QString("%1/%2/%3").arg(importFolder, projectName, file.fileName());
         qDebug() << "Copy " << file.filePath() << newFile;
+        bool exist = QFile::exists(file.filePath());
         bool ok = QFile::copy(file.filePath(), newFile);
 
         qDebug() << ok;
@@ -47,6 +50,15 @@ void fileCopyWorker::copyImages()
         QFileInfo newFileInfo(newFile);
 
         bool goDelete = true;
+        if (!ok) {
+            goDelete = false;
+            if (exist && deleteExisting) {
+                if (newFileInfo.size() == file.size()
+                    && newFileInfo.birthTime() == file.birthTime()) {
+                    goDelete = true;
+                }
+            }
+        }
         QFile sourceFile(file.filePath());
 
         if (md5Check && ok) {

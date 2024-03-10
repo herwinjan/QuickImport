@@ -109,10 +109,20 @@ MainWindow::MainWindow(QWidget *parent)
     deleteAfterImport = settings.value("deleteAfterImport", false).toBool();
     previewImage = settings.value("previewImage", true).toBool();
 
+    deleteExisting = settings.value("deleteExisting", false).toBool();
+    quitEmptyCard = settings.value("quitEmptyCard", false).toBool();
+    quitAfterImport = settings.value("quitAfterImport", false).toBool();
+    ejectIfEmpty = settings.value("ejectIfEmpty", false).toBool();
+
     ui->deleteAfterImportBox->setCheckState(deleteAfterImport ? Qt::Checked : Qt::Unchecked);
     ui->ejectBox->setCheckState(ejectAfterImport ? Qt::Checked : Qt::Unchecked);
     ui->mdCheckBox->setCheckState(md5Check ? Qt::Checked : Qt::Unchecked);
     ui->previewImageCheckBox->setCheckState(previewImage ? Qt::Checked : Qt::Unchecked);
+
+    ui->deleteExistingBox->setCheckState(deleteExisting ? Qt::Checked : Qt::Unchecked);
+    ui->quitEmptyCardBox->setCheckState(quitEmptyCard ? Qt::Checked : Qt::Unchecked);
+    ui->quitAfterImportBox->setCheckState(quitAfterImport ? Qt::Checked : Qt::Unchecked);
+    ui->ejectIfEmptyBox->setCheckState(ejectIfEmpty ? Qt::Checked : Qt::Unchecked);
 
     connect(ui->deviceWidget,
             SIGNAL(selectedUpdated(int, qint64)),
@@ -126,13 +136,25 @@ MainWindow::MainWindow(QWidget *parent)
             this,
             SLOT(selectedNode(TreeNode *)));
 
-    QKeySequence shortcutKey(Qt::CTRL | Qt::Key_Return);
+    QKeySequence shortcutKey(Qt::CTRL | Qt::Key_I);
 
     // Create a shortcut with the specified key sequence
     QShortcut *shortcut = new QShortcut(shortcutKey, this);
 
     // Connect the activated() signal of the shortcut to your function
     connect(shortcut, &QShortcut::activated, this, &MainWindow::on_moveButton_clicked);
+
+    QKeySequence selectCardKey(Qt::CTRL | Qt::Key_S);
+    QShortcut *selectCard = new QShortcut(selectCardKey, this);
+    connect(selectCard, &QShortcut::activated, this, &MainWindow::on_selectCard_clicked);
+
+    QKeySequence ejectCardKey(Qt::CTRL | Qt::Key_E);
+    QShortcut *ejectCard = new QShortcut(ejectCardKey, this);
+    connect(ejectCard, &QShortcut::activated, this, &MainWindow::on_ejectButton_clicked);
+
+    QKeySequence reloadKey(Qt::CTRL | Qt::Key_R);
+    QShortcut *reloadCard = new QShortcut(reloadKey, this);
+    connect(reloadCard, &QShortcut::activated, this, &MainWindow::on_reloadButton_clicked);
 
     QMenu *aboutMenu = new QMenu("&About");
     QAction *aboutAction = aboutMenu->addAction("About Quick Import",
@@ -316,6 +338,8 @@ void MainWindow::on_selectCard_clicked()
 }
 void MainWindow::reloadCard()
 {
+    emptyMainWindow();
+
     if (selectedCard.isValid()) {
         QList<QFileInfo> files;
         QString label;
@@ -334,15 +358,12 @@ void MainWindow::reloadCard()
         ui->deviceWidget->setEnabled(true);
         statusBar()->showMessage(tr("Done loading card."), 5000);
         QPixmap pixmap = ExternalDriveIconFetcher::getExternalDrivePixmap(selectedCard.rootPath());
-
         ui->pixmapLabel->setPixmap(pixmap.scaled(32, 32, Qt::KeepAspectRatio));
         selectedUpdated(0, 0);
         totalSelectedSize = 0;
         ui->moveButton->setDisabled(true);
         ui->ejectButton->setEnabled(true);
         ui->reloadButton->setEnabled(true);
-    } else {
-        emptyMainWindow();
     }
 }
 
@@ -410,10 +431,23 @@ void MainWindow::emptyMainWindow()
     ui->cardLabel->setText(QString(tr("No card loaded.")));
 }
 
+// SLOT for selection of node on ListWidget
 void MainWindow::selectedNode(TreeNode *image)
 {
     imageSelected = image;
-    if (image && previewImage)
+    if (imageSelected && previewImage) {
+        qDebug() << "preview";
+        if (!imageSelected->isFile) {
+            // if not a image, try first child!
+            qDebug() << "try first child";
+            TreeNode *child = imageSelected->children.at(0);
+
+            qDebug() << child;
+            if (child) {
+                imageSelected = child;
+                image = child;
+            }
+        }
         if (image->isFile) {
             if (imageLoaderThread) {
                 qDebug() << imageLoaderThread->isFinished() << imageLoaderThread->isRunning();
@@ -476,6 +510,7 @@ void MainWindow::selectedNode(TreeNode *image)
             //                ui->groupBoxImport->width() - 10,
             //                ui->groupBoxImport->width() - 10);
         }
+    }
 }
 
 void MainWindow::finshedImageLoading()
@@ -581,7 +616,13 @@ void MainWindow::on_moveButton_clicked()
         if (!dir.exists())
             dir.mkdir(QString("%1/%2").arg(importFolder, projectName));
 
-        fileCopyDialog dialog(list, importFolder, projectName, md5Check, deleteAfterImport, this);
+        fileCopyDialog dialog(list,
+                              importFolder,
+                              projectName,
+                              md5Check,
+                              deleteAfterImport,
+                              deleteExisting,
+                              this);
         bool ok = dialog.exec();
 
         /*
@@ -596,32 +637,35 @@ void MainWindow::on_moveButton_clicked()
                                      .arg(delMsg)
                                      .arg(fail));*/
         if (ejectAfterImport && ok) {
+            qDebug() << "Eject after move";
             on_ejectButton_clicked();
         }
 
+        if (quitAfterImport && ok) {
+            qApp->quit();
+        }
+
         reloadCard();
+
+        if (quitEmptyCard && ok) {
+            if (ui->deviceWidget->model()) {
+                if (ui->deviceWidget->model()->rowCount(QModelIndex()) <= 0) {
+                    qApp->quit();
+                }
+            } else {
+                qApp->quit();
+            }
+        }
+        if (ejectIfEmpty && ok) {
+            if (ui->deviceWidget->model()) {
+                if (ui->deviceWidget->model()->rowCount(QModelIndex()) <= 0) {
+                    on_ejectButton_clicked();
+                }
+            } else {
+                on_ejectButton_clicked();
+            }
+        }
     }
-}
-
-void MainWindow::on_mdCheckBox_stateChanged(int arg1)
-{
-    md5Check = arg1;
-    QSettings settings("HJ Steehouwer", "QuickImport");
-    settings.setValue("md5Check", (bool) arg1);
-}
-
-void MainWindow::on_deleteAfterImportBox_stateChanged(int arg1)
-{
-    deleteAfterImport = arg1;
-    QSettings settings("HJ Steehouwer", "QuickImport");
-    settings.setValue("deleteAfterImport", (bool) arg1);
-}
-
-void MainWindow::on_ejectBox_stateChanged(int arg1)
-{
-    ejectAfterImport = arg1;
-    QSettings settings("HJ Steehouwer", "QuickImport");
-    settings.setValue("ejectAfterImport", (bool) arg1);
 }
 
 void MainWindow::returnButtonPressed()
@@ -656,6 +700,7 @@ void MainWindow::on_quickViewButton_clicked()
                     } else {
                         TreeNode *child = node->children.at(0);
 
+                        qDebug() << child;
                         if (child) {
                             if (child->isFile) {
                                 displayImage(child->info.absoluteFilePath(), true);
@@ -708,4 +753,51 @@ void MainWindow::on_previewImageCheckBox_stateChanged(int arg1)
 void MainWindow::on_reloadButton_clicked()
 {
     reloadCard();
+}
+void MainWindow::on_mdCheckBox_stateChanged(int arg1)
+{
+    md5Check = arg1;
+    QSettings settings("HJ Steehouwer", "QuickImport");
+    settings.setValue("md5Check", (bool) arg1);
+}
+
+void MainWindow::on_deleteAfterImportBox_stateChanged(int arg1)
+{
+    deleteAfterImport = arg1;
+    QSettings settings("HJ Steehouwer", "QuickImport");
+    settings.setValue("deleteAfterImport", (bool) arg1);
+}
+
+void MainWindow::on_ejectBox_stateChanged(int arg1)
+{
+    ejectAfterImport = arg1;
+    QSettings settings("HJ Steehouwer", "QuickImport");
+    settings.setValue("ejectAfterImport", (bool) arg1);
+}
+void MainWindow::on_deleteExistingBox_stateChanged(int arg1)
+{
+    deleteExisting = arg1;
+    QSettings settings("HJ Steehouwer", "QuickImport");
+    settings.setValue("deleteExisting", (bool) arg1);
+}
+
+void MainWindow::on_quitEmptyCardBox_stateChanged(int arg1)
+{
+    quitEmptyCard = arg1;
+    QSettings settings("HJ Steehouwer", "QuickImport");
+    settings.setValue("quitEmptyCard", (bool) arg1);
+}
+
+void MainWindow::on_ejectIfEmptyBox_stateChanged(int arg1)
+{
+    ejectIfEmpty = arg1;
+    QSettings settings("HJ Steehouwer", "QuickImport");
+    settings.setValue("ejectIfEmpty", (bool) arg1);
+}
+
+void MainWindow::on_quitAfterImportBox_stateChanged(int arg1)
+{
+    quitAfterImport = arg1;
+    QSettings settings("HJ Steehouwer", "QuickImport");
+    settings.setValue("quitAfterImport", (bool) arg1);
 }

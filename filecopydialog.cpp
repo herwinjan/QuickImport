@@ -10,6 +10,7 @@ fileCopyDialog::fileCopyDialog(const QList<QFileInfo> &list,
                                const QString &projectName,
                                const bool &md5Check,
                                const bool &deleteAfterImport,
+                               const bool &deleteExisting,
                                QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::fileCopyDialog)
@@ -24,7 +25,12 @@ fileCopyDialog::fileCopyDialog(const QList<QFileInfo> &list,
 
     ui->progressBar->setValue(0);
 
-    m_worker = new fileCopyWorker(list, importFolder, projectName, md5Check, deleteAfterImport);
+    m_worker = new fileCopyWorker(list,
+                                  importFolder,
+                                  projectName,
+                                  md5Check,
+                                  deleteAfterImport,
+                                  deleteExisting);
 
     m_worker->moveToThread(m_thread);
     connect(m_thread, &QThread::started, m_worker, &fileCopyWorker::copyImages);

@@ -6,6 +6,7 @@
 
 #include <QFileInfoList>
 #include <QMainWindow>
+#include <QShortcut>
 #include <QStorageInfo>
 #include <QThread>
 
@@ -51,6 +52,11 @@ private:
     QThread *imageLoaderThread;
     TreeNode *imageShown, *imageSelected;
 
+    bool deleteExisting;
+
+    bool quitEmptyCard;
+    bool ejectIfEmpty;
+    bool quitAfterImport;
 private slots:
     void showImage(const QImage &image);
     void selectedNode(TreeNode *);
@@ -76,5 +82,10 @@ private slots:
 
     void on_previewImageCheckBox_stateChanged(int arg1);
     void on_reloadButton_clicked();
+    void on_deleteExistingBox_stateChanged(int arg1);
+    void on_quitEmptyCardBox_stateChanged(int arg1);
+    void on_ejectIfEmptyBox_stateChanged(int arg1);
+
+    void on_quitAfterImportBox_stateChanged(int arg1);
 };
 #endif // MAINWINDOW_H

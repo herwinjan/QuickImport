@@ -16,7 +16,8 @@ public:
                    const QString &importFolder,
                    const QString &projectName,
                    const bool &md5Check,
-                   const bool &deleteAfterImport);
+                   const bool &deleteAfterImport,
+                   const bool &deleteExisting);
     void cancel();
     bool doCancel = false;
 public slots:
@@ -33,6 +34,7 @@ private:
     QString projectName;
     bool md5Check;
     bool deleteAfterImport;
+    bool deleteExisting;
     QTimer *timer;
 };
 

@@ -15,7 +15,7 @@ isEqual(Q_DEVICE_WATCHER_DEBUG, 1) {
     DEFINES += CONFIG_DEBUG
 }
 
-CONFIG += lrelease
+QMAKE_MACOSX_DEPLOYMENT_TARGET = 14.0
 
 TRANSLATIONS = quickimport_en.ts quickimport_nl.ts
 
@@ -59,19 +59,21 @@ FORMS += \
     selectcarddialog.ui
 
 # Default rules for deployment.
-qnx: target.path = /tmp/$${TARGET}/bin
-else: unix:!android: target.path = /opt/$${TARGET}/bin
-!isEmpty(target.path): INSTALLS += target
+#qnx: target.path = /tmp/$${TARGET}/bin
+#else: unix:!android: target.path = /opt/$${TARGET}/bin
+#!isEmpty(target.path): INSTALLS += target
 
 
 
-win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../../../../../../opt/homebrew/Cellar/libraw/0.21.2/lib/release/ -lraw.23
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../../../../../../opt/homebrew/Cellar/libraw/0.21.2/lib/debug/ -lraw.23
-else:unix: LIBS += -L$$PWD/../../../../../../opt/homebrew/Cellar/libraw/0.21.2/lib/ -lraw.23
+win32:CONFIG(release, debug|release): LIBS += -L/opt/homebrew/Cellar/libraw/0.21.2/lib/release/ -lraw.23
+else:win32:CONFIG(debug, debug|release): LIBS += -L/opt/homebrew/Cellar/libraw/0.21.2/lib/debug/ -lraw.23
+else:unix: LIBS += -L/Users/herwin/devel/LibRaw-0.21.2/lib
+LIBS += /Users/herwin/devel/LibRaw-0.21.2/lib/.libs/libraw_r.a
+LIBS += -lz
 
-INCLUDEPATH += $$PWD/../../../../../../opt/homebrew/Cellar/libraw/0.21.2/include/
-DEPENDPATH += $$PWD/../../../../../../opt/homebrew/Cellar/libraw/0.21.2/include/
 
+INCLUDEPATH += /Users/herwin/devel/LibRaw-0.21.2/
+DEPENDPATH += /Users/herwin/devel/LibRaw-0.21.2/
 DISTFILES += \
     QuickImportLogo-1024.icns \
     quickimport_en.qm \
