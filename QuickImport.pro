@@ -22,15 +22,14 @@ TRANSLATIONS = quickimport_en.ts quickimport_nl.ts
 ICON = QuickImportLogo-1024.icns
 
 SOURCES += \
-    aboutdialog.cpp \
-    externDriveFetcher.mm \
+    aboutdialog.cpp \    
     filecopydialog.cpp \
     filecopyworker.cpp \
     filelistmodel.cpp \
     imageloader.cpp \
     qborderlessdialog.cpp \
     selectcarddialog.cpp
-LIBS += -framework DiskArbitration -framework Foundation
+
 
 
 SOURCES += \
@@ -64,16 +63,17 @@ FORMS += \
 #!isEmpty(target.path): INSTALLS += target
 
 
+#win32:CONFIG(release, debug|release): LIBS += -L/opt/homebrew/Cellar/libraw/0.21.2/lib/release/ -lraw.23
+#else:win32:CONFIG(debug, debug|release): LIBS += -L/opt/homebrew/Cellar/libraw/0.21.2/lib/debug/ -lraw.23
 
-win32:CONFIG(release, debug|release): LIBS += -L/opt/homebrew/Cellar/libraw/0.21.2/lib/release/ -lraw.23
-else:win32:CONFIG(debug, debug|release): LIBS += -L/opt/homebrew/Cellar/libraw/0.21.2/lib/debug/ -lraw.23
-else:unix: LIBS += -L/Users/herwin/devel/LibRaw-0.21.2/lib
-LIBS += /Users/herwin/devel/LibRaw-0.21.2/lib/.libs/libraw_r.a
-LIBS += -lz
-
-
-INCLUDEPATH += /Users/herwin/devel/LibRaw-0.21.2/
-DEPENDPATH += /Users/herwin/devel/LibRaw-0.21.2/
+macx {
+    SOURCES += externDriveFetcher.mm
+    LIBS += /Users/herwin/devel/LibRaw-0.21.2/lib/.libs/libraw_r.a
+    LIBS += -lz
+    INCLUDEPATH += /Users/herwin/devel/LibRaw-0.21.2/
+    DEPENDPATH += /Users/herwin/devel/LibRaw-0.21.2/
+    LIBS += -framework DiskArbitration -framework Foundation
+}
 DISTFILES += \
     QuickImportLogo-1024.icns \
     quickimport_en.qm \
