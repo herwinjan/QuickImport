@@ -20,7 +20,10 @@ void SelectCardDialog::setCards(QList<QStorageInfo> _cardList)
             + QString(tr(" (size: %1 GB, %2 GB Free )"))
                   .arg(storage.bytesTotal() / 1000 / 1000 / 1000)
                   .arg(storage.bytesFree() / 1000 / 1000 / 1000));
+#if defined(__APPLE__)
+        // windows-specific code goes here
         item->setIcon(ExternalDriveIconFetcher::getExternalDriveIcon(storage.rootPath()));
+#endif
         ui->listBox->addItem(item);
     }
     ui->listBox->setCurrentRow(0);

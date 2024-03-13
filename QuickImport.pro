@@ -74,6 +74,12 @@ macx {
     DEPENDPATH += /Users/herwin/devel/LibRaw-0.21.2/
     LIBS += -framework DiskArbitration -framework Foundation
 }
+win32 {
+    LIBS += -Lc:\Users\herwin\devel\LibRaw-0.21.2\lib\ -llibraw -Lc:\Users\herwin\devel\LibRaw-0.21.2\bin
+    INCLUDEPATH += c:\Users\herwin\devel\LibRaw-0.21.2\
+    DEPENDPATH += c:\Users\herwin\devel\LibRaw-0.21.2\
+
+}
 DISTFILES += \
     QuickImportLogo-1024.icns \
     quickimport_en.qm \

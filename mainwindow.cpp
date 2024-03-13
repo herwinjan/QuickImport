@@ -10,7 +10,11 @@
 #include <QStorageInfo>
 
 #include "aboutdialog.h"
+
+#if defined(__APPLE__)
 #include "externalDriveFetcher.h"
+#endif
+
 #include "filecopydialog.h"
 #include "filelistmodel.h"
 #include "qborderlessdialog.h"
@@ -357,8 +361,11 @@ void MainWindow::reloadCard()
         ui->deviceWidget->setFiles(files);
         ui->deviceWidget->setEnabled(true);
         statusBar()->showMessage(tr("Done loading card."), 5000);
+#if defined(__APPLE__)
         QPixmap pixmap = ExternalDriveIconFetcher::getExternalDrivePixmap(selectedCard.rootPath());
+
         ui->pixmapLabel->setPixmap(pixmap.scaled(32, 32, Qt::KeepAspectRatio));
+#endif
         selectedUpdated(0, 0);
         totalSelectedSize = 0;
         ui->moveButton->setDisabled(true);

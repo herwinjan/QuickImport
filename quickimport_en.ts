@@ -38,7 +38,7 @@
     </message>
     <message>
         <location filename="mainwindow.ui" line="81"/>
-        <location filename="mainwindow.cpp" line="410"/>
+        <location filename="mainwindow.cpp" line="431"/>
         <source>No card loaded.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -123,32 +123,52 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="609"/>
+        <location filename="mainwindow.ui" line="537"/>
+        <source>Eject if card is empty</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.ui" line="544"/>
+        <source>Quit after import</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.ui" line="551"/>
+        <source>Quit if card is empty</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.ui" line="558"/>
+        <source>Delete existing files if size, name and date are the same</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.ui" line="637"/>
         <source>Import</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="643"/>
+        <location filename="mainwindow.ui" line="671"/>
         <source>Quick View</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="650"/>
+        <location filename="mainwindow.ui" line="678"/>
         <source>Check all</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="657"/>
+        <location filename="mainwindow.ui" line="685"/>
         <source>Uncheck all</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="664"/>
+        <location filename="mainwindow.ui" line="692"/>
         <source>Check Selected</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="671"/>
+        <location filename="mainwindow.ui" line="699"/>
         <source>uncheck Selected</source>
         <translation type="unfinished"></translation>
     </message>
@@ -158,62 +178,62 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="171"/>
+        <location filename="mainwindow.cpp" line="193"/>
         <source>%1 GB</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="172"/>
+        <location filename="mainwindow.cpp" line="194"/>
         <source>%1 selected photos</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="305"/>
+        <location filename="mainwindow.cpp" line="327"/>
         <source>No Card found, please insert card.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="322"/>
+        <location filename="mainwindow.cpp" line="346"/>
         <source>Loading card...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="326"/>
+        <location filename="mainwindow.cpp" line="350"/>
         <source>  (Used space: %1 GB)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="335"/>
+        <location filename="mainwindow.cpp" line="359"/>
         <source>Done loading card.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="377"/>
+        <location filename="mainwindow.cpp" line="398"/>
         <source>Loading image, please wait.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="467"/>
+        <location filename="mainwindow.cpp" line="501"/>
         <source>Failed to load image.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="523"/>
+        <location filename="mainwindow.cpp" line="558"/>
         <source>Select a directory</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="555"/>
+        <location filename="mainwindow.cpp" line="590"/>
         <source>No Import folder set, please set one first.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="562"/>
+        <location filename="mainwindow.cpp" line="597"/>
         <source>Not enough diskspace available on project location!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="574"/>
+        <location filename="mainwindow.cpp" line="609"/>
         <source>No files selected, please check files to move/copy.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -277,27 +297,27 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="filecopydialog.cpp" line="20"/>
+        <location filename="filecopydialog.cpp" line="21"/>
         <source>Copy file %1 of %2.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="filecopydialog.cpp" line="53"/>
+        <location filename="filecopydialog.cpp" line="59"/>
         <source>%1 copied. </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="filecopydialog.cpp" line="56"/>
+        <location filename="filecopydialog.cpp" line="62"/>
         <source>%1 failed. </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="filecopydialog.cpp" line="59"/>
+        <location filename="filecopydialog.cpp" line="65"/>
         <source>%1 deleted. </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="filecopydialog.cpp" line="62"/>
+        <location filename="filecopydialog.cpp" line="68"/>
         <source>Copying: %1 of %2 processed. %3</source>
         <translation type="unfinished"></translation>
     </message>
@@ -305,12 +325,12 @@
 <context>
     <name>fileCopyWorker</name>
     <message>
-        <location filename="filecopyworker.cpp" line="72"/>
+        <location filename="filecopyworker.cpp" line="84"/>
         <source>Error</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="filecopyworker.cpp" line="73"/>
+        <location filename="filecopyworker.cpp" line="85"/>
         <source>MD5 check failed (files are different).</source>
         <translation type="unfinished"></translation>
     </message>
