@@ -436,6 +436,7 @@ void MainWindow::emptyMainWindow()
     ui->pixmapLabel->setPixmap(QPixmap());
     ui->deviceWidget->setEnabled(false);
     ui->cardLabel->setText(QString(tr("No card loaded.")));
+    ui->image->setPixmap(QPixmap());
 }
 
 // SLOT for selection of node on ListWidget
@@ -653,6 +654,15 @@ void MainWindow::on_moveButton_clicked()
         }
 
         reloadCard();
+        if (ejectIfEmpty && ok) {
+            if (ui->deviceWidget->model()) {
+                if (ui->deviceWidget->model()->rowCount(QModelIndex()) <= 0) {
+                    doEject();
+                }
+            } else {
+                doEject();
+            }
+        }
 
         if (quitEmptyCard && ok) {
             if (ui->deviceWidget->model()) {
@@ -663,16 +673,21 @@ void MainWindow::on_moveButton_clicked()
                 qApp->quit();
             }
         }
-        if (ejectIfEmpty && ok) {
-            if (ui->deviceWidget->model()) {
-                if (ui->deviceWidget->model()->rowCount(QModelIndex()) <= 0) {
-                    on_ejectButton_clicked();
-                }
-            } else {
-                on_ejectButton_clicked();
-            }
-        }
     }
+}
+
+int MainWindow::doEject()
+{
+    // Construct the command to eject the USB drive
+    QString command = "diskutil";
+    QStringList args;
+    args << "unmountDisk" << selectedCard.rootPath();
+
+    // Create a QProcess object and start the process
+    QProcess process;
+    process.start(command, args);
+    process.waitForFinished();
+    return process.exitCode();
 }
 
 void MainWindow::returnButtonPressed()
@@ -722,18 +737,10 @@ void MainWindow::on_quickViewButton_clicked()
 
 void MainWindow::on_ejectButton_clicked()
 {
-    // Construct the command to eject the USB drive
-    QString command = "diskutil";
-    QStringList args;
-    args << "unmountDisk" << selectedCard.rootPath();
-
-    // Create a QProcess object and start the process
-    QProcess process;
-    process.start(command, args);
-    process.waitForFinished();
+    int code = doEject();
 
     // Check the exit code of the process
-    if (process.exitCode() == 0) {
+    if (code == 0) {
         // Command executed successfully
         qDebug() << "USB drive ejected successfully.";
         emptyMainWindow();
@@ -744,7 +751,7 @@ void MainWindow::on_ejectButton_clicked()
 
     } else {
         // Error occurred
-        qWarning() << "Failed to eject USB drive. Error code:" << process.exitCode();
+        qWarning() << "Failed to eject USB drive. Error code:" << code;
     }
 }
 

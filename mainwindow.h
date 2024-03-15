@@ -36,6 +36,8 @@ public:
 protected:
     void resizeEvent(QResizeEvent *event);
 
+    int doEject();
+
 private:
     QString importFolder;
     QString projectName;
