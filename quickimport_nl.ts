@@ -38,7 +38,7 @@
     </message>
     <message>
         <location filename="mainwindow.ui" line="81"/>
-        <location filename="mainwindow.cpp" line="431"/>
+        <location filename="mainwindow.cpp" line="438"/>
         <source>No card loaded.</source>
         <translation>Geen kaart geladen.</translation>
     </message>
@@ -55,7 +55,7 @@
     <message>
         <location filename="mainwindow.ui" line="234"/>
         <source>Preview</source>
-        <translation>Vooebeeld</translation>
+        <translation>Voorbeeld</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="256"/>
@@ -85,7 +85,7 @@
     <message>
         <location filename="mainwindow.ui" line="391"/>
         <source>Project name:</source>
-        <translation>p[roject naam:</translation>
+        <translation>project naam:</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="401"/>
@@ -125,22 +125,22 @@
     <message>
         <location filename="mainwindow.ui" line="537"/>
         <source>Eject if card is empty</source>
-        <translation type="unfinished"></translation>
+        <translation>Uitwerpen als de kaart leeg is</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="544"/>
         <source>Quit after import</source>
-        <translation type="unfinished"></translation>
+        <translation>Sluiten na het importeren</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="551"/>
         <source>Quit if card is empty</source>
-        <translation type="unfinished"></translation>
+        <translation>Sluit als de kaart leeg is</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="558"/>
         <source>Delete existing files if size, name and date are the same</source>
-        <translation type="unfinished"></translation>
+        <translation>Verwijder bestaande bestanden als de grootte, naam en datum hetzelfde zijn</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="637"/>
@@ -173,67 +173,67 @@
         <translation>verwijder vinkje geselecteerde</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="101"/>
+        <location filename="mainwindow.cpp" line="105"/>
         <source>&lt;no location set&gt;</source>
         <translation>&lt;geen locatie aangegeven&gt;</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="193"/>
+        <location filename="mainwindow.cpp" line="197"/>
         <source>%1 GB</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="194"/>
+        <location filename="mainwindow.cpp" line="198"/>
         <source>%1 selected photos</source>
         <translation>%1 geselecteerde foto&apos;s</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="327"/>
+        <location filename="mainwindow.cpp" line="331"/>
         <source>No Card found, please insert card.</source>
         <translation>Geen kaart gevonden, plaats de kaart.</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="346"/>
+        <location filename="mainwindow.cpp" line="350"/>
         <source>Loading card...</source>
         <translation>Kaart laden...</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="350"/>
+        <location filename="mainwindow.cpp" line="354"/>
         <source>  (Used space: %1 GB)</source>
         <translation>  (Gebruikte ruimte: %1 GB)</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="359"/>
+        <location filename="mainwindow.cpp" line="363"/>
         <source>Done loading card.</source>
         <translation>Klaar met het laden van de kaart.</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="398"/>
+        <location filename="mainwindow.cpp" line="405"/>
         <source>Loading image, please wait.</source>
         <translation>Afbeelding wordt geladen, even geduld a.u.b.</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="501"/>
+        <location filename="mainwindow.cpp" line="509"/>
         <source>Failed to load image.</source>
         <translation>Kan afbeelding niet laden.</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="558"/>
+        <location filename="mainwindow.cpp" line="566"/>
         <source>Select a directory</source>
         <translation>Selecteer een map</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="590"/>
+        <location filename="mainwindow.cpp" line="598"/>
         <source>No Import folder set, please set one first.</source>
         <translation>Er is geen importmap ingesteld. Stel eerst een map in.</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="597"/>
+        <location filename="mainwindow.cpp" line="605"/>
         <source>Not enough diskspace available on project location!</source>
         <translation>Niet genoeg schijfruimte beschikbaar op projectlocatie!</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="609"/>
+        <location filename="mainwindow.cpp" line="617"/>
         <source>No files selected, please check files to move/copy.</source>
         <translation>Geen bestanden geselecteerd. Controleer de bestanden die u wilt verplaatsen/kopiëren.</translation>
     </message>
