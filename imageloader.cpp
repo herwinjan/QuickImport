@@ -2,37 +2,56 @@
 
 #include <QDebug>
 #include <QImage>
+
 #include <libraw/libraw.h>
 
 imageLoader::imageLoader(QObject *parent)
     : QObject(parent)
 
 {}
-void imageLoader::loadImageFile(const QString &imagePath)
+void imageLoader::loadImageFile(const TreeNode *_node)
 
 {
-    m_imagePath = imagePath;
+    node = _node;
 }
 
 void imageLoader::loadImage()
 {
-    LibRaw *rawProc = new LibRaw();
+    LibRaw *rawProc = NULL;
+    bool del = false;
 
-    auto state = rawProc->open_file(m_imagePath.toLatin1().data());
+    if (!node->rawProc) {
+        del = true;
+        rawProc = new LibRaw();
+
+        auto state = rawProc->open_file(m_imagePath.toLatin1().data());
+        if (LIBRAW_SUCCESS != state) {
+            emit loadingFailed();
+            emit finished();
+        }
+
+    } else {
+        rawProc = node->rawProc;
+        del = false;
+    }
 
     QImage thumbnail;
 
-    if (LIBRAW_SUCCESS == state) {
-        if (LIBRAW_SUCCESS == rawProc->unpack_thumb()) {
-            if (LIBRAW_THUMBNAIL_JPEG == rawProc->imgdata.thumbnail.tformat) {
-                thumbnail.loadFromData((unsigned char *) rawProc->imgdata.thumbnail.thumb,
-                                       rawProc->imgdata.thumbnail.tlength,
-                                       "JPEG");
-            }
-        }
-        rawProc->recycle();
+    if (!(rawProc->imgdata.thumbnail.thumb)) {
+        rawProc->unpack_thumb();
     }
-    delete rawProc;
+
+    if (LIBRAW_THUMBNAIL_JPEG == rawProc->imgdata.thumbnail.tformat) {
+        thumbnail.loadFromData((unsigned char *) rawProc->imgdata.thumbnail.thumb,
+                               rawProc->imgdata.thumbnail.tlength,
+                               "JPEG");
+    }
+    thumbnail = thumbnail.scaled(1024, 1024, Qt::KeepAspectRatio);
+
+    if (del) {
+        rawProc->recycle();
+        delete rawProc;
+    }
 
     // Check if the image was loaded successfully
     if (thumbnail.isNull()) {

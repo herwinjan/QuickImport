@@ -14,6 +14,7 @@ SelectCardDialog::SelectCardDialog(QWidget *parent)
 void SelectCardDialog::setCards(QList<QStorageInfo> _cardList)
 {
     cardList = _cardList;
+    qDebug() << _cardList;
     foreach (const QStorageInfo &storage, cardList) {
         QListWidgetItem *item = new QListWidgetItem(
             storage.name()

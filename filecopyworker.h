@@ -7,19 +7,23 @@
 #include <QObject>
 #include <QString>
 #include <QTimer>
+#include "filelistmodel.h"
 
 class fileCopyWorker : public QObject
 {
     Q_OBJECT
 public:
-    fileCopyWorker(const QList<QFileInfo> &list,
+    fileCopyWorker(const QList<fileInfoStruct> &list,
                    const QString &importFolder,
                    const QString &projectName,
+                   const QString &fileNameFormat,
                    const bool &md5Check,
                    const bool &deleteAfterImport,
                    const bool &deleteExisting);
     void cancel();
     bool doCancel = false;
+    static QList<QString> processNewFileName(
+        QString, QString, QDateTime, imageInfoStruct, QFileInfo, QString);
 public slots:
     void copyImages();
 signals:
@@ -29,9 +33,10 @@ signals:
 private:
     int cnt = 0, fail = 0;
 
-    QList<QFileInfo> list;
+    QList<fileInfoStruct> list;
     QString importFolder;
     QString projectName;
+    QString fileNameFormat;
     bool md5Check;
     bool deleteAfterImport;
     bool deleteExisting;

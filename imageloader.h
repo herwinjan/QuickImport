@@ -3,13 +3,16 @@
 
 #include <QObject>
 
+#include "filelistmodel.h"
+
 class imageLoader : public QObject
 {
     Q_OBJECT
 public:
     explicit imageLoader(QObject *parent = nullptr);
 
-    void loadImageFile(const QString &imagePath);
+    void loadImageFile(const TreeNode *_node);
+    const TreeNode *node;
 
 public slots:
     void loadImage();

@@ -3,12 +3,15 @@
 
 #include "filelistmodel.h"
 #include "imageloader.h"
+#include "presetlistmodel.h"
 
 #include <QFileInfoList>
 #include <QMainWindow>
 #include <QShortcut>
 #include <QStorageInfo>
 #include <QThread>
+
+#include <qdevicewatcher/qdevicewatcher.h>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -33,14 +36,27 @@ public:
 
     void flipSelectedItems();
 
+    QList<presetSetting> presetList;
+
+    void updatePresetList();
+public slots:
+    void slotDeviceAdded(const QString &dev);
+
+    void slotDeviceChanged(const QString &dev);
+
+    void slotDeviceRemoved(const QString &dev);
+
+    void reloadPresetComboBox();
+
 protected:
     void resizeEvent(QResizeEvent *event);
 
     int doEject();
 
-private:
+public:
     QString importFolder;
     QString projectName;
+    QString fileNameFormat;
     QStorageInfo selectedCard;
     bool md5Check;
     bool deleteAfterImport;
@@ -59,6 +75,25 @@ private:
     bool quitEmptyCard;
     bool ejectIfEmpty;
     bool quitAfterImport;
+
+    QStringList importLocationList;
+    QStringList projectNameList;
+    QStringList fileNameFormatList;
+
+    TreeNode *currentSelectedImage = NULL;
+
+    void loadPresets();
+    void savePresets();
+    void addLocationPreset(QString location);
+    void resetLocationPreset(int sel);
+    void loadPresetsLocations();
+    void savePresetsLocations(int sel);
+    void saveProjectName(int sel);
+    void loadProjectName();
+    void resetProjectName(int sel);
+    void loadFileNameFormat();
+    void resetFileNameFomat(int sel);
+    void saveFileNameFormat(int sel = -1);
 private slots:
     void showImage(const QImage &image);
     void selectedNode(TreeNode *);
@@ -69,8 +104,7 @@ private slots:
     void on_selectCard_clicked();
     void on_checkAll_clicked();
     void on_uncheckAll_clicked();
-    void on_selectLocationButton_clicked();
-    void on_projectName_textChanged(const QString &arg1);
+
     void on_moveButton_clicked();
     void on_mdCheckBox_stateChanged(int arg1);
     void on_deleteAfterImportBox_stateChanged(int arg1);
@@ -89,5 +123,17 @@ private slots:
     void on_ejectIfEmptyBox_stateChanged(int arg1);
 
     void on_quitAfterImportBox_stateChanged(int arg1);
+    void on_toolButton_clicked();
+    void on_presetComboBox_activated(int index);
+    void on_projectName_currentTextChanged(const QString &arg1);
+    void on_selectImportLocation_clicked();
+
+    void on_importLocation_activated(int index);
+    void on_saveProjectNameButton_clicked();
+    void on_deleteProjectName_clicked();
+    void on_safeFileNameFormat_clicked();
+    void on_deleteFileNameFormat_clicked();
+    void on_fileNameFormat_currentIndexChanged(int index);
+    void on_fileNameFormat_currentTextChanged(const QString &arg1);
 };
 #endif // MAINWINDOW_H

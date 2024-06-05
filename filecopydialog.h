@@ -15,9 +15,10 @@ class fileCopyDialog : public QDialog
     Q_OBJECT
 
 public:
-    fileCopyDialog(const QList<QFileInfo> &list,
+    fileCopyDialog(const QList<fileInfoStruct> &list,
                    const QString &importFolder,
                    const QString &projectName,
+                   const QString &fileNameFormat,
                    const bool &md5Check,
                    const bool &deleteAfterImport,
                    const bool &deleteExisting,

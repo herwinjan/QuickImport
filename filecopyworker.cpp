@@ -5,15 +5,17 @@
 #include <QFile>
 #include <QMessageBox>
 
-fileCopyWorker::fileCopyWorker(const QList<QFileInfo> &list,
+fileCopyWorker::fileCopyWorker(const QList<fileInfoStruct> &list,
                                const QString &importFolder,
                                const QString &projectName,
+                               const QString &fileNameFormat,
                                const bool &md5Check,
                                const bool &deleteAfterImport,
                                const bool &deleteExisting)
     : list(list)
     , importFolder(importFolder)
     , projectName(projectName)
+    , fileNameFormat(fileNameFormat)
     , md5Check(md5Check)
     , deleteAfterImport(deleteAfterImport)
     , deleteExisting(deleteExisting)
@@ -24,6 +26,86 @@ void fileCopyWorker::cancel()
     doCancel = true;
 }
 
+/*
+ * Return: List: 0 = file, 1 = directory, 2 = total path
+ */
+QList<QString> fileCopyWorker::processNewFileName(QString importFolder,
+                                                  QString projectName,
+                                                  QDateTime lastModified,
+                                                  imageInfoStruct imageInfo,
+                                                  QFileInfo info,
+                                                  QString fileNameFormat)
+
+{
+    QString project = projectName;
+
+    project.replace("{D}", lastModified.toString("dd"));
+    project.replace("{m}", lastModified.toString("MM"));
+    project.replace("{y}", lastModified.toString("yy"));
+    project.replace("{Y}", lastModified.toString("yyyy"));
+
+    project.replace("{W}", QString("%1").arg(lastModified.date().weekNumber()));
+    project.replace("{h}", lastModified.toString("h"));
+    project.replace("{H}", lastModified.toString("H"));
+    project.replace("{M}", lastModified.toString("mm"));
+
+    project.replace("{i}", QString("%1").arg(imageInfo.isoValue));
+    project.replace("{c}", QString("%1").arg(imageInfo.serialNumber));
+    project.replace("{T}", QString("%1").arg(imageInfo.cameraName));
+    project.replace("{O}", QString("%1").arg(imageInfo.ownerName));
+
+    //File name
+
+    fileNameFormat.replace("{D}", lastModified.toString("dd"));
+    fileNameFormat.replace("{m}", lastModified.toString("MM"));
+    fileNameFormat.replace("{y}", lastModified.toString("yy"));
+    fileNameFormat.replace("{Y}", lastModified.toString("yyyy"));
+
+    fileNameFormat.replace("{W}", QString("%1").arg(lastModified.date().weekNumber()));
+    fileNameFormat.replace("{h}", lastModified.toString("h"));
+    fileNameFormat.replace("{H}", lastModified.toString("H"));
+    fileNameFormat.replace("{M}", lastModified.toString("mm"));
+
+    fileNameFormat.replace("{i}", QString("%1").arg(imageInfo.isoValue));
+    fileNameFormat.replace("{c}", QString("%1").arg(imageInfo.serialNumber));
+    fileNameFormat.replace("{T}", QString("%1").arg(imageInfo.cameraName));
+    fileNameFormat.replace("{O}", QString("%1").arg(imageInfo.ownerName));
+    fileNameFormat.replace("{o}", QString("%1").arg(info.fileName()));
+    fileNameFormat.replace("{J}", QString("%1").arg(project));
+
+    QRegularExpression regex;
+    regex.setPattern("_(\\d+)\\.(\\w+)$");
+    QRegularExpressionMatch match = regex.match(info.fileName());
+    QString sequenceNumber;
+    QString extension;
+
+    if (match.hasMatch()) {
+        sequenceNumber = match.captured(1);
+        extension = match.captured(2);
+    }
+    fileNameFormat.replace("{e}", QString(".%1").arg(extension));
+    fileNameFormat.replace("{r}", QString("%1").arg(sequenceNumber));
+    QString file = fileNameFormat;
+    QString dir = importFolder;
+
+    QString fullPath = QString("%1/%2").arg(importFolder, fileNameFormat);
+
+    regex.setPattern("^(.*/)?([^/]+)?$");
+    QRegularExpressionMatch match2 = regex.match(fullPath);
+
+    if (match2.hasMatch()) {
+        dir = match2.captured(1).isEmpty() ? "Root or same directory" : match2.captured(1);
+        file = match2.captured(2);
+    }
+
+    QList<QString> ret;
+    ret.append(file);
+    ret.append(dir);
+    ret.append(fullPath);
+
+    return ret;
+}
+
 void fileCopyWorker::copyImages()
 {
     int del = 0;
@@ -31,18 +113,35 @@ void fileCopyWorker::copyImages()
     int totalFiles = list.size();
     int done = 0;
 
-    foreach (const QFileInfo &file, list) {
+    foreach (const fileInfoStruct &file, list) {
         if (doCancel) {
             emit copyingFinished();
             qDebug() << "stop copieing";
             return;
         }
-        QString newFile = QString("%1/%2/%3").arg(importFolder, projectName, file.fileName());
-        qDebug() << "Copy " << file.filePath() << newFile;
-        bool exist = QFile::exists(file.filePath());
-        bool ok = QFile::copy(file.filePath(), newFile);
+
+        QList<QString> fileTodo = fileCopyWorker::processNewFileName(importFolder,
+                                                                     projectName,
+                                                                     file.fileInfo.lastModified(),
+                                                                     file.imageInfo,
+                                                                     file.fileInfo,
+                                                                     fileNameFormat);
+
+        QString newFile = fileTodo[2];
+        QDir dir(fileTodo[1]);
+        qDebug() << "Copy " << file.fileInfo.filePath() << newFile;
+        qDebug() << fileTodo;
+        qDebug() << fileTodo[0] << fileTodo[1] << fileTodo[2];
+
+        if (!dir.exists())
+            dir.mkdir(fileTodo[1]);
+
+        bool exist = QFile::exists(file.fileInfo.filePath());
+        bool ok = QFile::copy(file.fileInfo.filePath(), newFile);
 
         qDebug() << ok;
+
+        continue;
         if (ok)
             cnt++;
         else
@@ -53,16 +152,16 @@ void fileCopyWorker::copyImages()
         if (!ok) {
             goDelete = false;
             if (exist && deleteExisting) {
-                if (newFileInfo.size() == file.size()
-                    && newFileInfo.birthTime() == file.birthTime()) {
+                if (newFileInfo.size() == file.fileInfo.size()
+                    && newFileInfo.birthTime() == file.fileInfo.birthTime()) {
                     goDelete = true;
                 }
             }
         }
-        QFile sourceFile(file.filePath());
+        QFile sourceFile(file.fileInfo.filePath());
 
         if (md5Check && ok) {
-            QFile sourceFile(file.filePath());
+            QFile sourceFile(file.fileInfo.filePath());
             QFile destinationFile(newFileInfo.filePath());
 
             // Calculate MD5 hash of source file
@@ -87,7 +186,7 @@ void fileCopyWorker::copyImages()
                 goDelete = false;
             }
         }
-        if (file.size() != newFileInfo.size()) {
+        if (file.fileInfo.size() != newFileInfo.size()) {
             qDebug() << "Do not Delete!! Size differs";
             goDelete = false;
         }

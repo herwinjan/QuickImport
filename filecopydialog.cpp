@@ -5,9 +5,10 @@
 #include <QTimer>
 #include "ui_filecopydialog.h"
 
-fileCopyDialog::fileCopyDialog(const QList<QFileInfo> &list,
+fileCopyDialog::fileCopyDialog(const QList<fileInfoStruct> &list,
                                const QString &importFolder,
                                const QString &projectName,
+                               const QString &fileNameFormat,
                                const bool &md5Check,
                                const bool &deleteAfterImport,
                                const bool &deleteExisting,
@@ -28,6 +29,7 @@ fileCopyDialog::fileCopyDialog(const QList<QFileInfo> &list,
     m_worker = new fileCopyWorker(list,
                                   importFolder,
                                   projectName,
+                                  fileNameFormat,
                                   md5Check,
                                   deleteAfterImport,
                                   deleteExisting);

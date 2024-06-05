@@ -22,15 +22,16 @@ TRANSLATIONS = quickimport_en.ts quickimport_nl.ts
 ICON = QuickImportLogo-1024.icns
 
 SOURCES += \
-    aboutdialog.cpp \    
+    aboutdialog.cpp \
+    presetdialog.cpp \
+    presetlistmodel.cpp \
+    qdevicewatcher/qdevicewatcher.cpp \
     filecopydialog.cpp \
     filecopyworker.cpp \
     filelistmodel.cpp \
     imageloader.cpp \
     qborderlessdialog.cpp \
     selectcarddialog.cpp
-
-
 
 SOURCES += \
     devicelist.cpp \
@@ -47,14 +48,19 @@ HEADERS += \
     filelistmodel.h \
     imageloader.h \
     mainwindow.h \
+    presetdialog.h \
+    presetlistmodel.h \
     qborderlessdialog.h \
     hotplugwatcher.h \
+    qdevicewatcher/qdevicewatcher.h \
+    qdevicewatcher/qdevicewatcher_p.h \
     selectcarddialog.h
 
 FORMS += \
     aboutdialog.ui \
     filecopydialog.ui \
     mainwindow.ui \
+    presetdialog.ui \
     selectcarddialog.ui
 
 # Default rules for deployment.
@@ -72,16 +78,24 @@ macx {
     LIBS += -lz
     INCLUDEPATH += /Users/herwin/devel/LibRaw-0.21.2/
     DEPENDPATH += /Users/herwin/devel/LibRaw-0.21.2/
+
     LIBS += -framework DiskArbitration -framework Foundation
+    SOURCES += qdevicewatcher/qdevicewatcher_mac.cpp
+
 }
 win32 {
     LIBS += -Lc:\Users\herwin\devel\LibRaw-0.21.2\lib\ -llibraw -Lc:\Users\herwin\devel\LibRaw-0.21.2\bin
     INCLUDEPATH += c:\Users\herwin\devel\LibRaw-0.21.2\
     DEPENDPATH += c:\Users\herwin\devel\LibRaw-0.21.2\
 
+    wince*: SOURCES += qdevicewatcher/qdevicewatcher_wince.cpp
+    else:  SOURCES += qdevicewatcher/qdevicewatcher_win32.cpp
+    LIBS *= -luser32
+
 }
 DISTFILES += \
     QuickImportLogo-1024.icns \
+    qdevicewatcher/libQDeviceWatcher.pri \
     quickimport_en.qm \
     quickimport_en.ts \
     quickimport_nl.qm \
@@ -91,3 +105,6 @@ DISTFILES += \
 RESOURCES += \
     icons.qrc \
     translations.qrc
+
+SUBDIRS += \
+    qdevicewatcher/libQDeviceWatcher.pro

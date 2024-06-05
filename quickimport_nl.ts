@@ -4,17 +4,17 @@
 <context>
     <name>FileInfoModel</name>
     <message>
-        <location filename="filelistmodel.cpp" line="43"/>
+        <location filename="filelistmodel.cpp" line="179"/>
         <source>Files</source>
         <translation>Bestanden</translation>
     </message>
     <message>
-        <location filename="filelistmodel.cpp" line="45"/>
+        <location filename="filelistmodel.cpp" line="181"/>
         <source>Time taken</source>
         <translation>Tijd vastgelegd</translation>
     </message>
     <message>
-        <location filename="filelistmodel.cpp" line="47"/>
+        <location filename="filelistmodel.cpp" line="183"/>
         <source>Size</source>
         <translation>Omvang</translation>
     </message>
@@ -38,7 +38,7 @@
     </message>
     <message>
         <location filename="mainwindow.ui" line="81"/>
-        <location filename="mainwindow.cpp" line="438"/>
+        <location filename="mainwindow.cpp" line="563"/>
         <source>No card loaded.</source>
         <translation>Geen kaart geladen.</translation>
     </message>
@@ -63,177 +63,211 @@
         <translation>Automatisch laad voorbeeld foto</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="288"/>
         <source>Import location</source>
-        <translation>Importeer loccatie</translation>
+        <translation type="vanished">Importeer loccatie</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="311"/>
+        <location filename="mainwindow.ui" line="332"/>
         <source>Import Location:</source>
         <translation>Importeer locatie:</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="340"/>
         <source>Select Import location</source>
-        <translation>Selecteer importeer locatie</translation>
+        <translation type="vanished">Selecteer importeer locatie</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="374"/>
+        <location filename="mainwindow.ui" line="315"/>
         <source>Project information</source>
         <translation>Project informatie</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="391"/>
+        <location filename="mainwindow.ui" line="348"/>
         <source>Project name:</source>
         <translation>project naam:</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="401"/>
         <source>Import to:</source>
-        <translation>Importeer naar:</translation>
+        <translation type="vanished">Importeer naar:</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="437"/>
+        <location filename="mainwindow.ui" line="372"/>
         <source>Free Diskspace:</source>
         <translation>Vrije schijfruimte:</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="472"/>
+        <location filename="mainwindow.ui" line="505"/>
         <source>Settings</source>
         <translation>Instellingen</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="489"/>
+        <location filename="mainwindow.ui" line="522"/>
         <source>Import settings:</source>
         <translation>importeer instellingen:</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="527"/>
+        <location filename="mainwindow.ui" line="560"/>
         <source>Do MD5 check after copy and before delete</source>
         <translation>Voer MD5-controle uit na het kopiëren en vóór het verwijderen</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="506"/>
+        <location filename="mainwindow.ui" line="539"/>
         <source>Delete files afer import</source>
         <translation>Bestanden verwijderen na import</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="520"/>
+        <location filename="mainwindow.ui" line="266"/>
+        <source>Presets</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.ui" line="280"/>
+        <source>Preset</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.ui" line="295"/>
+        <location filename="mainwindow.ui" line="401"/>
+        <location filename="mainwindow.ui" line="478"/>
+        <location filename="mainwindow.ui" line="488"/>
+        <source>...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.ui" line="358"/>
+        <source>Import to (example output):</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.ui" line="453"/>
+        <source>Filename format:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.ui" line="553"/>
         <source>Eject after import</source>
         <translation>Na import kaart uitwerpen</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="537"/>
+        <location filename="mainwindow.ui" line="570"/>
         <source>Eject if card is empty</source>
         <translation>Uitwerpen als de kaart leeg is</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="544"/>
+        <location filename="mainwindow.ui" line="577"/>
         <source>Quit after import</source>
         <translation>Sluiten na het importeren</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="551"/>
+        <location filename="mainwindow.ui" line="584"/>
         <source>Quit if card is empty</source>
         <translation>Sluit als de kaart leeg is</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="558"/>
+        <location filename="mainwindow.ui" line="591"/>
         <source>Delete existing files if size, name and date are the same</source>
         <translation>Verwijder bestaande bestanden als de grootte, naam en datum hetzelfde zijn</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="637"/>
+        <location filename="mainwindow.ui" line="670"/>
         <source>Import</source>
         <translation>Importeer</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="671"/>
+        <location filename="mainwindow.ui" line="704"/>
         <source>Quick View</source>
         <translation>Snel bekijken</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="678"/>
+        <location filename="mainwindow.ui" line="711"/>
         <source>Check all</source>
         <translation>Vink alles aan</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="685"/>
+        <location filename="mainwindow.ui" line="718"/>
         <source>Uncheck all</source>
         <translation>Deselecteer alles</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="692"/>
+        <location filename="mainwindow.ui" line="725"/>
         <source>Check Selected</source>
         <translation>Vink geselecteerd aan</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="699"/>
+        <location filename="mainwindow.ui" line="732"/>
         <source>uncheck Selected</source>
         <translation>verwijder vinkje geselecteerde</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="105"/>
         <source>&lt;no location set&gt;</source>
-        <translation>&lt;geen locatie aangegeven&gt;</translation>
+        <translation type="vanished">&lt;geen locatie aangegeven&gt;</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="197"/>
+        <location filename="mainwindow.cpp" line="314"/>
         <source>%1 GB</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="198"/>
+        <location filename="mainwindow.cpp" line="315"/>
         <source>%1 selected photos</source>
         <translation>%1 geselecteerde foto&apos;s</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="331"/>
+        <location filename="mainwindow.cpp" line="448"/>
         <source>No Card found, please insert card.</source>
         <translation>Geen kaart gevonden, plaats de kaart.</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="350"/>
+        <location filename="mainwindow.cpp" line="471"/>
         <source>Loading card...</source>
         <translation>Kaart laden...</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="354"/>
+        <location filename="mainwindow.cpp" line="475"/>
         <source>  (Used space: %1 GB)</source>
         <translation>  (Gebruikte ruimte: %1 GB)</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="363"/>
+        <location filename="mainwindow.cpp" line="484"/>
         <source>Done loading card.</source>
         <translation>Klaar met het laden van de kaart.</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="405"/>
+        <location filename="mainwindow.cpp" line="530"/>
         <source>Loading image, please wait.</source>
         <translation>Afbeelding wordt geladen, even geduld a.u.b.</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="509"/>
+        <location filename="mainwindow.cpp" line="637"/>
         <source>Failed to load image.</source>
         <translation>Kan afbeelding niet laden.</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="566"/>
+        <location filename="mainwindow.cpp" line="1056"/>
         <source>Select a directory</source>
         <translation>Selecteer een map</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="598"/>
+        <location filename="mainwindow.cpp" line="765"/>
         <source>No Import folder set, please set one first.</source>
         <translation>Er is geen importmap ingesteld. Stel eerst een map in.</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="605"/>
+        <location filename="mainwindow.cpp" line="266"/>
+        <source>Card inserted</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="267"/>
+        <source>Do you want to open new inserter card?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="772"/>
         <source>Not enough diskspace available on project location!</source>
         <translation>Niet genoeg schijfruimte beschikbaar op projectlocatie!</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="617"/>
+        <location filename="mainwindow.cpp" line="784"/>
         <source>No files selected, please check files to move/copy.</source>
         <translation>Geen bestanden geselecteerd. Controleer de bestanden die u wilt verplaatsen/kopiëren.</translation>
     </message>
@@ -251,7 +285,7 @@
         <translation>Selecteer Kaart waar u bestanden van wilt importeren:</translation>
     </message>
     <message>
-        <location filename="selectcarddialog.cpp" line="20"/>
+        <location filename="selectcarddialog.cpp" line="21"/>
         <source> (size: %1 GB, %2 GB Free )</source>
         <translation> (grootte: %1 GB, %2 GB vrij)</translation>
     </message>
@@ -297,27 +331,27 @@
         <translation></translation>
     </message>
     <message>
-        <location filename="filecopydialog.cpp" line="21"/>
+        <location filename="filecopydialog.cpp" line="22"/>
         <source>Copy file %1 of %2.</source>
         <translation>Kopieer bestand %1 van %2.</translation>
     </message>
     <message>
-        <location filename="filecopydialog.cpp" line="59"/>
+        <location filename="filecopydialog.cpp" line="61"/>
         <source>%1 copied. </source>
         <translation>%1 gekopieerd. </translation>
     </message>
     <message>
-        <location filename="filecopydialog.cpp" line="62"/>
+        <location filename="filecopydialog.cpp" line="64"/>
         <source>%1 failed. </source>
         <translation>%1 mislukt. </translation>
     </message>
     <message>
-        <location filename="filecopydialog.cpp" line="65"/>
+        <location filename="filecopydialog.cpp" line="67"/>
         <source>%1 deleted. </source>
         <translation>%1 verwijderd. </translation>
     </message>
     <message>
-        <location filename="filecopydialog.cpp" line="68"/>
+        <location filename="filecopydialog.cpp" line="70"/>
         <source>Copying: %1 of %2 processed. %3</source>
         <translation>Kopiëren: %1 van %2 verwerkt. %3</translation>
     </message>
@@ -325,12 +359,12 @@
 <context>
     <name>fileCopyWorker</name>
     <message>
-        <location filename="filecopyworker.cpp" line="84"/>
+        <location filename="filecopyworker.cpp" line="183"/>
         <source>Error</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="filecopyworker.cpp" line="85"/>
+        <location filename="filecopyworker.cpp" line="184"/>
         <source>MD5 check failed (files are different).</source>
         <translation>MD5-controle mislukt (bestanden zijn verschillend).</translation>
     </message>
@@ -344,6 +378,39 @@
     <message>
         <source>Date</source>
         <translation type="vanished">Datum</translation>
+    </message>
+</context>
+<context>
+    <name>presetDialog</name>
+    <message>
+        <location filename="presetdialog.ui" line="14"/>
+        <source>Dialog</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="presetdialog.ui" line="20"/>
+        <source>Preset</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="presetdialog.ui" line="28"/>
+        <source>Name:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="presetdialog.ui" line="40"/>
+        <source>Save</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="presetdialog.ui" line="54"/>
+        <source>Presets</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="presetdialog.ui" line="78"/>
+        <source>verwijder</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 </TS>

@@ -59,6 +59,11 @@ void deviceList::setFiles(QList<QFileInfo> files)
 
     //setSelectionBehavior(QAbstractItemView::SelectItems);
     setSelectionMode(QAbstractItemView::ExtendedSelection); // Allow multiple selections
+    if (fileModel->rowCount() > 0) {
+        QModelIndex selectedFirst = fileModel->index(0, 0);
+        TreeNode *node = static_cast<TreeNode *>(selectedFirst.internalPointer());
+        emit selectedNode(node);
+    }
 }
 
 void deviceList::updateSelectedCount(const QModelIndex &topLeft, const QModelIndex &bottomRight, const QList<int> &roles) {

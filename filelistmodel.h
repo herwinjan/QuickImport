@@ -1,14 +1,33 @@
 #ifndef FILELISTMODEL_H
 #define FILELISTMODEL_H
-#include <QApplication>
 #include <QAbstractItemModel>
-#include <QFileSystemModel>
-#include <QTreeView>
-#include <QList>
-#include <QFileInfo>
+#include <QApplication>
 #include <QDateTime>
-#include <QVariant>
+#include <QFileInfo>
+#include <QFileSystemModel>
+#include <QList>
 #include <QStyledItemDelegate>
+#include <QTreeView>
+#include <QVariant>
+#include <libraw/libraw.h>
+
+struct imageInfoStruct
+{
+    int isoValue = 0;
+    QString ownerName;
+    double shutterSpeed = 0.0;
+    QString cameraName;
+    double aperture = 0.0;
+    int resolutionWidth = 0;
+    int resolutionHeight = 0;
+    int compression = 0;
+    QString lensMake;
+    QString lensModel;
+
+    double focalLength = 0.0;
+    QDateTime dateTimeOriginal;
+    QString serialNumber;
+};
 
 struct TreeNode {
     QString data;
@@ -16,6 +35,7 @@ struct TreeNode {
     TreeNode* parent;
     QFileInfo info;
     bool isFile=false;
+
     bool isSelected;
     QList<TreeNode*> children;
     int row() const {
@@ -23,8 +43,17 @@ struct TreeNode {
             return parent->children.indexOf(const_cast<TreeNode*>(this));
         return 0;
     }
+
+    imageInfoStruct imageInfo;
+
+    LibRaw *rawProc = NULL;
 };
 
+struct fileInfoStruct
+{
+    QFileInfo fileInfo;
+    imageInfoStruct imageInfo;
+};
 
 class FileInfoModel : public QAbstractItemModel {
     Q_OBJECT
@@ -59,7 +88,7 @@ public:
 
     void deSelectAll();
 
-    QList<QFileInfo> getSelectedFiles();
+    QList<fileInfoStruct> getSelectedFiles();
 
     qint64 countSelectedSize();
 
@@ -71,7 +100,7 @@ private:
     QList<QFileInfo> m_fileInfoList;
     TreeNode* rootItem;
     QTreeView *view;
-    QList<QFileInfo> getSelectedFilesChilds(TreeNode *node, QList<QFileInfo> list);
+    QList<fileInfoStruct> getSelectedFilesChilds(TreeNode *node, QList<fileInfoStruct> list);
 };
 
 #endif

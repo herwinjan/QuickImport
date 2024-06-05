@@ -9,12 +9,148 @@
 #include <QStyledItemDelegate>
 #include "filelistmodel.h"
 
-FileInfoModel::FileInfoModel(const QList<QFileInfo>& fileInfoList, QObject* parent )
-        : QAbstractItemModel(parent), m_fileInfoList(fileInfoList) {
-        setupModelData();
+void exif_callback(void *context, int tag, int type, int len, unsigned int ord, void *ifp, long long)
+{
+    auto *data = static_cast<LibRaw_abstract_datastream *>(ifp);
+    auto *mycontext = static_cast<imageInfoStruct *>(context);
+    LibRaw_abstract_datastream *stream = (LibRaw_abstract_datastream *) ifp;
 
-        view=static_cast<QTreeView*>(parent);
+    tag &= 0x0fffff; // Undo (ifdN + 1) << 20)
+    switch (tag) {
+    case 0x8827:                     // ISO Speed Ratings
+        if (type == 3 && len == 1) { // 3: unsigned short
+            unsigned short isoValue;
+            data->read(&isoValue, sizeof(isoValue), 1);
+            mycontext->isoValue = isoValue;
+        }
+        break;
+    case 0xA430: // Owner Name
+    {
+        std::vector<char> buffer(len + 1);
+        data->read(buffer.data(), len, 1);
+        buffer[len] = '\0';
+        mycontext->ownerName = QString::fromUtf8(buffer.data());
+        break;
     }
+    case 0x829A:                     // Exposure Time (shutter speed)
+        if (type == 5 && len == 1) { // 5: unsigned rational
+            unsigned int num, den;
+            data->read(&num, sizeof(num), 1);
+            data->read(&den, sizeof(den), 1);
+            mycontext->shutterSpeed = static_cast<double>(num) / den;
+        }
+        break;
+    case 0x9201:                      // Shutter speed value (APEX)
+        if (type == 10 && len == 1) { // 10: signed rational
+            int num, den;
+            data->read(&num, sizeof(num), 1);
+            data->read(&den, sizeof(den), 1);
+            //            mycontext->shutterSpeed = pow(2, static_cast<double>(num) / den);
+        }
+        break;
+    case 0x0110: // Camera Model Name
+    {
+        std::vector<char> buffer(len + 1);
+        data->read(buffer.data(), len, 1);
+        buffer[len] = '\0';
+        mycontext->cameraName = QString::fromUtf8(buffer.data());
+        break;
+    }
+    case 0x829D:                     // FNumber (aperture)
+        if (type == 5 && len == 1) { // 5: unsigned rational
+            unsigned int num, den;
+            data->read(&num, sizeof(num), 1);
+            data->read(&den, sizeof(den), 1);
+            mycontext->aperture = static_cast<double>(num) / den;
+        }
+        break;
+    case 0xA002:                     // Image Width
+        if (type == 4 && len == 1) { // 4: unsigned long
+            unsigned int width;
+            data->read(&width, sizeof(width), 1);
+            mycontext->resolutionWidth = static_cast<int>(width);
+        }
+        break;
+    case 0xA003:                     // Image Height
+        if (type == 4 && len == 1) { // 4: unsigned long
+            unsigned int height;
+            data->read(&height, sizeof(height), 1);
+            mycontext->resolutionHeight = static_cast<int>(height);
+        }
+        break;
+    case 0x0103:                     // Compression
+        if (type == 3 && len == 1) { // 3: unsigned short
+            unsigned short compressionValue;
+            data->read(&compressionValue, sizeof(compressionValue), 1);
+            mycontext->compression = compressionValue;
+        }
+        break;
+    case 0xA433: // Lens make
+    {
+        char lens[128]; // Adjust size as necessary
+        stream->read(lens, len, 1);
+        lens[len] = '\0';
+        mycontext->lensMake = QString::fromLatin1(lens);
+        //  qDebug() << mycontext->lensMake;
+
+        break;
+    }
+    case 0xA434: // Lens Model
+    {
+        char lens[128]; // Adjust size as necessary
+        stream->read(lens, len, 1);
+        lens[len] = '\0';
+        mycontext->lensModel = QString::fromLatin1(lens);
+        //        qDebug() << mycontext->lensModel;
+
+        break;
+    }
+    case 0x920A:                     // Focal Length
+        if (type == 5 && len == 1) { // 5: unsigned rational
+            unsigned int num, den;
+            data->read(&num, sizeof(num), 1);
+            data->read(&den, sizeof(den), 1);
+            mycontext->focalLength = static_cast<double>(num) / den;
+        }
+        break;
+    case 0x9003: // DateTimeOriginal
+    {
+        std::vector<char> buffer(len + 1);
+        data->read(buffer.data(), len, 1);
+        buffer[len] = '\0';
+        QString dateTimeString = QString::fromUtf8(buffer.data());
+
+        // Expected format: "YYYY:MM:DD HH:MM:SS"
+        QDateTime dateTime = QDateTime::fromString(dateTimeString, "yyyy:MM:dd HH:mm:ss");
+        if (dateTime.isValid()) {
+            mycontext->dateTimeOriginal = dateTime;
+        } else {
+            //   std::cerr << "Invalid date format: " << buffer.data() << std::endl;
+        }
+    } break;
+
+    case 0xA431: // Camera Serial Number (common)
+    case 0xC62F: // Camera Serial Number (for specific brands like Canon)
+    {
+        std::vector<char> buffer(len + 1);
+        data->read(buffer.data(), len, 1);
+        buffer[len] = '\0';
+        mycontext->serialNumber = QString::fromUtf8(buffer.data());
+        break;
+    }
+    default:
+        break;
+    }
+}
+
+FileInfoModel::FileInfoModel(const QList<QFileInfo> &fileInfoList, QObject *parent)
+    : QAbstractItemModel(parent)
+    , m_fileInfoList(fileInfoList)
+{
+    setupModelData();
+
+    view = static_cast<QTreeView *>(parent);
+}
 
 QModelIndex FileInfoModel::index(int row, int column, const QModelIndex& parent ) const  {
         if (!hasIndex(row, column, parent))
@@ -167,6 +303,18 @@ void FileInfoModel::setupModelData()
 
         fileNode->parent = hourNode;
         hourNode->children.append(fileNode);
+
+        if (!fileNode->rawProc) {
+            fileNode->rawProc = new LibRaw();
+            fileNode->rawProc->set_exifparser_handler(exif_callback, &fileNode->imageInfo);
+            auto state = fileNode->rawProc->open_file(fileNode->filePath.toLatin1().data());
+            //    qDebug() << fileNode->imageInfo.ownerName;
+            //    qDebug() << fileNode->imageInfo.dateTimeOriginal;
+            if (LIBRAW_SUCCESS != state) {
+                fileNode->rawProc = NULL;
+                delete fileNode->rawProc;
+            }
+        }
     }
 }
 
@@ -242,17 +390,22 @@ qint64 FileInfoModel::getCountSelectedSize(TreeNode *node, qint64 size)
     }
     return newsize;
 }
-QList<QFileInfo> FileInfoModel::getSelectedFiles()
+QList<fileInfoStruct> FileInfoModel::getSelectedFiles()
 {
-    QList<QFileInfo> list;
+    QList<fileInfoStruct> list;
     list = getSelectedFilesChilds(this->rootItem, list);
     return list;
 }
-QList<QFileInfo> FileInfoModel::getSelectedFilesChilds(TreeNode *node, QList<QFileInfo> list)
+QList<fileInfoStruct> FileInfoModel::getSelectedFilesChilds(TreeNode *node,
+                                                            QList<fileInfoStruct> list)
 {
     for (TreeNode *child : node->children) {
-        if (child->isSelected && child->isFile)
-            list.append(child->info);
+        if (child->isSelected && child->isFile) {
+            fileInfoStruct item;
+            item.fileInfo = child->info;
+            item.imageInfo = child->imageInfo;
+            list.append(item);
+        }
         list = getSelectedFilesChilds(child, list);
     }
     return list;
