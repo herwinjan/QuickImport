@@ -95,6 +95,7 @@ win32 {
 }
 DISTFILES += \
     QuickImportLogo-1024.icns \
+    images/QuickImport-1.png \
     qdevicewatcher/libQDeviceWatcher.pri \
     quickimport_en.qm \
     quickimport_en.ts \

@@ -1,5 +1,8 @@
 # Quick Import #
 
+![alt text](https://raw.githubusercontent.com/herwinjan/QuickImport/master/images/QuickImport-1.png)
+
+
 **Streamline your workflow:** Quickly and efficiently transfer your photos from memory card to your chosen project folder with Quick Import, your dedicated photo import utility.
 
 **Effortless Photo workflow:**
