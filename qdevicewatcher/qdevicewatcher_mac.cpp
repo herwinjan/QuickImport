@@ -36,7 +36,7 @@ static void onDiskAppear(DADiskRef disk, void *context)
                                                              kDADiskDescriptionVolumePathKey);
 
     if (volumePathURL == nullptr) {
-        //qWarning() << "Cannot retrieve volume path.";
+        // qWarning() << "Cannot retrieve volume path.";
         //   return;
     }
     CFStringRef protocolString = (CFStringRef)
@@ -79,15 +79,16 @@ static void onDiskAppear(DADiskRef disk, void *context)
 */
     if (protocolString != nullptr) {
         QString protocol = QString::fromCFString(protocolString);
-        if (protocol != "USB") {
-            //  qDebug() << "No USB";
+
+        if (protocol != "USB" && !protocol.contains("Secure Digital")) {
+            //   qDebug() << "No USB";
             return;
         }
     }
 
     QString disk_name = DADiskGetBSDName(disk);
     if (disk_name.count() <= 0) {
-        //qDebug() << "No Name";
+        //  qDebug() << "No Name";
         return;
     }
     if (sDevices.contains(disk_name))

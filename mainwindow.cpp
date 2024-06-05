@@ -49,6 +49,7 @@ QFileInfoList MainWindow::getFileListFromDir(const QString &directory)
                                                               << "*.erf"
                                                               << "*.fff"
                                                               << "*.gpr"
+                                                              << "*.heic"
                                                               << "*.iiq"
                                                               << "*.k25"
                                                               << "*.kdc"
@@ -554,6 +555,7 @@ void MainWindow::displayImage(QString rawFilePath, bool window = true, int h = 0
 
 void MainWindow::emptyMainWindow()
 {
+    ui->deviceWidget->setModel(nullptr);
     selectedUpdated(0, 0);
     ui->ejectButton->setDisabled(true);
     ui->reloadButton->setDisabled(true);
