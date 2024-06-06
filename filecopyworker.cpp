@@ -40,13 +40,13 @@ QList<QString> fileCopyWorker::processNewFileName(QString importFolder,
     QString project = projectName;
 
     project.replace("{D}", lastModified.toString("dd"));
-    project.replace("{m}", lastModified.toString("MM"));
+    project.replace("{m}", lastModified.toString("mm"));
     project.replace("{y}", lastModified.toString("yy"));
     project.replace("{Y}", lastModified.toString("yyyy"));
 
     project.replace("{W}", QString("%1").arg(lastModified.date().weekNumber()));
     project.replace("{h}", lastModified.toString("h"));
-    project.replace("{H}", lastModified.toString("H"));
+    project.replace("{H}", lastModified.toString("hh"));
     project.replace("{M}", lastModified.toString("mm"));
 
     project.replace("{i}", QString("%1").arg(imageInfo.isoValue));
@@ -63,7 +63,7 @@ QList<QString> fileCopyWorker::processNewFileName(QString importFolder,
 
     fileNameFormat.replace("{W}", QString("%1").arg(lastModified.date().weekNumber()));
     fileNameFormat.replace("{h}", lastModified.toString("h"));
-    fileNameFormat.replace("{H}", lastModified.toString("H"));
+    fileNameFormat.replace("{H}", lastModified.toString("hh"));
     fileNameFormat.replace("{M}", lastModified.toString("mm"));
 
     fileNameFormat.replace("{i}", QString("%1").arg(imageInfo.isoValue));

@@ -4,6 +4,7 @@
 #include "filelistmodel.h"
 #include "imageloader.h"
 #include "presetlistmodel.h"
+#include "shortcutdialog.h"
 
 #include <QFileInfoList>
 #include <QMainWindow>
@@ -52,6 +53,8 @@ protected:
     void resizeEvent(QResizeEvent *event);
 
     int doEject();
+
+    shortcutDialog *shortcutDialogWindow = nullptr;
 
 public:
     QString importFolder;
@@ -137,5 +140,7 @@ private slots:
     void on_fileNameFormat_currentTextChanged(const QString &arg1);
 
     void on_deleteLocationButton_clicked();
+    void on_shortcutDialogButton_clicked();
+    void shortcutWindowFinisched(int);
 };
 #endif // MAINWINDOW_H

@@ -31,7 +31,8 @@ SOURCES += \
     filelistmodel.cpp \
     imageloader.cpp \
     qborderlessdialog.cpp \
-    selectcarddialog.cpp
+    selectcarddialog.cpp \
+    shortcutdialog.cpp
 
 SOURCES += \
     devicelist.cpp \
@@ -54,14 +55,16 @@ HEADERS += \
     hotplugwatcher.h \
     qdevicewatcher/qdevicewatcher.h \
     qdevicewatcher/qdevicewatcher_p.h \
-    selectcarddialog.h
+    selectcarddialog.h \
+    shortcutdialog.h
 
 FORMS += \
     aboutdialog.ui \
     filecopydialog.ui \
     mainwindow.ui \
     presetdialog.ui \
-    selectcarddialog.ui
+    selectcarddialog.ui \
+    shortcutdialog.ui
 
 # Default rules for deployment.
 #qnx: target.path = /tmp/$${TARGET}/bin

@@ -1265,3 +1265,25 @@ void MainWindow::saveFileNameFormat(int sel)
     settings.setValue("fileNameFormat", fileNameFormatList);
     settings.setValue("fileNameFormatLastUsed", sel);
 }
+
+void MainWindow::on_shortcutDialogButton_clicked()
+{
+    if (shortcutDialogWindow == nullptr) {
+        shortcutDialogWindow = new shortcutDialog();
+        shortcutDialogWindow->show();
+        connect(shortcutDialogWindow,
+                &shortcutDialog::finished,
+                this,
+                &MainWindow::shortcutWindowFinisched);
+    } else {
+        shortcutDialogWindow->hide();
+        delete shortcutDialogWindow;
+        shortcutDialogWindow = nullptr;
+    }
+}
+void MainWindow::shortcutWindowFinisched(int)
+{
+    shortcutDialogWindow->hide();
+    delete shortcutDialogWindow;
+    shortcutDialogWindow = nullptr;
+}
