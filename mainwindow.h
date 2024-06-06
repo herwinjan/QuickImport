@@ -135,5 +135,7 @@ private slots:
     void on_deleteFileNameFormat_clicked();
     void on_fileNameFormat_currentIndexChanged(int index);
     void on_fileNameFormat_currentTextChanged(const QString &arg1);
+
+    void on_deleteLocationButton_clicked();
 };
 #endif // MAINWINDOW_H

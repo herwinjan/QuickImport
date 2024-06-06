@@ -403,16 +403,6 @@
                 </widget>
                </item>
                <item>
-                <widget class="QToolButton" name="saveLocationButton">
-                 <property name="text">
-                  <string>...</string>
-                 </property>
-                 <property name="icon">
-                  <iconset theme="document-save"/>
-                 </property>
-                </widget>
-               </item>
-               <item>
                 <widget class="QToolButton" name="deleteLocationButton">
                  <property name="text">
                   <string>...</string>

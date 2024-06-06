@@ -317,8 +317,15 @@ void MainWindow::selectedUpdated(int cnt, qint64 size)
 
     if (cnt <= 0)
         ui->moveButton->setDisabled(true);
-    else
-        ui->moveButton->setDisabled(false);
+    else {
+        if (importFolder.count() > 0 && projectName.count() > 0 && fileNameFormat.count() > 0) {
+            ui->moveButton->setDisabled(false);
+        }
+
+        else {
+            ui->moveButton->setDisabled(true);
+        }
+    }
 }
 
 void MainWindow::on_checkSelected_clicked()
@@ -758,6 +765,18 @@ void MainWindow::updateImportToLabel()
     ui->freeDiskSpace->setText(
         QString("%1 GB").arg(((float) info.bytesAvailable() / 1000 / 1000 / 1000), 0, 'f', 2));
     freeProjectSpace = info.bytesAvailable();
+
+    if (totalSelectedSize <= 0)
+        ui->moveButton->setDisabled(true);
+    else {
+        if (importFolder.count() > 0 && projectName.count() > 0 && fileNameFormat.count() > 0) {
+            ui->moveButton->setDisabled(false);
+        }
+
+        else {
+            ui->moveButton->setDisabled(true);
+        }
+    }
 }
 
 void MainWindow::on_moveButton_clicked()
@@ -1042,14 +1061,29 @@ void MainWindow::resetLocationPreset(int sel = -1)
     if (importLocationList.count() <= 0)
         ui->importLocation->setPlaceholderText(QStringLiteral("--Location not set--"));
 
-    if (sel >= 0) {
+    if (sel >= 0 && ui->importLocation->count() > 0) {
         ui->importLocation->setCurrentIndex(sel);
         importFolder = importLocationList.at(sel);
     } else {
+        sel = 0;
         importFolder = QString();
     }
 
     updateImportToLabel();
+}
+void MainWindow::on_deleteLocationButton_clicked()
+{
+    if (importLocationList.count() > 0)
+        importLocationList.remove(ui->importLocation->currentIndex());
+
+    int sel = ui->importLocation->currentIndex();
+    if (sel > importLocationList.count() - 1)
+        sel = importLocationList.count() - 1;
+    if (sel < 0)
+        sel = 0;
+
+    savePresetsLocations(sel);
+    resetLocationPreset(sel);
 }
 
 void MainWindow::on_selectImportLocation_clicked()
@@ -1108,14 +1142,17 @@ void MainWindow::resetProjectName(int sel = -1)
 {
     ui->projectName->clear();
     ui->projectName->addItems(projectNameList);
-    if (projectNameList.count() <= 0)
+    if (projectNameList.count() <= 0) {
         ui->projectName->setPlaceholderText(QStringLiteral("-- set project name --"));
+        sel = -1;
+    }
 
     if (sel >= 0) {
         ui->projectName->setCurrentIndex(sel);
         projectName = projectNameList.at(sel);
     } else {
         projectName = QString();
+        sel = 0;
     }
 
     updateImportToLabel();
@@ -1123,8 +1160,9 @@ void MainWindow::resetProjectName(int sel = -1)
 
 void MainWindow::on_deleteProjectName_clicked()
 {
-    projectNameList.remove(ui->projectName->currentIndex());
-
+    if (projectNameList.count() > 0) {
+        projectNameList.remove(ui->projectName->currentIndex());
+    }
     int sel = ui->projectName->currentIndex();
     if (sel > projectNameList.count() - 1)
         sel = projectNameList.count() - 1;
@@ -1140,6 +1178,7 @@ void MainWindow::on_safeFileNameFormat_clicked()
     int sel = -1;
 
     sel = fileNameFormatList.indexOf(ui->fileNameFormat->currentText());
+    qDebug() << "Safe" << sel << fileNameFormatList;
     if (sel == -1) {
         fileNameFormatList.prepend(ui->fileNameFormat->currentText());
         sel = 0;
@@ -1182,31 +1221,46 @@ void MainWindow::loadFileNameFormat()
     //settings.setValue("fileNameFormatLastUsed", -1);
     fileNameFormatList = settings.value("fileNameFormat").toStringList();
     int sel = settings.value("fileNameFormatLastUsed", -1).toInt();
-    if (sel > projectNameList.count() - 1)
-        sel = projectNameList.count() - 1;
+
+    if (sel > fileNameFormatList.count() - 1)
+        sel = fileNameFormatList.count() - 1;
+    if (sel < 0 && fileNameFormatList.count() > 0)
+        sel = 0;
 
     if (fileNameFormatList.count() <= 0) {
         sel = 0;
         fileNameFormatList.append("{J}/{o}");
+        ui->fileNameFormat->setCurrentIndex(0);
+        ui->fileNameFormat->clear();
+        ui->fileNameFormat->addItems(fileNameFormatList);
     }
+
     resetFileNameFomat(sel);
 }
 void MainWindow::resetFileNameFomat(int sel = -1)
 {
-    ui->fileNameFormat->clear();
-    ui->fileNameFormat->addItems(fileNameFormatList);
+    if (fileNameFormatList.count() <= 0) {
+        sel = -1;
+    }
 
     if (sel >= 0) {
+        ui->fileNameFormat->clear();
+        ui->fileNameFormat->addItems(fileNameFormatList);
         ui->fileNameFormat->setCurrentIndex(sel);
         fileNameFormat = fileNameFormatList.at(sel);
     } else {
         fileNameFormat = "{J}/{o}";
+        fileNameFormatList.append("{J}/{o}");
+        ui->fileNameFormat->clear();
+        ui->fileNameFormat->addItems(fileNameFormatList);
+        ui->fileNameFormat->setCurrentIndex(0);
     }
 
     updateImportToLabel();
 }
 void MainWindow::saveFileNameFormat(int sel)
 {
+    qDebug() << "FileNameFormat Save" << fileNameFormatList;
     QSettings settings("HJ Steehouwer", "QuickImport");
     settings.setValue("fileNameFormat", fileNameFormatList);
     settings.setValue("fileNameFormatLastUsed", sel);
