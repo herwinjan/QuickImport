@@ -139,9 +139,6 @@ void fileCopyWorker::copyImages()
         bool exist = QFile::exists(file.fileInfo.filePath());
         bool ok = QFile::copy(file.fileInfo.filePath(), newFile);
 
-        qDebug() << ok;
-
-        continue;
         if (ok)
             cnt++;
         else
