@@ -19,7 +19,8 @@ public:
                    const QString &fileNameFormat,
                    const bool &md5Check,
                    const bool &deleteAfterImport,
-                   const bool &deleteExisting);
+                   const bool &deleteExisting,
+                   const QString &importBackupLocation);
     void cancel();
     bool doCancel = false;
     static QList<QString> processNewFileName(
@@ -34,6 +35,7 @@ private:
     int cnt = 0, fail = 0;
 
     QList<fileInfoStruct> list;
+    QString importBackupLocation;
     QString importFolder;
     QString projectName;
     QString fileNameFormat;

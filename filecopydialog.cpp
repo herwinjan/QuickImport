@@ -12,6 +12,7 @@ fileCopyDialog::fileCopyDialog(const QList<fileInfoStruct> &list,
                                const bool &md5Check,
                                const bool &deleteAfterImport,
                                const bool &deleteExisting,
+                               const QString &importBackupFolder,
                                QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::fileCopyDialog)
@@ -32,7 +33,8 @@ fileCopyDialog::fileCopyDialog(const QList<fileInfoStruct> &list,
                                   fileNameFormat,
                                   md5Check,
                                   deleteAfterImport,
-                                  deleteExisting);
+                                  deleteExisting,
+                                  importBackupFolder);
 
     m_worker->moveToThread(m_thread);
     connect(m_thread, &QThread::started, m_worker, &fileCopyWorker::copyImages);

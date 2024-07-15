@@ -58,6 +58,7 @@ protected:
 
 public:
     QString importFolder;
+    QString importBackupFolder;
     QString projectName;
     QString fileNameFormat;
     QStorageInfo selectedCard;
@@ -72,6 +73,7 @@ public:
     imageLoader *imageLoaderObject;
     QThread *imageLoaderThread;
     TreeNode *imageShown, *imageSelected;
+    bool doBackupImport = false;
 
     bool deleteExisting;
 
@@ -80,6 +82,7 @@ public:
     bool quitAfterImport;
 
     QStringList importLocationList;
+    QStringList importBackupLocationList;
     QStringList projectNameList;
     QStringList fileNameFormatList;
 
@@ -89,6 +92,8 @@ public:
     void savePresets();
     void addLocationPreset(QString location);
     void resetLocationPreset(int sel);
+    void addBackupLocationPreset(QString location);
+    void resetBackupLocationPreset(int sel);
     void loadPresetsLocations();
     void savePresetsLocations(int sel);
     void saveProjectName(int sel);
@@ -97,6 +102,7 @@ public:
     void loadFileNameFormat();
     void resetFileNameFomat(int sel);
     void saveFileNameFormat(int sel = -1);
+    void saveBackupPresetsLocations(int sel);
 private slots:
     void showImage(const QImage &image);
     void selectedNode(TreeNode *);
@@ -142,5 +148,10 @@ private slots:
     void on_deleteLocationButton_clicked();
     void on_shortcutDialogButton_clicked();
     void shortcutWindowFinisched(int);
+    void on_backupBox_stateChanged(int arg1);
+    void on_selectBackupLocation_clicked();
+    void on_deleteBackupLocationButton_clicked();
+    void on_fileNameFormat_activated(int index);
+    void on_projectName_activated(int index);
 };
 #endif // MAINWINDOW_H

@@ -22,6 +22,7 @@ public:
                    const bool &md5Check,
                    const bool &deleteAfterImport,
                    const bool &deleteExisting,
+                   const QString &importBackupFolder,
                    QWidget *parent = nullptr);
     ~fileCopyDialog();
 

@@ -11,7 +11,8 @@ fileCopyWorker::fileCopyWorker(const QList<fileInfoStruct> &list,
                                const QString &fileNameFormat,
                                const bool &md5Check,
                                const bool &deleteAfterImport,
-                               const bool &deleteExisting)
+                               const bool &deleteExisting,
+                               const QString &importBackupLocation)
     : list(list)
     , importFolder(importFolder)
     , projectName(projectName)
@@ -19,6 +20,7 @@ fileCopyWorker::fileCopyWorker(const QList<fileInfoStruct> &list,
     , md5Check(md5Check)
     , deleteAfterImport(deleteAfterImport)
     , deleteExisting(deleteExisting)
+    , importBackupLocation(importBackupLocation)
 {}
 
 void fileCopyWorker::cancel()
@@ -127,6 +129,26 @@ void fileCopyWorker::copyImages()
                                                                      file.fileInfo,
                                                                      fileNameFormat);
 
+        QList<QString> backupTodo;
+        bool doBackup = false;
+        QString newBackupFile;
+
+        if (!importBackupLocation.isEmpty()) {
+            doBackup = true;
+            backupTodo = fileCopyWorker::processNewFileName(importBackupLocation,
+                                                            projectName,
+                                                            file.fileInfo.lastModified(),
+                                                            file.imageInfo,
+                                                            file.fileInfo,
+                                                            fileNameFormat);
+            newBackupFile = backupTodo[2];
+
+            QDir dirBackup(backupTodo[1]);
+
+            if (!dirBackup.exists())
+                dirBackup.mkdir(backupTodo[1]);
+        }
+
         QString newFile = fileTodo[2];
         QDir dir(fileTodo[1]);
         qDebug() << "Copy " << file.fileInfo.filePath() << newFile;
@@ -138,10 +160,20 @@ void fileCopyWorker::copyImages()
 
         bool exist = QFile::exists(file.fileInfo.filePath());
         bool ok = QFile::copy(file.fileInfo.filePath(), newFile);
+        bool backupOK = false;
 
-        if (ok)
-            cnt++;
-        else
+        if (doBackup) {
+            backupOK = QFile::copy(file.fileInfo.filePath(), newBackupFile);
+        }
+
+        if (ok) {
+            if (doBackup && backupOK != true) {
+                ok = false;
+                fail++;
+            } else {
+                cnt++;
+            }
+        } else
             fail++;
         QFileInfo newFileInfo(newFile);
 
