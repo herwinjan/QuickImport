@@ -18,21 +18,20 @@ void imageLoader::loadImageFile(const TreeNode *_node)
 void imageLoader::loadImage()
 {
     LibRaw *rawProc = NULL;
-    bool del = false;
 
-        rawProc = new LibRaw();
-        qDebug() << rawProc->cameraCount();
-        auto state = rawProc->open_file(m_imagePath.toLatin1().data());
-        qDebug() << "open" << state;
-        if (LIBRAW_SUCCESS != state) {
-            QImage img = QImage(1024, 682, QImage::Format_RGB32);
-            img.fill(Qt::black);
-            img = img.scaled(1024, 682, Qt::KeepAspectRatio);
-            // emit loadingFailed();
-            emit imageLoaded(img, true);
-            emit finished();
-            return;
-        }
+    rawProc = new LibRaw();
+    qDebug() << "LibRaw: " << rawProc->versionNumber() << rawProc->version();
+    auto state = rawProc->open_file(node->filePath.toLatin1().data());
+    qDebug() << "open" << node->filePath.toLatin1().data() << state;
+    if (LIBRAW_SUCCESS != state) {
+        QImage img = QImage(1024, 682, QImage::Format_RGB32);
+        img.fill(Qt::black);
+        img = img.scaled(1024, 682, Qt::KeepAspectRatio);
+        // emit loadingFailed();
+        emit imageLoaded(img, true);
+        emit finished();
+        return;
+    }
 
     QImage thumbnail;
 

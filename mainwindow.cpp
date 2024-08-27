@@ -104,8 +104,7 @@ MainWindow::MainWindow(QWidget *parent)
           SLOT(returnButtonPressed()));
   connect(ui->deviceWidget, SIGNAL(doneLoading()), this, SLOT(doneLoadingCard()));
 
-  connect(ui->deviceWidget, SIGNAL(selectedNode(TreeNode *)), this,
-          SLOT(selectedNode(TreeNode *)));
+  connect(ui->deviceWidget, SIGNAL(selectedNode(TreeNode *)), this, SLOT(selectedNode(TreeNode *)));
 
   QKeySequence shortcutKey(Qt::CTRL | Qt::Key_I);
 
@@ -485,6 +484,7 @@ QImage requestImage(const QString &id, int height = 0, int width = 0) {
   LibRaw rawProc;
 
   auto state = rawProc.open_file(id.toLatin1().data());
+  qDebug() << "State loading Image:" << state;
   QImage thumbnail;
   if (LIBRAW_SUCCESS == state) {
     if (LIBRAW_SUCCESS == rawProc.unpack_thumb()) {
@@ -493,7 +493,7 @@ QImage requestImage(const QString &id, int height = 0, int width = 0) {
                                rawProc.imgdata.thumbnail.tlength, "JPEG");
       }
     }
-    rawProc.recycle();
+    // rawProc.recycle();
   }
   QScreen *screen = QGuiApplication::primaryScreen();
   QRect screenGeometry = screen->geometry();
