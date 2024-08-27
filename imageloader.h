@@ -17,7 +17,7 @@ public:
 public slots:
     void loadImage();
 signals:
-    void imageLoaded(const QImage &image);
+    void imageLoaded(const QImage &image, bool failed = false);
     void loadingFailed();
     void finished();
 

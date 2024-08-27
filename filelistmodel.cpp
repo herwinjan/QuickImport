@@ -1,13 +1,13 @@
-#include <QApplication>
-#include <QAbstractItemModel>
-#include <QFileSystemModel>
-#include <QTreeView>
-#include <QList>
-#include <QFileInfo>
-#include <QDateTime>
-#include <QVariant>
-#include <QStyledItemDelegate>
 #include "filelistmodel.h"
+#include <QAbstractItemModel>
+#include <QApplication>
+#include <QDateTime>
+#include <QFileInfo>
+#include <QFileSystemModel>
+#include <QList>
+#include <QStyledItemDelegate>
+#include <QTreeView>
+#include <QVariant>
 
 void exif_callback(void *context, int tag, int type, int len, unsigned int ord, void *ifp, long long)
 {
@@ -147,6 +147,11 @@ FileInfoModel::FileInfoModel(const QList<QFileInfo> &fileInfoList, QObject *pare
     : QAbstractItemModel(parent)
     , m_fileInfoList(fileInfoList)
 {
+    connect(&m_treeWatcher,
+            &QFutureWatcher<void>::finished,
+            this,
+            &FileInfoModel::onTreeBuildingFinished);
+
     setupModelData();
 
     view = static_cast<QTreeView *>(parent);
@@ -282,39 +287,81 @@ void FileInfoModel::setupModelData()
     rootItem = new TreeNode();
     rootItem->data = "Root";
 
-    for (const QFileInfo &fileInfo : m_fileInfoList) {
-        QDateTime dateTime = fileInfo.lastModified();
-        QString year = QString::number(dateTime.date().year());
-        QString month = QString::number(dateTime.date().month());
-        QString day = QString::number(dateTime.date().day());
-        QString hour = QString::number(dateTime.time().hour()) + QString(" uur");
-        QString fileName = fileInfo.fileName();
+    auto buildTree = [this]() {
+        QMutexLocker locker(&m_mutex);
+        int items = 0;
+        for (const QFileInfo &fileInfo : m_fileInfoList) {
+            QDateTime dateTime = fileInfo.lastModified();
+            QString year = QString::number(dateTime.date().year());
+            QString month = QString::number(dateTime.date().month());
+            QString day = QString::number(dateTime.date().day());
+            QString hour = QString::number(dateTime.time().hour()) + QString(" uur");
+            QString fileName = fileInfo.fileName();
 
-        TreeNode *yearNode = findOrCreateNode(year, rootItem);
-        TreeNode *monthNode = findOrCreateNode(month, yearNode);
-        TreeNode *dayNode = findOrCreateNode(day, monthNode);
-        TreeNode *hourNode = findOrCreateNode(hour, dayNode);
-        TreeNode *fileNode = new TreeNode();
-        fileNode->data = fileName;
-        fileNode->filePath = fileInfo.filePath();
-        fileNode->isSelected = false;
-        fileNode->info = fileInfo;
-        fileNode->isFile = true;
+            TreeNode *yearNode = findOrCreateNode(year, rootItem);
+            TreeNode *monthNode = findOrCreateNode(month, yearNode);
+            TreeNode *dayNode = findOrCreateNode(day, monthNode);
+            TreeNode *hourNode = findOrCreateNode(hour, dayNode);
+            TreeNode *fileNode = new TreeNode();
+            fileNode->data = fileName;
+            fileNode->filePath = fileInfo.filePath();
+            fileNode->isSelected = false;
+            fileNode->info = fileInfo;
+            fileNode->isFile = true;
 
-        fileNode->parent = hourNode;
-        hourNode->children.append(fileNode);
+            fileNode->parent = hourNode;
+            beginInsertRows(QModelIndex(), items, items);
+            items++;
+            hourNode->children.append(fileNode);
+            endInsertRows();
 
-        if (!fileNode->rawProc) {
-            fileNode->rawProc = new LibRaw();
-            fileNode->rawProc->set_exifparser_handler(exif_callback, &fileNode->imageInfo);
-            auto state = fileNode->rawProc->open_file(fileNode->filePath.toLatin1().data());
-            //    qDebug() << fileNode->imageInfo.ownerName;
-            //    qDebug() << fileNode->imageInfo.dateTimeOriginal;
-            if (LIBRAW_SUCCESS != state) {
-                fileNode->rawProc = NULL;
-                delete fileNode->rawProc;
+            try {
+                LibRaw *localRawProc = nullptr;
+                try {
+                    localRawProc = new LibRaw();
+                    localRawProc->set_exifparser_handler(exif_callback, &fileNode->imageInfo);
+                    int ret = localRawProc->open_file(fileNode->filePath.toLatin1().data());
+                    if (ret != LIBRAW_SUCCESS) {
+                        qWarning()
+                            << "Failed to open file:" << fileNode->filePath << "Error:" << ret;
+                        delete localRawProc;
+                        return;
+                    }
+                } catch (const std::exception &e) {
+                    qWarning() << "Exception caught during LibRaw processing:" << e.what();
+                    if (localRawProc) {
+                        delete localRawProc;
+                    }
+                    return;
+                } catch (...) {
+                    qWarning() << "Unknown exception caught during LibRaw processing";
+                    if (localRawProc) {
+                        delete localRawProc;
+                    }
+                    return;
+                }
+                delete localRawProc;
+            } catch (const std::exception &e) {
+                qWarning() << "Exception caught in loadExifData:" << e.what();
+            } catch (...) {
+                qWarning() << "Unknown exception caught in loadExifData";
             }
+            //  qDebug() << "Added" << fileNode->filePath << fileNode->data;
         }
+        qDebug() << "Tree structure built.";
+    };
+
+    QFuture<void> treeFuture = QtConcurrent::run(buildTree);
+    m_treeWatcher.setFuture(treeFuture);
+}
+
+void FileInfoModel::collectFileNodes(TreeNode *node, QList<TreeNode *> &fileNodes)
+{
+    if (node->isFile) {
+        fileNodes.append(node);
+    }
+    for (TreeNode *child : node->children) {
+        collectFileNodes(child, fileNodes);
     }
 }
 
@@ -329,7 +376,10 @@ TreeNode *FileInfoModel::findOrCreateNode(const QString &text, TreeNode *parent)
     newNode->data = text;
     newNode->isSelected = false;
     newNode->parent = parent;
+    beginInsertRows(QModelIndex(), rowCount(), rowCount());
+
     parent->children.append(newNode);
+    endInsertRows();
     return newNode;
 }
 
@@ -422,4 +472,11 @@ int FileInfoModel::getCountSelectedItems(TreeNode *node, int count)
             newcount = getCountSelectedItems(child, newcount);
     }
     return newcount;
+}
+
+void FileInfoModel::onTreeBuildingFinished()
+{
+    qDebug() << "Tree building finished. Starting EXIF data loading...";
+    emit treeBuildingFinished();
+    // emit dataChanged(QModelIndex(), QModelIndex())
 }

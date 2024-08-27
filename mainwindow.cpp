@@ -102,6 +102,7 @@ MainWindow::MainWindow(QWidget *parent)
           SLOT(spaceButtonPressed()));
   connect(ui->deviceWidget, SIGNAL(returnButtonPressed()), this,
           SLOT(returnButtonPressed()));
+  connect(ui->deviceWidget, SIGNAL(doneLoading()), this, SLOT(doneLoadingCard()));
 
   connect(ui->deviceWidget, SIGNAL(selectedNode(TreeNode *)), this,
           SLOT(selectedNode(TreeNode *)));
@@ -439,6 +440,13 @@ void MainWindow::on_selectCard_clicked() {
   }
   reloadCard();
 }
+void MainWindow::doneLoadingCard()
+{
+    ui->deviceWidget->setEnabled(true);
+    statusBar()->showMessage(tr("Done loading card."), 5000);
+    selectedUpdated(0, 0);
+    totalSelectedSize = 0;
+}
 void MainWindow::reloadCard() {
   emptyMainWindow();
 
@@ -455,8 +463,8 @@ void MainWindow::reloadCard() {
                                     0, 'f', 2));
     files = getFiles(selectedCard.rootPath());
     ui->deviceWidget->setFiles(files);
-    ui->deviceWidget->setEnabled(true);
-    statusBar()->showMessage(tr("Done loading card."), 5000);
+    ui->deviceWidget->setEnabled(false);
+
 #if defined(__APPLE__)
     try {
       QPixmap pixmap = ExternalDriveIconFetcher::getExternalDrivePixmap(
@@ -466,8 +474,7 @@ void MainWindow::reloadCard() {
     } catch (...) {
     }
 #endif
-    selectedUpdated(0, 0);
-    totalSelectedSize = 0;
+
     ui->moveButton->setDisabled(true);
     ui->ejectButton->setEnabled(true);
     ui->reloadButton->setEnabled(true);
@@ -611,8 +618,12 @@ void MainWindow::selectedNode(TreeNode *image) {
       QObject::connect(imageLoaderObject, &imageLoader::imageLoaded, this,
                        &MainWindow::showImage);
       QObject::connect(imageLoaderObject, &imageLoader::loadingFailed, [=]() {
-        ui->image->setPixmap(QPixmap());
-        ui->image->setText(tr("Failed to load image."));
+          // ui->image->setPixmap(QPixmap());
+          // ui->image->setText(tr("Failed to load image."));
+          QImage img = QImage(1024, 1024, QImage::Format_RGB32);
+          img.fill(Qt::white);
+          img = img.scaled(1024, 1024, Qt::KeepAspectRatio);
+          showImage(img);
       });
 
       imageLoaderObject->loadImageFile(image);
@@ -635,44 +646,59 @@ void MainWindow::finshedImageLoading() {
     selectedNode(imageSelected);
 }
 
-void MainWindow::showImage(const QImage &image) {
-  // label.resize(image.size());
-  QImage img(image);
-  QPainter painter(&img);
+void MainWindow::showImage(const QImage &image, bool failed)
+{
+    qDebug() << "Show Image";
+    // label.resize(image.size());
+    QImage img(image);
+    QPainter painter(&img);
 
-  // Set font, size, and color
-  QFont font("Arial", 30); // You can customize the font and size
-  painter.setFont(font);
-  QPoint point(50, 50);
-  painter.setPen(QColor(Qt::white)); // You can customize the text color
+    // Set font, size, and color
+    QFont font("Arial", 30); // You can customize the font and size
+    painter.setFont(font);
+    QPoint point(50, 50);
+    painter.setPen(QColor(Qt::white)); // You can customize the text color
 
-  // Draw text at the specified position
-  painter.drawText(
-      10, 10, 1024, 1024, Qt::AlignLeft,
-      QString("%1\nf %2 - 1/%3s\nISO %4\n%5 mm")
-          .arg(currentSelectedImage->info.fileName())
-          .arg(currentSelectedImage->imageInfo.aperture, 0, 'f', 1)
-          .arg(qRound(1.0 / currentSelectedImage->imageInfo.shutterSpeed))
-          .arg(currentSelectedImage->imageInfo.isoValue)
-          .arg(currentSelectedImage->imageInfo.focalLength)
+    // Draw text at the specified position
+    painter.drawText(10,
+                     10,
+                     1024,
+                     1024,
+                     Qt::AlignLeft,
+                     QString("%1\nf %2 - 1/%3s\nISO %4\n%5 mm")
+                         .arg(currentSelectedImage->info.fileName())
+                         .arg(currentSelectedImage->imageInfo.aperture, 0, 'f', 1)
+                         .arg(qRound(1.0 / currentSelectedImage->imageInfo.shutterSpeed))
+                         .arg(currentSelectedImage->imageInfo.isoValue)
+                         .arg(currentSelectedImage->imageInfo.focalLength)
 
-  );
+    );
 
-  painter.drawText(10, 10, 1004, 1004, Qt::AlignRight,
-                   QString("%1\n%2\n#%3\n%4 %5")
-                       .arg(currentSelectedImage->imageInfo.ownerName)
-                       .arg(currentSelectedImage->imageInfo.cameraName)
-                       .arg(currentSelectedImage->imageInfo.serialNumber)
-                       .arg(currentSelectedImage->imageInfo.lensMake)
-                       .arg(currentSelectedImage->imageInfo.lensModel)
+    painter.drawText(10,
+                     10,
+                     1004,
+                     1004,
+                     Qt::AlignRight,
+                     QString("%1\n%2\n#%3\n%4 %5")
+                         .arg(currentSelectedImage->imageInfo.ownerName)
+                         .arg(currentSelectedImage->imageInfo.cameraName)
+                         .arg(currentSelectedImage->imageInfo.serialNumber)
+                         .arg(currentSelectedImage->imageInfo.lensMake)
+                         .arg(currentSelectedImage->imageInfo.lensModel)
 
-  );
-
-  ui->image->setPixmap(QPixmap::fromImage(
-      img.scaled(ui->projectGroupBox->width() - 30,
-                 ui->projectGroupBox->width() - 30, Qt::KeepAspectRatio)));
-
-  ui->image->show();
+    );
+    if (failed) {
+        painter.drawText(0,
+                         0,
+                         img.width(),
+                         img.height(),
+                         Qt::AlignCenter,
+                         QString(tr("Failed to load image.")));
+    }
+    ui->image->setPixmap(QPixmap::fromImage(img.scaled(ui->projectGroupBox->width() - 30,
+                                                       ui->projectGroupBox->width() - 30,
+                                                       Qt::KeepAspectRatio)));
+    ui->image->show();
 }
 
 void MainWindow::resizeEvent(QResizeEvent *event) {

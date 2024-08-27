@@ -20,27 +20,28 @@ void imageLoader::loadImage()
     LibRaw *rawProc = NULL;
     bool del = false;
 
-    if (!node->rawProc) {
-        del = true;
         rawProc = new LibRaw();
-
+        qDebug() << rawProc->cameraCount();
         auto state = rawProc->open_file(m_imagePath.toLatin1().data());
+        qDebug() << "open" << state;
         if (LIBRAW_SUCCESS != state) {
-            emit loadingFailed();
+            QImage img = QImage(1024, 682, QImage::Format_RGB32);
+            img.fill(Qt::black);
+            img = img.scaled(1024, 682, Qt::KeepAspectRatio);
+            // emit loadingFailed();
+            emit imageLoaded(img, true);
             emit finished();
+            return;
         }
-
-    } else {
-        rawProc = node->rawProc;
-        del = false;
-    }
 
     QImage thumbnail;
 
     if (!(rawProc->imgdata.thumbnail.thumb)) {
+        qDebug() << "thumb!";
         rawProc->unpack_thumb();
     }
 
+    qDebug() << rawProc->imgdata.thumbnail.tformat;
     if (LIBRAW_THUMBNAIL_JPEG == rawProc->imgdata.thumbnail.tformat) {
         thumbnail.loadFromData((unsigned char *) rawProc->imgdata.thumbnail.thumb,
                                rawProc->imgdata.thumbnail.tlength,
@@ -48,13 +49,12 @@ void imageLoader::loadImage()
     }
     thumbnail = thumbnail.scaled(1024, 1024, Qt::KeepAspectRatio);
 
-    if (del) {
-        rawProc->recycle();
-        delete rawProc;
-    }
+    //    rawProc->recycle();
+    delete rawProc;
 
     // Check if the image was loaded successfully
     if (thumbnail.isNull()) {
+        qDebug() << "Failed loading thumb" << rawProc->imgdata.shootinginfo.BodySerial;
         emit loadingFailed();
     } else {
         emit imageLoaded(thumbnail);

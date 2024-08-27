@@ -23,12 +23,17 @@ void deviceList::setFiles(QList<QFileInfo> files)
     fileModel=new FileInfoModel(files, this);
 
     connect(fileModel, &FileInfoModel::dataChanged, this, &deviceList::updateSelectedCount);
+    connect(fileModel, &FileInfoModel::treeBuildingFinished, this, &deviceList::expandTree);
 
     this->setModel(fileModel);
+    //
+}
+void deviceList::expandTree()
+{
     this->expandAll();
+    // Assuming treeView is your QTreeView object and columnIndex is the index of the column you want to expand
     resizeColumnToContents(0);
     // Expand only year and month levels
-    qDebug() << fileModel->rowCount();
     for (int ri = 0; ri < fileModel->rowCount(); ++ri) {
         QModelIndex rootIndex = fileModel->index(ri, 0);
         this->expand(rootIndex);
@@ -46,7 +51,6 @@ void deviceList::setFiles(QList<QFileInfo> files)
             }
         }
     }
-    // Assuming treeView is your QTreeView object and columnIndex is the index of the column you want to expand
 
     // Get the current width of the column
     int currentWidth = columnWidth(0);
@@ -64,6 +68,7 @@ void deviceList::setFiles(QList<QFileInfo> files)
         TreeNode *node = static_cast<TreeNode *>(selectedFirst.internalPointer());
         emit selectedNode(node);
     }
+    emit doneLoading();
 }
 
 void deviceList::updateSelectedCount(const QModelIndex &topLeft, const QModelIndex &bottomRight, const QList<int> &roles) {

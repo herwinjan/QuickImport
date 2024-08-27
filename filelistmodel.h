@@ -11,6 +11,11 @@
 #include <QVariant>
 #include <libraw/libraw.h>
 
+#include <QFuture>
+#include <QFutureWatcher>
+#include <QMutex>
+#include <QMutexLocker>
+#include <QtConcurrent/QtConcurrent>
 struct imageInfoStruct
 {
     int isoValue = 0;
@@ -46,7 +51,6 @@ struct TreeNode {
 
     imageInfoStruct imageInfo;
 
-    LibRaw *rawProc = NULL;
 };
 
 struct fileInfoStruct
@@ -58,7 +62,9 @@ struct fileInfoStruct
 class FileInfoModel : public QAbstractItemModel {
     Q_OBJECT
 public:
-    explicit FileInfoModel(const QList<QFileInfo>& fileInfoList, QObject* parent = nullptr);
+    QFutureWatcher<void> m_treeWatcher;
+    QMutex m_mutex;
+    explicit FileInfoModel(const QList<QFileInfo> &fileInfoList, QObject *parent = nullptr);
 
     QModelIndex index(int row, int column, const QModelIndex& parent = QModelIndex()) const override ;
 
@@ -94,13 +100,19 @@ public:
 
     qint64 getCountSelectedSize(TreeNode *node, qint64 size);
 
-private:
-    TreeNode* findOrCreateNode(const QString& text, TreeNode* parent) ;
+    void collectFileNodes(TreeNode *node, QList<TreeNode *> &fileNodes);
+
+    TreeNode *findOrCreateNode(const QString &text, TreeNode *parent);
 
     QList<QFileInfo> m_fileInfoList;
     TreeNode* rootItem;
     QTreeView *view;
     QList<fileInfoStruct> getSelectedFilesChilds(TreeNode *node, QList<fileInfoStruct> list);
+public slots:
+    void onTreeBuildingFinished();
+
+signals:
+    void treeBuildingFinished();
 };
 
 #endif

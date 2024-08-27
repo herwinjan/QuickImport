@@ -36,10 +36,11 @@ signals:
     void selectedUpdated(int, qint64);
     void returnButtonPressed();
     void spaceButtonPressed();
-
+    void doneLoading();
     void selectedNode(TreeNode *);
 public slots:
     void updateSelectedCount(const QModelIndex &topLeft, const QModelIndex &bottomRight, const QList<int> &roles = QList<int>());
+    void expandTree();
 };
 
 #endif // DEVICELIST_H

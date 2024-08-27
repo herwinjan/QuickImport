@@ -1,4 +1,4 @@
-QT       += core gui
+QT       += core gui concurrent
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -14,6 +14,9 @@ DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs depr
 isEqual(Q_DEVICE_WATCHER_DEBUG, 1) {
     DEFINES += CONFIG_DEBUG
 }
+ DEFINES += CONFIG_DEBUG
+
+CONFIG+=app_bundle
 
 QMAKE_MACOSX_DEPLOYMENT_TARGET = 14.0
 
@@ -77,19 +80,19 @@ FORMS += \
 
 macx {
     SOURCES += externDriveFetcher.mm
-    LIBS += /Users/herwin/devel/LibRaw-0.21.2/lib/.libs/libraw_r.a
+    LIBS += /Users/herwin/devel/LibRaw/lib/.libs/libraw_r.a
     LIBS += -lz
-    INCLUDEPATH += /Users/herwin/devel/LibRaw-0.21.2/
-    DEPENDPATH += /Users/herwin/devel/LibRaw-0.21.2/
+    INCLUDEPATH += /Users/herwin/devel/LibRaw/
+    DEPENDPATH += /Users/herwin/devel/LibRaw/
 
     LIBS += -framework DiskArbitration -framework Foundation
     SOURCES += qdevicewatcher/qdevicewatcher_mac.cpp
 
 }
 win32 {
-    LIBS += -Lc:\Users\herwin\devel\LibRaw-0.21.2\lib\ -llibraw -Lc:\Users\herwin\devel\LibRaw-0.21.2\bin
-    INCLUDEPATH += c:\Users\herwin\devel\LibRaw-0.21.2\
-    DEPENDPATH += c:\Users\herwin\devel\LibRaw-0.21.2\
+    LIBS += -Lc:\Users\herwin\devel\LibRaw\lib\ -llibraw -Lc:\Users\herwin\devel\LibRaw\bin
+    INCLUDEPATH += c:\Users\herwin\devel\LibRaw\
+    DEPENDPATH += c:\Users\herwin\devel\LibRaw\
 
     wince*: SOURCES += qdevicewatcher/qdevicewatcher_wince.cpp
     else:  SOURCES += qdevicewatcher/qdevicewatcher_win32.cpp

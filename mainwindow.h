@@ -49,6 +49,8 @@ public slots:
 
     void reloadPresetComboBox();
 
+    void doneLoadingCard();
+
 protected:
     void resizeEvent(QResizeEvent *event);
 
@@ -104,7 +106,7 @@ public:
     void saveFileNameFormat(int sel = -1);
     void saveBackupPresetsLocations(int sel);
 private slots:
-    void showImage(const QImage &image);
+    void showImage(const QImage &image, bool failed = false);
     void selectedNode(TreeNode *);
     void showAboutDialog();
     void on_checkSelected_clicked();
