@@ -281,7 +281,19 @@ bool FileInfoModel::setData(const QModelIndex &index, const QVariant &value, int
 
     return true;
 }
+QString formatHour(int hour)
+{
+    QTime time(hour, 0); // Create a QTime object with the given hour and 0 minutes
+    QLocale systemLocale = QLocale::system();
 
+    // Check the language and country of the system locale
+    if (systemLocale.language() == QLocale::Dutch
+        && systemLocale.country() == QLocale::Netherlands) {
+        return systemLocale.toString(time, "h 'uur'");
+    } else {
+        return systemLocale.toString(time, "hh:mm AP");
+    }
+}
 void FileInfoModel::setupModelData()
 {
     rootItem = new TreeNode();
@@ -295,7 +307,8 @@ void FileInfoModel::setupModelData()
             QString year = QString::number(dateTime.date().year());
             QString month = QString::number(dateTime.date().month());
             QString day = QString::number(dateTime.date().day());
-            QString hour = QString::number(dateTime.time().hour()) + QString(" uur");
+            // QString hour = QString::number(dateTime.time().hour()) + QString(tr(" uur"));
+            QString hour = formatHour(dateTime.time().hour());
             QString fileName = fileInfo.fileName();
 
             TreeNode *yearNode = findOrCreateNode(year, rootItem);
@@ -313,7 +326,7 @@ void FileInfoModel::setupModelData()
             beginInsertRows(QModelIndex(), items, items);
             items++;
             emit updateProcessStatus(
-                QString("loading EXIF data #%1 of %2.").arg(items).arg(m_fileInfoList.count()));
+                QString(tr("loading EXIF data #%1 of %2.")).arg(items).arg(m_fileInfoList.count()));
             hourNode->children.append(fileNode);
             endInsertRows();
 

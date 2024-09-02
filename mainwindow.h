@@ -60,6 +60,7 @@ protected:
     shortcutDialog *shortcutDialogWindow = nullptr;
 
 public:
+    //TODO store all settings in own class
     QString importFolder;
     QString importBackupFolder;
     QString projectName;
@@ -83,6 +84,8 @@ public:
     bool quitEmptyCard;
     bool ejectIfEmpty;
     bool quitAfterImport;
+    QString openApplicationLocation;
+    bool openApplicationAfterImport;
 
     QStringList importLocationList;
     QStringList importBackupLocationList;
@@ -156,5 +159,7 @@ private slots:
     void on_deleteBackupLocationButton_clicked();
     void on_fileNameFormat_activated(int index);
     void on_projectName_activated(int index);
+    void on_OpenApplicationLocation_clicked();
+    void on_openApplicationAfterImport_stateChanged(int arg1);
 };
 #endif // MAINWINDOW_H

@@ -78,9 +78,13 @@ MainWindow::MainWindow(QWidget *parent)
   quitAfterImport = settings.value("quitAfterImport", false).toBool();
   ejectIfEmpty = settings.value("ejectIfEmpty", false).toBool();
   doBackupImport = settings.value("doBackupImport", false).toBool();
+  openApplicationAfterImport = settings.value("openApplicationAfterImport", false).toBool();
+  on_openApplicationAfterImport_stateChanged(openApplicationAfterImport);
+  ui->openApplicationAfterImport->setCheckState(openApplicationAfterImport ? Qt::Checked
+                                                                           : Qt::Unchecked);
 
-  ui->deleteAfterImportBox->setCheckState(deleteAfterImport ? Qt::Checked
-                                                            : Qt::Unchecked);
+  openApplicationLocation = settings.value("openApplicationLocation", "").toString();
+  ui->deleteAfterImportBox->setCheckState(deleteAfterImport ? Qt::Checked : Qt::Unchecked);
   ui->ejectBox->setCheckState(ejectAfterImport ? Qt::Checked : Qt::Unchecked);
   ui->mdCheckBox->setCheckState(md5Check ? Qt::Checked : Qt::Unchecked);
   ui->previewImageCheckBox->setCheckState(previewImage ? Qt::Checked
@@ -149,16 +153,15 @@ MainWindow::MainWindow(QWidget *parent)
   on_selectCard_clicked();
 }
 void MainWindow::updatePresetList() {
-  ui->presetComboBox->clear();
+    ui->presetComboBox->clear();
 
-  if (ui->presetComboBox->model())
-    delete ui->presetComboBox->model();
-  presetListModel *model = new presetListModel(presetList);
-  ui->presetComboBox->setModel(model);
+    if (ui->presetComboBox->model())
+        delete ui->presetComboBox->model();
+    presetListModel *model = new presetListModel(presetList);
+    ui->presetComboBox->setModel(model);
 
-  ui->presetComboBox->setPlaceholderText(
-      QStringLiteral("--Select to load preset--"));
-  ui->presetComboBox->setCurrentIndex(-1);
+    ui->presetComboBox->setPlaceholderText(QStringLiteral("--Select to load preset--"));
+    ui->presetComboBox->setCurrentIndex(-1);
 }
 void MainWindow::reloadPresetComboBox() {}
 void MainWindow::loadPresets() {
@@ -289,7 +292,7 @@ void MainWindow::selectedUpdated(int cnt, qint64 size) {
     }
 
     else {
-      ui->moveButton->setDisabled(true);
+        ui->moveButton->setDisabled(true);
     }
   }
 }
@@ -355,8 +358,7 @@ void MainWindow::flipSelectedItems() {
                     ->setSelect(node);
               }
             }
-            emit ui->deviceWidget->model()->dataChanged(QModelIndex(),
-                                                        QModelIndex());
+            emit ui->deviceWidget->model()->dataChanged(QModelIndex(), QModelIndex());
           }
         }
       }
@@ -770,51 +772,52 @@ void MainWindow::updateImportToLabel() {
   }
 }
 
-void MainWindow::on_moveButton_clicked() {
-  if (importFolder.length() <= 0) {
-    QMessageBox msgBox;
-    msgBox.setText(tr("No Import folder set, please set one first."));
-    msgBox.setIcon(QMessageBox::Critical);
-    msgBox.exec();
-    return;
-  }
-  if (freeProjectSpace < totalSelectedSize) {
-    QMessageBox msgBox;
-    msgBox.setText(tr("Not enough diskspace available on project location!"));
-    msgBox.setIcon(QMessageBox::Critical);
-    msgBox.exec();
-    return;
-  }
-
-  if (ui->deviceWidget->model()) {
-    QList<fileInfoStruct> list;
-    list = qobject_cast<FileInfoModel *>(ui->deviceWidget->model())
-               ->getSelectedFiles();
-
-    if (list.count() <= 0) {
-      QMessageBox msgBox;
-      msgBox.setText(tr("No files selected, please check files to move/copy."));
-      msgBox.setIcon(QMessageBox::Critical);
-      msgBox.exec();
-      return;
+void MainWindow::on_moveButton_clicked()
+{
+    if (importFolder.length() <= 0) {
+        QMessageBox msgBox;
+        msgBox.setText(tr("No Import folder set, please set one first."));
+        msgBox.setIcon(QMessageBox::Critical);
+        msgBox.exec();
+        return;
     }
-    QString impBackup = importBackupFolder;
-    if (!doBackupImport) {
-        impBackup = QString();
+    if (freeProjectSpace < totalSelectedSize) {
+        QMessageBox msgBox;
+        msgBox.setText(tr("Not enough diskspace available on project location!"));
+        msgBox.setIcon(QMessageBox::Critical);
+        msgBox.exec();
+        return;
     }
 
-    fileCopyDialog dialog(list,
-                          importFolder,
-                          projectName,
-                          fileNameFormat,
-                          md5Check,
-                          deleteAfterImport,
-                          deleteExisting,
-                          impBackup,
-                          this);
-    bool ok = dialog.exec();
+    if (ui->deviceWidget->model()) {
+        QList<fileInfoStruct> list;
+        list = qobject_cast<FileInfoModel *>(ui->deviceWidget->model())->getSelectedFiles();
 
-    /*
+        if (list.count() <= 0) {
+            QMessageBox msgBox;
+            msgBox.setText(tr("No files selected, please check files to move/copy."));
+            msgBox.setIcon(QMessageBox::Critical);
+            msgBox.exec();
+            return;
+        }
+        QString impBackup = importBackupFolder;
+        if (!doBackupImport) {
+            impBackup = QString();
+        }
+
+        fileCopyDialog dialog(list,
+                              importFolder,
+                              projectName,
+                              fileNameFormat,
+                              md5Check,
+                              deleteAfterImport,
+                              deleteExisting,
+                              impBackup,
+                              this);
+
+        bool ok = dialog.exec();
+
+        /*
     QString delMsg;
     if (didDelete) {
         delMsg = QString(", %1 deleted").arg(del);
@@ -823,36 +826,42 @@ void MainWindow::on_moveButton_clicked() {
                              "Copying done",
                              QString("copying done, %1 files copied%2, %3
     failed.") .arg(cnt) .arg(delMsg) .arg(fail));*/
-    if (ejectAfterImport && ok) {
-      qDebug() << "Eject after move";
-      on_ejectButton_clicked();
-    }
-
-    if (quitAfterImport && ok) {
-      qApp->quit();
-    }
-
-    reloadCard();
-    if (ejectIfEmpty && ok) {
-      if (ui->deviceWidget->model()) {
-        if (ui->deviceWidget->model()->rowCount(QModelIndex()) <= 0) {
-          doEject();
+        if (ejectAfterImport && ok) {
+            qDebug() << "Eject after move";
+            on_ejectButton_clicked();
         }
-      } else {
-        doEject();
-      }
-    }
 
-    if (quitEmptyCard && ok) {
-      if (ui->deviceWidget->model()) {
-        if (ui->deviceWidget->model()->rowCount(QModelIndex()) <= 0) {
-          qApp->quit();
+        if (quitAfterImport && ok) {
+            qApp->quit();
         }
-      } else {
-        qApp->quit();
-      }
+        if (openApplicationAfterImport && ok) {
+            QString path = dialog.getLastFilePath();
+            QStringList arguments;
+            arguments << path;
+            QProcess::startDetached(openApplicationLocation, arguments);
+        }
+
+        reloadCard();
+        if (ejectIfEmpty && ok) {
+            if (ui->deviceWidget->model()) {
+                if (ui->deviceWidget->model()->rowCount(QModelIndex()) <= 0) {
+                    doEject();
+                }
+            } else {
+                doEject();
+            }
+        }
+
+        if (quitEmptyCard && ok) {
+            if (ui->deviceWidget->model()) {
+                if (ui->deviceWidget->model()->rowCount(QModelIndex()) <= 0) {
+                    qApp->quit();
+                }
+            } else {
+                qApp->quit();
+            }
+        }
     }
-  }
 }
 
 int MainWindow::doEject() {
@@ -1115,15 +1124,16 @@ void MainWindow::on_importLocation_activated(int index) {
   updateImportToLabel();
 }
 
-void MainWindow::on_saveProjectNameButton_clicked() {
-  int sel = -1;
-  sel = projectNameList.indexOf(ui->projectName->currentText());
-  if (sel == -1) {
-    projectNameList.prepend(ui->projectName->currentText());
-    sel = 0;
-  }
-  saveProjectName(sel);
-  resetProjectName(sel);
+void MainWindow::on_saveProjectNameButton_clicked()
+{
+    int sel = -1;
+    sel = projectNameList.indexOf(ui->projectName->currentText());
+    if (sel == -1) {
+        projectNameList.prepend(ui->projectName->currentText());
+        sel = 0;
+    }
+    saveProjectName(sel);
+    resetProjectName(sel);
 }
 void MainWindow::saveProjectName(int sel = -1) {
   QSettings settings("HJ Steehouwer", "QuickImport");
@@ -1336,4 +1346,27 @@ void MainWindow::on_fileNameFormat_activated(int index)
 void MainWindow::on_projectName_activated(int index)
 {
     saveProjectName(index);
+}
+
+void MainWindow::on_OpenApplicationLocation_clicked()
+{
+    QString app = QFileDialog::getOpenFileName(this, tr("Choose Application"));
+
+    if (!app.isEmpty()) {
+        openApplicationLocation = app;
+        QSettings settings("HJ Steehouwer", "QuickImport");
+        settings.setValue("openApplicationLocation", openApplicationLocation);
+    }
+}
+
+void MainWindow::on_openApplicationAfterImport_stateChanged(int arg1)
+{
+    openApplicationAfterImport = (bool) arg1;
+    QSettings settings("HJ Steehouwer", "QuickImport");
+    settings.setValue("openApplicationAfterImport", (bool) arg1);
+    if ((bool) arg1) {
+        ui->OpenApplicationLocation->setEnabled(true);
+    } else {
+        ui->OpenApplicationLocation->setEnabled(false);
+    }
 }

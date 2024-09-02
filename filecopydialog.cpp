@@ -39,6 +39,10 @@ fileCopyDialog::fileCopyDialog(const QList<fileInfoStruct> &list,
     m_worker->moveToThread(m_thread);
     connect(m_thread, &QThread::started, m_worker, &fileCopyWorker::copyImages);
     connect(m_worker, &fileCopyWorker::progressUpdated, this, &fileCopyDialog::handleProgress);
+    connect(m_worker,
+            &fileCopyWorker::lastLocationImportedTo,
+            this,
+            &fileCopyDialog::lastLocationImportedToSlot);
     connect(m_worker, &fileCopyWorker::copyingFinished, this, &fileCopyDialog::handleFinished);
     connect(m_thread, &QThread::finished, m_worker, &QObject::deleteLater);
     connect(m_thread, &QThread::finished, m_thread, &QObject::deleteLater);
@@ -80,4 +84,13 @@ void fileCopyDialog::handleFinished()
         reject();
     }
     accept();
+}
+
+void fileCopyDialog::lastLocationImportedToSlot(QString str)
+{
+    lastFilePath = str;
+}
+QString fileCopyDialog::getLastFilePath()
+{
+    return lastFilePath;
 }

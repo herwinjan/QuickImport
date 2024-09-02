@@ -26,15 +26,19 @@ public:
                    QWidget *parent = nullptr);
     ~fileCopyDialog();
 
+    QString getLastFilePath();
 private slots:
     void on_cancelButton_clicked();
 
     void handleProgress(int progress, int, int, int, int);
     void handleFinished();
 
+    void lastLocationImportedToSlot(QString);
+
 private:
     Ui::fileCopyDialog *ui;
     int count = 0;
+    QString lastFilePath;
 
     QThread *m_thread;
     fileCopyWorker *m_worker;

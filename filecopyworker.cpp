@@ -230,6 +230,7 @@ void fileCopyWorker::copyImages()
         //QString("Copy file %1 of %2. %3").arg(cnt).arg(list.count()).arg(err));
         done = done + 1;
         emit progressUpdated((done * 100) / totalFiles, done, cnt, fail, del);
+        emit lastLocationImportedTo(fileTodo[1]);
     }
 
     emit copyingFinished();

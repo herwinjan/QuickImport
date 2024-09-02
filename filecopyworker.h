@@ -30,6 +30,7 @@ public slots:
 signals:
     void progressUpdated(int, int, int, int, int);
     void copyingFinished();
+    void lastLocationImportedTo(QString);
 
 private:
     int cnt = 0, fail = 0;
