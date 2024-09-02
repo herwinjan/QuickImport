@@ -50,6 +50,7 @@ public slots:
     void reloadPresetComboBox();
 
     void doneLoadingCard();
+    void updateProcessStatus(QString);
 
 protected:
     void resizeEvent(QResizeEvent *event);

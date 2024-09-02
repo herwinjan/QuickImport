@@ -446,6 +446,12 @@ void MainWindow::doneLoadingCard()
     selectedUpdated(0, 0);
     totalSelectedSize = 0;
 }
+
+void MainWindow::updateProcessStatus(QString str)
+{
+    statusBar()->showMessage(tr("Loading card...") + str);
+}
+
 void MainWindow::reloadCard() {
   emptyMainWindow();
 
@@ -462,6 +468,10 @@ void MainWindow::reloadCard() {
                                     0, 'f', 2));
     files = getFiles(selectedCard.rootPath());
     ui->deviceWidget->setFiles(files);
+    connect(ui->deviceWidget->fileModel,
+            &FileInfoModel::updateProcessStatus,
+            this,
+            &MainWindow::updateProcessStatus);
     ui->deviceWidget->setEnabled(false);
 
 #if defined(__APPLE__)

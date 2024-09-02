@@ -18,10 +18,10 @@ class deviceList : public QTreeView
     Q_OBJECT
 
 
-    FileInfoModel *fileModel;
 
 
 public:
+    FileInfoModel *fileModel;
 
     deviceList(QWidget *parent = nullptr);
     void addItem(QStandardItem *model, QFileInfo index);

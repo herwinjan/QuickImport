@@ -113,6 +113,7 @@ public slots:
 
 signals:
     void treeBuildingFinished();
+    void updateProcessStatus(QString);
 };
 
 #endif

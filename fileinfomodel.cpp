@@ -312,6 +312,8 @@ void FileInfoModel::setupModelData()
             fileNode->parent = hourNode;
             beginInsertRows(QModelIndex(), items, items);
             items++;
+            emit updateProcessStatus(
+                QString("loading EXIF data #%1 of %2.").arg(items).arg(m_fileInfoList.count()));
             hourNode->children.append(fileNode);
             endInsertRows();
 
