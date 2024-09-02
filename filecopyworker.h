@@ -7,7 +7,7 @@
 #include <QObject>
 #include <QString>
 #include <QTimer>
-#include "filelistmodel.h"
+#include "fileinfomodel.h"
 
 class fileCopyWorker : public QObject
 {

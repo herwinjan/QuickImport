@@ -1,5 +1,5 @@
-#ifndef FILELISTMODEL_H
-#define FILELISTMODEL_H
+#ifndef FILEINFOMODEL_H
+#define FILEINFOMODEL_H
 #include <QAbstractItemModel>
 #include <QApplication>
 #include <QDateTime>

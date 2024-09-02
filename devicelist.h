@@ -11,7 +11,7 @@
 #include <QStringListModel>
 #include <qtreeview.h>
 
-#include <filelistmodel.h>
+#include <fileinfomodel.h>
 
 class deviceList : public QTreeView
 {

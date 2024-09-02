@@ -26,12 +26,12 @@ ICON = QuickImportLogo-1024.icns
 
 SOURCES += \
     aboutdialog.cpp \
+    fileinfomodel.cpp \
     presetdialog.cpp \
     presetlistmodel.cpp \
     qdevicewatcher/qdevicewatcher.cpp \
     filecopydialog.cpp \
     filecopyworker.cpp \
-    filelistmodel.cpp \
     imageloader.cpp \
     qborderlessdialog.cpp \
     selectcarddialog.cpp \
@@ -49,7 +49,7 @@ HEADERS += \
     externalDriveFetcher.h \
     filecopydialog.h \
     filecopyworker.h \
-    filelistmodel.h \
+    fileinfomodel.h \
     imageloader.h \
     mainwindow.h \
     presetdialog.h \
@@ -80,10 +80,12 @@ FORMS += \
 
 macx {
     SOURCES += externDriveFetcher.mm
-    LIBS += /Users/herwin/devel/LibRaw-0.21.2/lib/.libs/libraw_r.a
-    LIBS += -lz
-    INCLUDEPATH += /Users/herwin/devel/LibRaw-0.21.2/
-    DEPENDPATH += /Users/herwin/devel/LibRaw-0.21.2/
+    LIBS += /Users/herwin/devel/LibRaw/lib/.libs/libraw_r.a
+        # LIBS += /Users/herwin/devel/exiv2/build/lib/libexiv2.a
+        LIBS += -lz
+    INCLUDEPATH += /Users/herwin/devel/LibRaw/
+    # INCLUDEPATH += /Users/herwin/devel/exiv2/include
+    DEPENDPATH += /Users/herwin/devel/LibRaw/
 
     LIBS += -framework DiskArbitration -framework Foundation
     SOURCES += qdevicewatcher/qdevicewatcher_mac.cpp

@@ -3,7 +3,7 @@
 
 #include <QObject>
 
-#include "filelistmodel.h"
+#include "fileinfomodel.h"
 
 class imageLoader : public QObject
 {

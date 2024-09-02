@@ -1,7 +1,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include "filelistmodel.h"
+#include "fileinfomodel.h"
 #include "imageloader.h"
 #include "presetlistmodel.h"
 #include "shortcutdialog.h"

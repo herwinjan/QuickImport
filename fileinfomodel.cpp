@@ -1,4 +1,4 @@
-#include "filelistmodel.h"
+#include "fileinfomodel.h"
 #include <QAbstractItemModel>
 #include <QApplication>
 #include <QDateTime>

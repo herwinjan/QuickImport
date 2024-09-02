@@ -16,7 +16,7 @@
 #endif
 
 #include "filecopydialog.h"
-#include "filelistmodel.h"
+#include "fileinfomodel.h"
 #include "presetdialog.h"
 #include "qborderlessdialog.h"
 #include "selectcarddialog.h"
