@@ -84,6 +84,13 @@ MainWindow::MainWindow(QWidget *parent)
                                                                            : Qt::Unchecked);
 
   openApplicationLocation = settings.value("openApplicationLocation", "").toString();
+
+  QFileInfo fileInfo(openApplicationLocation);
+  QString applicationName = fileInfo.fileName();
+
+  openApplicationLocation = openApplicationLocation;
+  ui->openApplicationText->setText(applicationName);
+
   ui->deleteAfterImportBox->setCheckState(deleteAfterImport ? Qt::Checked : Qt::Unchecked);
   ui->ejectBox->setCheckState(ejectAfterImport ? Qt::Checked : Qt::Unchecked);
   ui->mdCheckBox->setCheckState(md5Check ? Qt::Checked : Qt::Unchecked);
@@ -831,14 +838,15 @@ void MainWindow::on_moveButton_clicked()
             on_ejectButton_clicked();
         }
 
-        if (quitAfterImport && ok) {
-            qApp->quit();
-        }
         if (openApplicationAfterImport && ok) {
             QString path = dialog.getLastFilePath();
             QStringList arguments;
             arguments << path;
             QProcess::startDetached(openApplicationLocation, arguments);
+        }
+
+        if (quitAfterImport && ok) {
+            qApp->quit();
         }
 
         reloadCard();
@@ -1350,12 +1358,30 @@ void MainWindow::on_projectName_activated(int index)
 
 void MainWindow::on_OpenApplicationLocation_clicked()
 {
-    QString app = QFileDialog::getOpenFileName(this, tr("Choose Application"));
+    QString filter;
+    QString defaultPath;
+
+    if (QSysInfo::productType() == "windows") {
+        filter = tr("Applications (*.exe)");
+        defaultPath = "C:\\Program Files";
+    } else if (QSysInfo::productType() == "macos") {
+        filter = tr("Applications (*.app)");
+        defaultPath = "/Applications";
+    } else { // Assuming Linux or other Unix-like OS
+        filter = tr("Applications (*.sh *.bin *.run *.AppImage);;All Files (*)");
+        defaultPath = "/usr/bin";
+    }
+
+    QString app = QFileDialog::getOpenFileName(this, tr("Choose Application"), defaultPath, filter);
 
     if (!app.isEmpty()) {
+        QFileInfo fileInfo(app);
+        QString applicationName = fileInfo.fileName();
+
         openApplicationLocation = app;
         QSettings settings("HJ Steehouwer", "QuickImport");
         settings.setValue("openApplicationLocation", openApplicationLocation);
+        ui->openApplicationText->setText(applicationName);
     }
 }
 
