@@ -161,5 +161,8 @@ private slots:
     void on_projectName_activated(int index);
     void on_OpenApplicationLocation_clicked();
     void on_openApplicationAfterImport_stateChanged(int arg1);
+
+private:
+    void displayNoCardDialog();
 };
 #endif // MAINWINDOW_H

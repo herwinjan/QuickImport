@@ -27,6 +27,8 @@ ICON = QuickImportLogo-1024.icns
 SOURCES += \
     aboutdialog.cpp \
     fileinfomodel.cpp \
+    metadatadialog.cpp \
+    metadatatemplatedialog.cpp \
     presetdialog.cpp \
     presetlistmodel.cpp \
     qdevicewatcher/qdevicewatcher.cpp \
@@ -35,7 +37,8 @@ SOURCES += \
     imageloader.cpp \
     qborderlessdialog.cpp \
     selectcarddialog.cpp \
-    shortcutdialog.cpp
+    shortcutdialog.cpp \
+    xmpengine.cpp
 
 SOURCES += \
     devicelist.cpp \
@@ -52,6 +55,8 @@ HEADERS += \
     fileinfomodel.h \
     imageloader.h \
     mainwindow.h \
+    metadatadialog.h \
+    metadatatemplatedialog.h \
     presetdialog.h \
     presetlistmodel.h \
     qborderlessdialog.h \
@@ -59,12 +64,15 @@ HEADERS += \
     qdevicewatcher/qdevicewatcher.h \
     qdevicewatcher/qdevicewatcher_p.h \
     selectcarddialog.h \
-    shortcutdialog.h
+    shortcutdialog.h \
+    xmpengine.h
 
 FORMS += \
     aboutdialog.ui \
     filecopydialog.ui \
     mainwindow.ui \
+    metadatadialog.ui \
+    metadatatemplatedialog.ui \
     presetdialog.ui \
     selectcarddialog.ui \
     shortcutdialog.ui
@@ -79,12 +87,19 @@ FORMS += \
 #else:win32:CONFIG(debug, debug|release): LIBS += -L/opt/homebrew/Cellar/libraw/0.21.2/lib/debug/ -lraw.23
 
 macx {
+
+# export LDFLAGS="-L/opt/homebrew/opt/libxml2/lib"
+# export CPPFLAGS="-I/opt/homebrew/opt/libxml2/include"
+
+        # LIBS += -L/opt/homebrew/lib
     SOURCES += externDriveFetcher.mm
     LIBS += /Users/herwin/devel/LibRaw/lib/.libs/libraw_r.a
-        # LIBS += /Users/herwin/devel/exiv2/build/lib/libexiv2.a
-        LIBS += -lz
+        LIBS += /Users/herwin/devel/exiv2/lib/libexiv2.a
+        LIBS += -lz         -lexpat -liconv
+        #-liconv -lINIReader
     INCLUDEPATH += /Users/herwin/devel/LibRaw/
-    # INCLUDEPATH += /Users/herwin/devel/exiv2/include
+    INCLUDEPATH += /Users/herwin/devel/exiv2/include
+    INCLUDEPATH += /Users/herwin/devel/exiv2
     DEPENDPATH += /Users/herwin/devel/LibRaw/
 
     LIBS += -framework DiskArbitration -framework Foundation

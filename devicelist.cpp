@@ -33,6 +33,7 @@ void deviceList::expandTree()
     this->expandAll();
     // Assuming treeView is your QTreeView object and columnIndex is the index of the column you want to expand
     resizeColumnToContents(0);
+
     // Expand only year and month levels
     for (int ri = 0; ri < fileModel->rowCount(); ++ri) {
         QModelIndex rootIndex = fileModel->index(ri, 0);
@@ -56,10 +57,11 @@ void deviceList::expandTree()
     int currentWidth = columnWidth(0);
 
     // Add 20px to the current width
-    int newWidth = currentWidth + 30;
+    int newWidth = currentWidth;
+    //+30;
 
     // Set the new width for the column
-    setColumnWidth(0, newWidth);
+    // setColumnWidth(0, newWidth);
 
     //setSelectionBehavior(QAbstractItemView::SelectItems);
     setSelectionMode(QAbstractItemView::ExtendedSelection); // Allow multiple selections

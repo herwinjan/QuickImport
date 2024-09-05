@@ -186,7 +186,8 @@ QVariant FileInfoModel::headerData(int section, Qt::Orientation orientation, int
             return tr("Time taken");
         case 2:
             return tr("Size");
-        // Add more cases for additional columns if needed
+        case 3:
+            return tr("IPTC"); // Add more cases for additional columns if needed
         default:
             return QVariant();
         }
@@ -225,7 +226,7 @@ int FileInfoModel::rowCount(const QModelIndex &parent) const
 int FileInfoModel::columnCount(const QModelIndex &parent) const
 {
     Q_UNUSED(parent);
-    return 3;
+    return 4;
 }
 
 QVariant FileInfoModel::data(const QModelIndex &index, int role) const
@@ -243,6 +244,9 @@ QVariant FileInfoModel::data(const QModelIndex &index, int role) const
                 return QString("%1 MB").arg(node->info.size() / 1000 / 1000);
         if (index.column() == 1)
             return node->info.birthTime().toString("hh:mm");
+        if (index.column() == 3)
+            if (node->isFile)
+                return "✅";
     }
 
     if (role == Qt::CheckStateRole && index.column() == 0) {

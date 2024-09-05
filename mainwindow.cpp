@@ -21,6 +21,7 @@
 #include "qborderlessdialog.h"
 #include "selectcarddialog.h"
 #include "ui_mainwindow.h"
+#include "xmpengine.h"
 
 #include <libraw/libraw.h>
 
@@ -157,7 +158,10 @@ MainWindow::MainWindow(QWidget *parent)
   if (!settings.value("dontShowAboutDialog", false).toBool()) {
     showAboutDialog();
   }
+
   on_selectCard_clicked();
+
+  // XMPEngine test;
 }
 void MainWindow::updatePresetList() {
     ui->presetComboBox->clear();
@@ -408,9 +412,20 @@ QList<QFileInfo> MainWindow::getFiles(QString map) {
   files = getFileListFromDir(map);
   return files;
 }
+void MainWindow::displayNoCardDialog()
+{
+    QMessageBox *msgBox = nullptr;
+    msgBox = new QMessageBox(this);
+    qDebug() << "here4";
+    msgBox->setText(tr("No Card found, please insert card."));
+    msgBox->setIcon(QMessageBox::Critical);
+    qDebug() << "here4i1";
+    msgBox->exec();
+    qDebug() << "here5";
+    delete msgBox;
+}
 
 void MainWindow::on_selectCard_clicked() {
-  SelectCardDialog window;
 
   QList<QStorageInfo> cardList;
   ui->deviceWidget->setEnabled(false);
@@ -431,20 +446,27 @@ void MainWindow::on_selectCard_clicked() {
     }
   }
   if (cardList.count() < 1) {
-    QMessageBox msgBox;
-    msgBox.setText(tr("No Card found, please insert card."));
-    msgBox.setIcon(QMessageBox::Critical);
-    msgBox.exec();
-
-    return;
+      qDebug() << "Here2";
+      try {
+          // QTimer::singleShot(0, [this]() { displayNoCardDialog(); });
+          displayNoCardDialog();
+      } catch (const std::exception &e) {
+          qDebug() << "Exception caught: " << e.what();
+      } catch (...) {
+          qDebug() << "Unknown exception caught";
+      }
+      qDebug() << "Here3";
+      return;
   }
+  qDebug() << "Here";
   if (cardList.count() == 1) {
-    selectedCard = cardList.at(0);
+      selectedCard = cardList.at(0);
   } else {
-    window.setCards(cardList);
-    if (window.exec()) {
-      selectedCard = window.getSelected();
-    }
+      SelectCardDialog window;
+      window.setCards(cardList);
+      if (window.exec()) {
+          selectedCard = window.getSelected();
+      }
   }
   reloadCard();
 }
@@ -462,41 +484,44 @@ void MainWindow::updateProcessStatus(QString str)
 }
 
 void MainWindow::reloadCard() {
-  emptyMainWindow();
+    qDebug() << "Reload Card";
+    emptyMainWindow();
 
-  if (selectedCard.isValid()) {
-    QList<QFileInfo> files;
-    QString label;
-    statusBar()->showMessage(tr("Loading card..."));
-    label = selectedCard.name();
-    ui->cardLabel->setText(label +
-                           QString(tr("  (Used space: %1 GB)"))
-                               .arg(((float)(selectedCard.bytesTotal() -
-                                             selectedCard.bytesAvailable()) /
-                                     1000 / 1000 / 1000),
-                                    0, 'f', 2));
-    files = getFiles(selectedCard.rootPath());
-    ui->deviceWidget->setFiles(files);
-    connect(ui->deviceWidget->fileModel,
-            &FileInfoModel::updateProcessStatus,
-            this,
-            &MainWindow::updateProcessStatus);
-    ui->deviceWidget->setEnabled(false);
+    if (selectedCard.isValid()) {
+        QList<QFileInfo> files;
+        QString label;
+        statusBar()->showMessage(tr("Loading card..."));
+        label = selectedCard.name();
+        ui->cardLabel->setText(
+            label
+            + QString(tr("  (Used space: %1 GB)"))
+                  .arg(((float) (selectedCard.bytesTotal() - selectedCard.bytesAvailable()) / 1000
+                        / 1000 / 1000),
+                       0,
+                       'f',
+                       2));
+        files = getFiles(selectedCard.rootPath());
+        ui->deviceWidget->setFiles(files);
+        connect(ui->deviceWidget->fileModel,
+                &FileInfoModel::updateProcessStatus,
+                this,
+                &MainWindow::updateProcessStatus);
+        ui->deviceWidget->setEnabled(false);
 
 #if defined(__APPLE__)
-    try {
-      QPixmap pixmap = ExternalDriveIconFetcher::getExternalDrivePixmap(
-          selectedCard.rootPath());
+        try {
+            QPixmap pixmap = ExternalDriveIconFetcher::getExternalDrivePixmap(
+                selectedCard.rootPath());
 
-      ui->pixmapLabel->setPixmap(pixmap.scaled(32, 32, Qt::KeepAspectRatio));
-    } catch (...) {
-    }
+            ui->pixmapLabel->setPixmap(pixmap.scaled(32, 32, Qt::KeepAspectRatio));
+        } catch (...) {
+        }
 #endif
 
-    ui->moveButton->setDisabled(true);
-    ui->ejectButton->setEnabled(true);
-    ui->reloadButton->setEnabled(true);
-  }
+        ui->moveButton->setDisabled(true);
+        ui->ejectButton->setEnabled(true);
+        ui->reloadButton->setEnabled(true);
+    }
 }
 
 QImage requestImage(const QString &id, int height = 0, int width = 0) {
@@ -563,16 +588,20 @@ void MainWindow::emptyMainWindow() {
   ui->image->setPixmap(QPixmap());
   qDebug() << "doBackupImport" << doBackupImport;
   if (doBackupImport) {
-    ui->backupLabel->setEnabled(true);
-    ui->importBackupLocation->setEnabled(true);
-    ui->deleteBackupLocationButton->setEnabled(true);
-    ui->selectBackupLocation->setEnabled(true);
+      // ui->backupLabel->setEnabled(true);
+      ui->importBackupLocation->setEnabled(true);
+      ui->deleteBackupLocationButton->setEnabled(true);
+      ui->selectBackupLocation->setEnabled(true);
+      ui->freeSpaceBackupLabel->setEnabled(true);
+      ui->freeSpaceBackup->setEnabled(true);
 
   } else {
-    ui->backupLabel->setEnabled(false);
-    ui->importBackupLocation->setEnabled(false);
-    ui->deleteBackupLocationButton->setEnabled(false);
-    ui->selectBackupLocation->setEnabled(false);
+      // ui->backupLabel->setEnabled(false);
+      ui->importBackupLocation->setEnabled(false);
+      ui->deleteBackupLocationButton->setEnabled(false);
+      ui->selectBackupLocation->setEnabled(false);
+      ui->freeSpaceBackupLabel->setEnabled(false);
+      ui->freeSpaceBackup->setEnabled(false);
   }
 }
 
@@ -764,6 +793,17 @@ void MainWindow::updateImportToLabel() {
   ui->freeDiskSpace->setText(QString("%1 GB").arg(
       ((float)info.bytesAvailable() / 1000 / 1000 / 1000), 0, 'f', 2));
   freeProjectSpace = info.bytesAvailable();
+
+  if (doBackupImport) {
+      QDir Bfolder(importBackupFolder);
+      QStorageInfo Binfo(Bfolder);
+
+      ui->freeSpaceBackup->setText(
+          QString("%1 GB").arg(((float) Binfo.bytesAvailable() / 1000 / 1000 / 1000), 0, 'f', 2));
+      // freeProjectSpace = info.bytesAvailable();
+  } else {
+      ui->freeSpaceBackup->setText("");
+  }
 
   if (totalSelectedSize <= 0)
     ui->moveButton->setDisabled(true);
@@ -1303,17 +1343,22 @@ void MainWindow::on_backupBox_stateChanged(int arg1) {
   settings.setValue("doBackupImport", (bool)arg1);
   doBackupImport = (bool)arg1;
   if (doBackupImport) {
-    ui->backupLabel->setEnabled(true);
-    ui->importBackupLocation->setEnabled(true);
-    ui->deleteBackupLocationButton->setEnabled(true);
-    ui->selectBackupLocation->setEnabled(true);
+      // ui->backupLabel->setEnabled(true);
+      ui->importBackupLocation->setEnabled(true);
+      ui->deleteBackupLocationButton->setEnabled(true);
+      ui->selectBackupLocation->setEnabled(true);
+      ui->freeSpaceBackupLabel->setEnabled(true);
+      ui->freeSpaceBackup->setEnabled(true);
 
   } else {
-      ui->backupLabel->setEnabled(false);
+      // ui->backupLabel->setEnabled(false);
       ui->importBackupLocation->setEnabled(false);
       ui->deleteBackupLocationButton->setEnabled(false);
       ui->selectBackupLocation->setEnabled(false);
+      ui->freeSpaceBackupLabel->setEnabled(false);
+      ui->freeSpaceBackup->setEnabled(false);
   }
+  updateImportToLabel();
 }
 
 void MainWindow::on_selectBackupLocation_clicked()

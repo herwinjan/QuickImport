@@ -2,7 +2,7 @@
 #define PRESETDIALOG_H
 
 #include <QDialog>
-#include <MainWindow.h>
+#include "MainWindow.h"
 
 namespace Ui {
 class presetDialog;

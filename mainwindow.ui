@@ -234,6 +234,18 @@
            <string>Preview</string>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_6">
+           <property name="leftMargin">
+            <number>5</number>
+           </property>
+           <property name="topMargin">
+            <number>5</number>
+           </property>
+           <property name="rightMargin">
+            <number>5</number>
+           </property>
+           <property name="bottomMargin">
+            <number>5</number>
+           </property>
            <item>
             <widget class="QLabel" name="image">
              <property name="sizePolicy">
@@ -315,6 +327,18 @@
            <string>Project information</string>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_3">
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <property name="rightMargin">
+            <number>0</number>
+           </property>
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
            <item>
             <layout class="QFormLayout" name="formLayout_3">
              <property name="fieldGrowthPolicy">
@@ -333,50 +357,6 @@
                </property>
                <property name="alignment">
                 <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
-               </property>
-              </widget>
-             </item>
-             <item row="3" column="0">
-              <widget class="QLabel" name="projectNameLabel">
-               <property name="minimumSize">
-                <size>
-                 <width>150</width>
-                 <height>0</height>
-                </size>
-               </property>
-               <property name="text">
-                <string>Project name:</string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
-               </property>
-              </widget>
-             </item>
-             <item row="5" column="0">
-              <widget class="QLabel" name="label_2">
-               <property name="text">
-                <string>Import to (example output):</string>
-               </property>
-              </widget>
-             </item>
-             <item row="5" column="1">
-              <widget class="QLabel" name="importToLabel">
-               <property name="text">
-                <string/>
-               </property>
-              </widget>
-             </item>
-             <item row="6" column="0">
-              <widget class="QLabel" name="label_8">
-               <property name="text">
-                <string>Free Diskspace:</string>
-               </property>
-              </widget>
-             </item>
-             <item row="6" column="1">
-              <widget class="QLabel" name="freeDiskSpace">
-               <property name="text">
-                <string/>
                </property>
               </widget>
              </item>
@@ -412,9 +392,101 @@
                  </property>
                 </widget>
                </item>
+               <item>
+                <widget class="QLabel" name="label_5">
+                 <property name="text">
+                  <string>Free space: </string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLabel" name="freeDiskSpace">
+                 <property name="text">
+                  <string/>
+                 </property>
+                </widget>
+               </item>
               </layout>
              </item>
+             <item row="3" column="0">
+              <widget class="QLabel" name="backupLabel">
+               <property name="text">
+                <string>Backup import location:</string>
+               </property>
+              </widget>
+             </item>
              <item row="3" column="1">
+              <layout class="QHBoxLayout" name="backupLayout">
+               <property name="rightMargin">
+                <number>0</number>
+               </property>
+               <item>
+                <widget class="QCheckBox" name="backupBox">
+                 <property name="text">
+                  <string/>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QComboBox" name="importBackupLocation">
+                 <property name="minimumSize">
+                  <size>
+                   <width>250</width>
+                   <height>0</height>
+                  </size>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QToolButton" name="selectBackupLocation">
+                 <property name="text">
+                  <string>...</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QToolButton" name="deleteBackupLocationButton">
+                 <property name="text">
+                  <string>...</string>
+                 </property>
+                 <property name="icon">
+                  <iconset theme="edit-cut"/>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLabel" name="freeSpaceBackupLabel">
+                 <property name="text">
+                  <string>Free space: </string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLabel" name="freeSpaceBackup">
+                 <property name="text">
+                  <string/>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item row="4" column="0">
+              <widget class="QLabel" name="projectNameLabel">
+               <property name="minimumSize">
+                <size>
+                 <width>150</width>
+                 <height>0</height>
+                </size>
+               </property>
+               <property name="text">
+                <string>Project name:</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item row="4" column="1">
               <layout class="QHBoxLayout" name="horizontalLayout_9" stretch="0,0,0,0,0">
                <property name="topMargin">
                 <number>0</number>
@@ -480,14 +552,14 @@
                </item>
               </layout>
              </item>
-             <item row="4" column="0">
+             <item row="5" column="0">
               <widget class="QLabel" name="label_9">
                <property name="text">
                 <string>Filename format:</string>
                </property>
               </widget>
              </item>
-             <item row="4" column="1">
+             <item row="5" column="1">
               <layout class="QHBoxLayout" name="horizontalLayout_7">
                <property name="rightMargin">
                 <number>200</number>
@@ -527,46 +599,19 @@
                </item>
               </layout>
              </item>
-             <item row="2" column="0">
-              <widget class="QLabel" name="backupLabel">
+             <item row="6" column="0">
+              <widget class="QLabel" name="label_2">
                <property name="text">
-                <string>Backup import location:</string>
+                <string>Import to (example output):</string>
                </property>
               </widget>
              </item>
-             <item row="2" column="1">
-              <layout class="QHBoxLayout" name="backupLayout">
-               <property name="rightMargin">
-                <number>0</number>
+             <item row="6" column="1">
+              <widget class="QLabel" name="importToLabel">
+               <property name="text">
+                <string/>
                </property>
-               <item>
-                <widget class="QComboBox" name="importBackupLocation">
-                 <property name="minimumSize">
-                  <size>
-                   <width>250</width>
-                   <height>0</height>
-                  </size>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QToolButton" name="selectBackupLocation">
-                 <property name="text">
-                  <string>...</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QToolButton" name="deleteBackupLocationButton">
-                 <property name="text">
-                  <string>...</string>
-                 </property>
-                 <property name="icon">
-                  <iconset theme="edit-cut"/>
-                 </property>
-                </widget>
-               </item>
-              </layout>
+              </widget>
              </item>
             </layout>
            </item>
@@ -576,38 +621,39 @@
         <item>
          <widget class="QGroupBox" name="groupBox_3">
           <property name="title">
-           <string>Settings</string>
+           <string>Import Settings</string>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_8">
+           <property name="leftMargin">
+            <number>5</number>
+           </property>
+           <property name="topMargin">
+            <number>5</number>
+           </property>
+           <property name="rightMargin">
+            <number>5</number>
+           </property>
+           <property name="bottomMargin">
+            <number>5</number>
+           </property>
            <item>
-            <layout class="QFormLayout" name="formLayout_2">
-             <property name="fieldGrowthPolicy">
-              <enum>QFormLayout::FieldGrowthPolicy::FieldsStayAtSizeHint</enum>
+            <layout class="QGridLayout" name="gridLayout" rowstretch="0,0,0,0,0" columnstretch="0,0">
+             <property name="sizeConstraint">
+              <enum>QLayout::SizeConstraint::SetNoConstraint</enum>
              </property>
-             <item row="0" column="0">
-              <widget class="QLabel" name="label_7">
-               <property name="minimumSize">
-                <size>
-                 <width>150</width>
-                 <height>0</height>
-                </size>
-               </property>
-               <property name="text">
-                <string>Import settings:</string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="0">
-              <widget class="QLabel" name="label_6">
-               <property name="text">
-                <string/>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="1">
+             <property name="leftMargin">
+              <number>0</number>
+             </property>
+             <property name="topMargin">
+              <number>0</number>
+             </property>
+             <property name="rightMargin">
+              <number>0</number>
+             </property>
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
+             <item row="2" column="1">
               <widget class="QCheckBox" name="deleteAfterImportBox">
                <property name="text">
                 <string>Delete files afer import</string>
@@ -615,20 +661,6 @@
               </widget>
              </item>
              <item row="3" column="0">
-              <widget class="QLabel" name="label_5">
-               <property name="text">
-                <string/>
-               </property>
-              </widget>
-             </item>
-             <item row="3" column="1">
-              <widget class="QCheckBox" name="ejectBox">
-               <property name="text">
-                <string>Eject after import</string>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="1">
               <widget class="QCheckBox" name="mdCheckBox">
                <property name="text">
                 <string>Do MD5 check after copy and before delete</string>
@@ -638,45 +670,51 @@
                </property>
               </widget>
              </item>
-             <item row="4" column="1">
-              <widget class="QCheckBox" name="ejectIfEmptyBox">
-               <property name="text">
-                <string>Eject if card is empty</string>
-               </property>
-              </widget>
-             </item>
-             <item row="5" column="1">
-              <widget class="QCheckBox" name="quitAfterImportBox">
-               <property name="text">
-                <string>Quit after import</string>
-               </property>
-              </widget>
-             </item>
-             <item row="6" column="1">
+             <item row="0" column="0">
               <widget class="QCheckBox" name="quitEmptyCardBox">
                <property name="text">
                 <string>Quit if card is empty</string>
                </property>
               </widget>
              </item>
-             <item row="2" column="1">
+             <item row="2" column="0">
               <widget class="QCheckBox" name="deleteExistingBox">
                <property name="text">
-                <string>Delete existing files if size, name and date are the same</string>
+                <string>Delete existing files if size/name/date are the same</string>
                </property>
               </widget>
              </item>
-             <item row="7" column="1">
-              <widget class="QCheckBox" name="backupBox">
+             <item row="0" column="1">
+              <widget class="QCheckBox" name="quitAfterImportBox">
                <property name="text">
-                <string>Import to Backup location</string>
+                <string>Quit after import</string>
                </property>
               </widget>
              </item>
-             <item row="8" column="1">
-              <layout class="QHBoxLayout" name="horizontalLayout_8">
+             <item row="1" column="0">
+              <widget class="QCheckBox" name="ejectBox">
+               <property name="text">
+                <string>Eject after import</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QCheckBox" name="ejectIfEmptyBox">
+               <property name="text">
+                <string>Eject if card is empty</string>
+               </property>
+              </widget>
+             </item>
+             <item row="4" column="0">
+              <layout class="QHBoxLayout" name="horizontalLayout_8" stretch="0,0">
+               <property name="spacing">
+                <number>-1</number>
+               </property>
                <property name="sizeConstraint">
-                <enum>QLayout::SizeConstraint::SetNoConstraint</enum>
+                <enum>QLayout::SizeConstraint::SetDefaultConstraint</enum>
+               </property>
+               <property name="leftMargin">
+                <number>0</number>
                </property>
                <property name="rightMargin">
                 <number>0</number>
@@ -698,14 +736,14 @@
                  </property>
                 </widget>
                </item>
-               <item>
-                <widget class="QLabel" name="openApplicationText">
-                 <property name="text">
-                  <string/>
-                 </property>
-                </widget>
-               </item>
               </layout>
+             </item>
+             <item row="4" column="1">
+              <widget class="QLabel" name="openApplicationText">
+               <property name="text">
+                <string/>
+               </property>
+              </widget>
              </item>
             </layout>
            </item>

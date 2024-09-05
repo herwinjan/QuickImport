@@ -6,6 +6,8 @@
 
 int main(int argc, char *argv[])
 {
+    // return 0;
+
     QApplication a(argc, argv);
 
     QTranslator translator;
@@ -43,8 +45,8 @@ int main(int argc, char *argv[])
                         &w,
                         SLOT(slotDeviceRemoved(QString)),
                         Qt::DirectConnection);
+    // watcher->start();
 
-    watcher->start();
     w.show();
 
     qDebug() << "started";
