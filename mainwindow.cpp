@@ -15,13 +15,19 @@
 #include "externalDriveFetcher.h"
 #endif
 
+// Check delete if backup failed
+// only delete is backup goed ok
+// check backup space before backup
+// - option add: start backup even if there is no space, only copy until disk is full
+//     cgeck also backup featrure for this
+//
+
 #include "filecopydialog.h"
 #include "fileinfomodel.h"
 #include "presetdialog.h"
 #include "qborderlessdialog.h"
 #include "selectcarddialog.h"
 #include "ui_mainwindow.h"
-#include "xmpengine.h"
 
 #include <libraw/libraw.h>
 
@@ -89,7 +95,7 @@ MainWindow::MainWindow(QWidget *parent)
   QFileInfo fileInfo(openApplicationLocation);
   QString applicationName = fileInfo.fileName();
 
-  openApplicationLocation = openApplicationLocation;
+  // openApplicationLocation = openApplicationLocation;
   ui->openApplicationText->setText(applicationName);
 
   ui->deleteAfterImportBox->setCheckState(deleteAfterImport ? Qt::Checked : Qt::Unchecked);
@@ -108,15 +114,15 @@ MainWindow::MainWindow(QWidget *parent)
                                                   : Qt::Unchecked);
   ui->backupBox->setCheckState(doBackupImport ? Qt::Checked : Qt::Unchecked);
 
-  connect(ui->deviceWidget, SIGNAL(selectedUpdated(int, qint64)), this,
-          SLOT(selectedUpdated(int, qint64)));
-  connect(ui->deviceWidget, SIGNAL(spaceButtonPressed()), this,
-          SLOT(spaceButtonPressed()));
-  connect(ui->deviceWidget, SIGNAL(returnButtonPressed()), this,
-          SLOT(returnButtonPressed()));
-  connect(ui->deviceWidget, SIGNAL(doneLoading()), this, SLOT(doneLoadingCard()));
+  connect(ui->deviceWidget, &deviceList::selectedUpdated, this, &MainWindow::selectedUpdated);
+  connect(ui->deviceWidget, &deviceList::spaceButtonPressed, this, &MainWindow::spaceButtonPressed);
+  connect(ui->deviceWidget,
+          &deviceList::returnButtonPressed,
+          this,
+          &MainWindow::returnButtonPressed);
+  connect(ui->deviceWidget, &deviceList::doneLoading, this, &MainWindow::doneLoadingCard);
 
-  connect(ui->deviceWidget, SIGNAL(selectedNode(TreeNode *)), this, SLOT(selectedNode(TreeNode *)));
+  connect(ui->deviceWidget, &deviceList::selectedNode, this, &MainWindow::selectedNode);
 
   QKeySequence shortcutKey(Qt::CTRL | Qt::Key_I);
 
@@ -230,12 +236,12 @@ void MainWindow::slotDeviceAdded(const QString &dev) {
   qDebug("add %s", qPrintable(dev));
   QString devicePath = "/dev/";
   devicePath.append(dev);
-  QFileInfo fileInfo(devicePath);
+  // QFileInfo fileInfo(devicePath);
 
   //  qDebug() << QStorageInfo::mountedVolumes();
 
   int cnt = 0;
-  QString foundStr;
+  // QString foundStr;
   foreach (const QStorageInfo &storage, QStorageInfo::mountedVolumes()) {
     qDebug() << storage.device() << devicePath << storage.isValid()
              << storage.isReady();
@@ -665,7 +671,7 @@ void MainWindow::selectedNode(TreeNode *image) {
 
       QObject::connect(imageLoaderObject, &imageLoader::imageLoaded, this,
                        &MainWindow::showImage);
-      QObject::connect(imageLoaderObject, &imageLoader::loadingFailed, [=]() {
+      QObject::connect(imageLoaderObject, &imageLoader::loadingFailed, this, [=]() {
           // ui->image->setPixmap(QPixmap());
           // ui->image->setText(tr("Failed to load image."));
           QImage img = QImage(1024, 1024, QImage::Format_RGB32);
@@ -704,7 +710,7 @@ void MainWindow::showImage(const QImage &image, bool failed)
     // Set font, size, and color
     QFont font("Arial", 30); // You can customize the font and size
     painter.setFont(font);
-    QPoint point(50, 50);
+    // QPoint point(50, 50);
     painter.setPen(QColor(Qt::white)); // You can customize the text color
 
     // Draw text at the specified position
@@ -728,11 +734,11 @@ void MainWindow::showImage(const QImage &image, bool failed)
                      1004,
                      Qt::AlignRight,
                      QString("%1\n%2\n#%3\n%4 %5")
-                         .arg(currentSelectedImage->imageInfo.ownerName)
-                         .arg(currentSelectedImage->imageInfo.cameraName)
-                         .arg(currentSelectedImage->imageInfo.serialNumber)
-                         .arg(currentSelectedImage->imageInfo.lensMake)
-                         .arg(currentSelectedImage->imageInfo.lensModel)
+                         .arg(currentSelectedImage->imageInfo.ownerName,
+                              currentSelectedImage->imageInfo.cameraName,
+                              currentSelectedImage->imageInfo.serialNumber,
+                              currentSelectedImage->imageInfo.lensMake,
+                              currentSelectedImage->imageInfo.lensModel)
 
     );
     if (failed) {
@@ -1106,6 +1112,7 @@ void MainWindow::addLocationPreset(QString location)
 }
 void MainWindow::resetBackupLocationPreset(int sel = -1)
 {
+    Q_UNUSED(sel);
     ui->importBackupLocation->clear();
     ui->importBackupLocation->addItems(importBackupLocationList);
     if (importBackupLocationList.count() <= 0)
@@ -1116,7 +1123,7 @@ void MainWindow::resetBackupLocationPreset(int sel = -1)
         ui->importBackupLocation->setCurrentIndex(sel);
         importBackupFolder = importBackupLocationList.at(sel);
     } else {
-        sel = 0;
+        // sel = 0;
         importBackupFolder = QString();
     }
 
@@ -1133,7 +1140,7 @@ void MainWindow::resetLocationPreset(int sel = -1)
         ui->importLocation->setCurrentIndex(sel);
         importFolder = importLocationList.at(sel);
     } else {
-        sel = 0;
+        // sel = 0;
         importFolder = QString();
     }
 
@@ -1214,7 +1221,7 @@ void MainWindow::resetProjectName(int sel = -1) {
     projectName = projectNameList.at(sel);
   } else {
     projectName = QString();
-    sel = 0;
+    // sel = 0;
   }
 
   updateImportToLabel();

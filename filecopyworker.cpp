@@ -14,13 +14,13 @@ fileCopyWorker::fileCopyWorker(const QList<fileInfoStruct> &list,
                                const bool &deleteExisting,
                                const QString &importBackupLocation)
     : list(list)
+    , importBackupLocation(importBackupLocation)
     , importFolder(importFolder)
     , projectName(projectName)
     , fileNameFormat(fileNameFormat)
     , md5Check(md5Check)
     , deleteAfterImport(deleteAfterImport)
     , deleteExisting(deleteExisting)
-    , importBackupLocation(importBackupLocation)
 {}
 
 void fileCopyWorker::cancel()

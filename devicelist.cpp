@@ -54,10 +54,10 @@ void deviceList::expandTree()
     }
 
     // Get the current width of the column
-    int currentWidth = columnWidth(0);
+    // int currentWidth = columnWidth(0);
 
     // Add 20px to the current width
-    int newWidth = currentWidth;
+    // int newWidth = currentWidth;
     //+30;
 
     // Set the new width for the column

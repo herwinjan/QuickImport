@@ -11,6 +11,7 @@
 
 void exif_callback(void *context, int tag, int type, int len, unsigned int ord, void *ifp, long long)
 {
+    Q_UNUSED(ord);
     auto *data = static_cast<LibRaw_abstract_datastream *>(ifp);
     auto *mycontext = static_cast<imageInfoStruct *>(context);
     LibRaw_abstract_datastream *stream = (LibRaw_abstract_datastream *) ifp;
