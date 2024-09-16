@@ -35,28 +35,27 @@
 #include <QShortcut>
 
 QFileInfoList MainWindow::getFileListFromDir(const QString &directory) {
-  QDir qdir(directory);
-  QFileInfoList fileList = qdir.entryInfoList(
-      QStringList() << "*.3fr" << "*.ari" << "*.arw" << "*.arq" << "*.bay"
-                    << "*.braw" << "*.crw" << "*.cr2" << "*.cr3" << "*.cap"
-                    << "*.data" << "*.dcs" << "*.dcr" << "*.dng" << "*.drf"
-                    << "*.eip" << "*.erf" << "*.fff" << "*.gpr" << "*.heic"
-                    << "*.iiq" << "*.k25" << "*.kdc" << "*.mdc" << "*.mef"
-                    << "*.mos" << "*.mrw" << "*.nef" << "*.nrw" << "*.obm"
-                    << "*.orf" << "*.pef" << "*.ptx" << "*.pxn" << "*.r3d"
-                    << "*.raf" << "*.raw" << "*.rwl" << "*.rw2" << "*.rwz"
-                    << "*.sr2" << "*.srf" << "*.srw" << "*.tif" << "*.x3f"
-                    << "*.jpg" << "*.jpeg" << "*.mov" << "*.mp4" << "*.flv"
-                    << "*.avi" << "*.wmv" << "*.wav" << "*.avchd" << "*.heic"
-                    << "*.srt",
-      QDir::Files);
+    qDebug() << "Search" << directory;
+    QDir qdir(directory);
+    QFileInfoList fileList
+        = qdir.entryInfoList(QStringList() << "*.3fr" << "*.ari" << "*.arw" << "*.arq" << "*.bay"
+                                           << "*.braw" << "*.crw" << "*.cr2" << "*.cr3" << "*.cap"
+                                           << "*.data" << "*.dcs" << "*.dcr" << "*.dng" << "*.drf"
+                                           << "*.eip" << "*.erf" << "*.fff" << "*.gpr" << "*.heic"
+                                           << "*.iiq" << "*.k25" << "*.kdc" << "*.mdc" << "*.mef"
+                                           << "*.mos" << "*.mrw" << "*.nef" << "*.nrw" << "*.obm"
+                                           << "*.orf" << "*.pef" << "*.ptx" << "*.pxn" << "*.r3d"
+                                           << "*.raf" << "*.raw" << "*.rwl" << "*.rw2" << "*.rwz"
+                                           << "*.sr2" << "*.srf" << "*.srw" << "*.tif" << "*.x3f"
+                                           << "*.jpg" << "*.jpeg" << "*.mov" << "*.mp4" << "*.flv"
+                                           << "*.avi" << "*.wmv" << "*.wav" << "*.avchd" << "*.heic"
+                                           << "*.srt",
+                             QDir::Files);
 
-  for (const QFileInfo &subdir :
-       qdir.entryInfoList(QDir::AllDirs | QDir::NoDotAndDotDot)) {
-
-    fileList << getFileListFromDir(
-        subdir.absoluteFilePath()); // this is the recursion
-  }
+    qDebug() << "Found:" << fileList.count();
+    for (const QFileInfo &subdir : qdir.entryInfoList(QDir::AllDirs | QDir::NoDotAndDotDot)) {
+        fileList << getFileListFromDir(subdir.absoluteFilePath()); // this is the recursion
+    }
 
   return fileList;
 }
@@ -416,6 +415,7 @@ QList<QFileInfo> MainWindow::getFiles(QString map) {
   QList<QFileInfo> files;
 
   files = getFileListFromDir(map);
+  qDebug() << "Found # files:" << files.count();
   return files;
 }
 void MainWindow::displayNoCardDialog()

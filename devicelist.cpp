@@ -18,6 +18,7 @@ deviceList::deviceList(QWidget *parent ) :
 
 void deviceList::setFiles(QList<QFileInfo> files)
 {
+    qDebug() << "SetFiles" << files.count();
     if (fileModel)
         delete fileModel;
     fileModel=new FileInfoModel(files, this);

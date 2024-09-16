@@ -148,6 +148,7 @@ FileInfoModel::FileInfoModel(const QList<QFileInfo> &fileInfoList, QObject *pare
     : QAbstractItemModel(parent)
     , m_fileInfoList(fileInfoList)
 {
+    qDebug() << "FileInfoModek init:" << m_fileInfoList.count();
     connect(&m_treeWatcher,
             &QFutureWatcher<void>::finished,
             this,
@@ -307,6 +308,7 @@ void FileInfoModel::setupModelData()
     auto buildTree = [this]() {
         QMutexLocker locker(&m_mutex);
         int items = 0;
+        qDebug() << "Loop Model init:" << m_fileInfoList.count();
         for (const QFileInfo &fileInfo : m_fileInfoList) {
             QDateTime dateTime = fileInfo.lastModified();
             QString year = QString::number(dateTime.date().year());
@@ -342,23 +344,23 @@ void FileInfoModel::setupModelData()
                     localRawProc->set_exifparser_handler(exif_callback, &fileNode->imageInfo);
                     int ret = localRawProc->open_file(fileNode->filePath.toLatin1().data());
                     if (ret != LIBRAW_SUCCESS) {
-                        qWarning()
-                            << "Failed to open file:" << fileNode->filePath << "Error:" << ret;
-                        delete localRawProc;
-                        return;
+                        // qWarning()
+                        // << "Failed to open file:" << fileNode->filePath << "Error:" << ret;
+                        // delete localRawProc;
+                        // return;
                     }
                 } catch (const std::exception &e) {
                     qWarning() << "Exception caught during LibRaw processing:" << e.what();
-                    if (localRawProc) {
-                        delete localRawProc;
-                    }
-                    return;
+                    // if (localRawProc) {
+                    // delete localRawProc;
+                    // }
+                    // return;
                 } catch (...) {
                     qWarning() << "Unknown exception caught during LibRaw processing";
-                    if (localRawProc) {
-                        delete localRawProc;
-                    }
-                    return;
+                    // if (localRawProc) {
+                    // delete localRawProc;
+                    // }
+                    // return;
                 }
                 delete localRawProc;
             } catch (const std::exception &e) {
@@ -368,7 +370,7 @@ void FileInfoModel::setupModelData()
             }
             //  qDebug() << "Added" << fileNode->filePath << fileNode->data;
         }
-        qDebug() << "Tree structure built.";
+        qDebug() << "Tree structure built." << items << m_fileInfoList.count();
     };
 
     QFuture<void> treeFuture = QtConcurrent::run(buildTree);

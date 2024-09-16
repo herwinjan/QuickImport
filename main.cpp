@@ -2,12 +2,11 @@
 #include "mainwindow.h"
 
 #include <QApplication>
+#include <QImageReader>
 #include <QTranslator>
 
 int main(int argc, char *argv[])
 {
-    // return 0;
-
     QApplication a(argc, argv);
 
     QTranslator translator;
