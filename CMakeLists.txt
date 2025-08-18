@@ -12,7 +12,13 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # ---- Qt 6 ----
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Concurrent Widgets)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Concurrent Widgets LinguistTools)
+
+set(TS_FILES
+    quickimport_en.ts
+    quickimport_nl.ts
+    
+)
 
 # ---- Sources & headers ----
 set(PROJECT_SOURCES
@@ -68,7 +74,7 @@ set(PROJECT_SOURCES
 
     # .qrc
     icons.qrc
-    translations.qrc
+
 )
 
 # ---- Executable (Qt6 auto-handles moc/uic/rcc) ----
@@ -90,12 +96,55 @@ target_compile_definitions(QuickImport PRIVATE
     QT_DISABLE_DEPRECATED_BEFORE=0x060000
 )
 
+
 target_link_libraries(QuickImport PRIVATE
     Qt6::Core
     Qt6::Gui
     Qt6::Concurrent
     Qt6::Widgets
 )
+
+# ---- Translations (.ts -> .qm -> embedded at :/translation) ----
+# Build .qm files with lrelease explicitly, then embed them via rcc
+# TS files are listed in TS_FILES above and live in the source root
+
+# Output directory for compiled .qm files
+set(QM_OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/translations)
+file(MAKE_DIRECTORY ${QM_OUTPUT_DIR})
+
+# Map each .ts to a .qm in the build tree
+set(QM_FILES)
+foreach(_ts ${TS_FILES})
+    get_filename_component(_ts_name ${_ts} NAME_WE)
+    set(_qm ${QM_OUTPUT_DIR}/${_ts_name}.qm)
+    list(APPEND QM_FILES ${_qm})
+
+    add_custom_command(
+        OUTPUT ${_qm}
+        COMMAND $<TARGET_FILE:Qt6::lrelease> ${CMAKE_CURRENT_SOURCE_DIR}/${_ts} -qm ${_qm}
+        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_ts}
+        VERBATIM
+        COMMENT "lrelease ${_ts} -> ${_qm}"
+    )
+endforeach()
+
+# Aggregate target to build all .qm files
+add_custom_target(QuickImport_ts ALL DEPENDS ${QM_FILES})
+
+# Generate a QRC that lists the compiled .qm files and embed it via AUTORCC
+set(GENERATED_QM_QRC ${CMAKE_CURRENT_BINARY_DIR}/translations.qrc)
+file(WRITE ${GENERATED_QM_QRC} "<RCC>\n  <qresource prefix=\"/translation\">\n")
+foreach(_qm ${QM_FILES})
+    get_filename_component(_qm_name ${_qm} NAME)
+    file(APPEND ${GENERATED_QM_QRC} "    <file alias=\"${_qm_name}\">${_qm}</file>\n")
+endforeach()
+file(APPEND ${GENERATED_QM_QRC} "  </qresource>\n</RCC>\n")
+
+# Ensure the app builds .qm before rcc processes the qrc
+add_dependencies(QuickImport QuickImport_ts)
+
+# AUTORCC will pick up this qrc and embed the translations at :/translation
+target_sources(QuickImport PRIVATE ${GENERATED_QM_QRC})
 
 # ---- App bundle / icon ----
 if(APPLE)
@@ -163,10 +212,9 @@ set(DISTFILES
     QuickImportLogo-1024.icns
     images/QuickImport-1.png
     qdevicewatcher/libQDeviceWatcher.pri
-    quickimport_en.qm
-    quickimport_nl.qm
     readme.md
 )
+
 # You can attach them to the target if you want IDE visibility:
 # target_sources(QuickImport PRIVATE ${DISTFILES})
 
