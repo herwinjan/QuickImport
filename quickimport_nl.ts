@@ -11,22 +11,22 @@
     <message>
         <location filename="fileinfomodel.cpp" line="187"/>
         <source>Time taken</source>
-        <translation>Tijd vastgelegd</translation>
+        <translation>Opnametijd</translation>
     </message>
     <message>
         <location filename="fileinfomodel.cpp" line="189"/>
         <source>Size</source>
-        <translation>Omvang</translation>
+        <translation>Grootte</translation>
     </message>
     <message>
         <location filename="fileinfomodel.cpp" line="191"/>
         <source>IPTC</source>
-        <translation type="unfinished"></translation>
+        <translation>IPTC</translation>
     </message>
     <message>
         <location filename="fileinfomodel.cpp" line="335"/>
         <source>loading EXIF data #%1 of %2.</source>
-        <translation type="unfinished"></translation>
+        <translation>EXIF-gegevens laden #%1 van %2.</translation>
     </message>
 </context>
 <context>
@@ -35,7 +35,7 @@
         <location filename="mainwindow.ui" line="23"/>
         <location filename="build/QuickImport_autogen/include/ui_mainwindow.h" line="673"/>
         <source>MainWindow</source>
-        <translation>MainWindow</translation>
+        <translation>Hoofdvenster</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="36"/>
@@ -47,7 +47,7 @@
         <location filename="mainwindow.ui" line="49"/>
         <location filename="build/QuickImport_autogen/include/ui_mainwindow.h" line="675"/>
         <source>Cardname:</source>
-        <translation>Kaart naam:</translation>
+        <translation>Kaartnaam:</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="81"/>
@@ -60,7 +60,7 @@
         <location filename="mainwindow.ui" line="107"/>
         <location filename="build/QuickImport_autogen/include/ui_mainwindow.h" line="678"/>
         <source>Eject</source>
-        <translation>Eject</translation>
+        <translation>Uitwerpen</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="195"/>
@@ -78,13 +78,13 @@
         <location filename="mainwindow.ui" line="268"/>
         <location filename="build/QuickImport_autogen/include/ui_mainwindow.h" line="685"/>
         <source>Load preview image</source>
-        <translation>Automatisch laad voorbeeld foto</translation>
+        <translation>Voorbeeldafbeelding laden</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="728"/>
         <location filename="build/QuickImport_autogen/include/ui_mainwindow.h" line="717"/>
         <source>Open application after import</source>
-        <translation type="unfinished"></translation>
+        <translation>Applicatie openen na import</translation>
     </message>
     <message>
         <source>Import location</source>
@@ -94,7 +94,7 @@
         <location filename="mainwindow.ui" line="356"/>
         <location filename="build/QuickImport_autogen/include/ui_mainwindow.h" line="690"/>
         <source>Import Location:</source>
-        <translation>Importeer locatie:</translation>
+        <translation>Importlocatie:</translation>
     </message>
     <message>
         <source>Select Import location</source>
@@ -104,13 +104,13 @@
         <location filename="mainwindow.ui" line="327"/>
         <location filename="build/QuickImport_autogen/include/ui_mainwindow.h" line="689"/>
         <source>Project information</source>
-        <translation>Project informatie</translation>
+        <translation>Projectinformatie</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="482"/>
         <location filename="build/QuickImport_autogen/include/ui_mainwindow.h" line="701"/>
         <source>Project name:</source>
-        <translation>project naam:</translation>
+        <translation>Projectnaam:</translation>
     </message>
     <message>
         <source>Import to:</source>
@@ -144,13 +144,13 @@
         <location filename="mainwindow.ui" line="278"/>
         <location filename="build/QuickImport_autogen/include/ui_mainwindow.h" line="686"/>
         <source>Presets</source>
-        <translation type="unfinished"></translation>
+        <translation>Voorinstellingen</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="292"/>
         <location filename="build/QuickImport_autogen/include/ui_mainwindow.h" line="687"/>
         <source>Preset</source>
-        <translation type="unfinished"></translation>
+        <translation>Voorinstelling</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="307"/>
@@ -170,7 +170,7 @@
         <location filename="build/QuickImport_autogen/include/ui_mainwindow.h" line="706"/>
         <location filename="build/QuickImport_autogen/include/ui_mainwindow.h" line="718"/>
         <source>...</source>
-        <translation type="unfinished"></translation>
+        <translation>...</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="398"/>
@@ -178,43 +178,43 @@
         <location filename="build/QuickImport_autogen/include/ui_mainwindow.h" line="693"/>
         <location filename="build/QuickImport_autogen/include/ui_mainwindow.h" line="699"/>
         <source>Free space: </source>
-        <translation type="unfinished"></translation>
+        <translation>Vrije ruimte: </translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="414"/>
         <location filename="build/QuickImport_autogen/include/ui_mainwindow.h" line="695"/>
         <source>Backup import location:</source>
-        <translation type="unfinished"></translation>
+        <translation>Back-up importlocatie:</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="605"/>
         <location filename="build/QuickImport_autogen/include/ui_mainwindow.h" line="707"/>
         <source>Import to (example output):</source>
-        <translation type="unfinished"></translation>
+        <translation>Importeren naar (voorbeelduitvoer):</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="558"/>
         <location filename="build/QuickImport_autogen/include/ui_mainwindow.h" line="704"/>
         <source>Filename format:</source>
-        <translation type="unfinished"></translation>
+        <translation>Bestandsnaamformaat:</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="624"/>
         <location filename="build/QuickImport_autogen/include/ui_mainwindow.h" line="709"/>
         <source>Import Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Importinstellingen</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="683"/>
         <location filename="build/QuickImport_autogen/include/ui_mainwindow.h" line="713"/>
         <source>Delete existing files if size/name/date are the same</source>
-        <translation type="unfinished"></translation>
+        <translation>Bestaande bestanden verwijderen als grootte/naam/datum gelijk zijn</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="697"/>
         <location filename="build/QuickImport_autogen/include/ui_mainwindow.h" line="715"/>
         <source>Eject after import</source>
-        <translation>Na import kaart uitwerpen</translation>
+        <translation>Kaart na import uitwerpen</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="704"/>
@@ -242,37 +242,37 @@
         <location filename="mainwindow.ui" line="823"/>
         <location filename="build/QuickImport_autogen/include/ui_mainwindow.h" line="720"/>
         <source>Import</source>
-        <translation>Importeer</translation>
+        <translation>Importeren</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="857"/>
         <location filename="build/QuickImport_autogen/include/ui_mainwindow.h" line="721"/>
         <source>Quick View</source>
-        <translation>Snel bekijken</translation>
+        <translation>Snelle weergave</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="864"/>
         <location filename="build/QuickImport_autogen/include/ui_mainwindow.h" line="722"/>
         <source>Check all</source>
-        <translation>Vink alles aan</translation>
+        <translation>Alles selecteren</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="871"/>
         <location filename="build/QuickImport_autogen/include/ui_mainwindow.h" line="723"/>
         <source>Uncheck all</source>
-        <translation>Deselecteer alles</translation>
+        <translation>Alles deselecteren</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="878"/>
         <location filename="build/QuickImport_autogen/include/ui_mainwindow.h" line="724"/>
         <source>Check Selected</source>
-        <translation>Vink geselecteerd aan</translation>
+        <translation>Geselecteerde aanvinken</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="885"/>
         <location filename="build/QuickImport_autogen/include/ui_mainwindow.h" line="725"/>
         <source>uncheck Selected</source>
-        <translation>verwijder vinkje geselecteerde</translation>
+        <translation>Geselecteerde uitvinken</translation>
     </message>
     <message>
         <source>&lt;no location set&gt;</source>
@@ -281,7 +281,7 @@
     <message>
         <location filename="mainwindow.cpp" line="312"/>
         <source>%1 GB</source>
-        <translation></translation>
+        <translation>%1 GB</translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="313"/>
@@ -333,12 +333,12 @@
     <message>
         <location filename="mainwindow.cpp" line="269"/>
         <source>Card inserted</source>
-        <translation type="unfinished"></translation>
+        <translation>Kaart geplaatst</translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="270"/>
         <source>Do you want to open new inserter card?</source>
-        <translation type="unfinished"></translation>
+        <translation>Wilt u de nieuw geplaatste kaart openen?</translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="584"/>
@@ -358,22 +358,22 @@
     <message>
         <location filename="mainwindow.cpp" line="1456"/>
         <source>Applications (*.exe)</source>
-        <translation type="unfinished"></translation>
+        <translation>Applicaties (*.exe)</translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="1459"/>
         <source>Applications (*.app)</source>
-        <translation type="unfinished"></translation>
+        <translation>Applicaties (*.app)</translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="1462"/>
         <source>Applications (*.sh *.bin *.run *.AppImage);;All Files (*)</source>
-        <translation type="unfinished"></translation>
+        <translation>Applicaties (*.sh *.bin *.run *.AppImage);;Alle bestanden (*)</translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="1466"/>
         <source>Choose Application</source>
-        <translation type="unfinished"></translation>
+        <translation>Kies applicatie</translation>
     </message>
 </context>
 <context>
@@ -382,7 +382,7 @@
         <location filename="metadatadialog.ui" line="14"/>
         <location filename="build/QuickImport_autogen/include/ui_metadatadialog.h" line="45"/>
         <source>Dialog</source>
-        <translation type="unfinished"></translation>
+        <translation>Dialoogvenster</translation>
     </message>
 </context>
 <context>
@@ -391,19 +391,19 @@
         <location filename="metadatatemplatedialog.ui" line="14"/>
         <location filename="build/QuickImport_autogen/include/ui_metadatatemplatedialog.h" line="260"/>
         <source>Dialog</source>
-        <translation type="unfinished"></translation>
+        <translation>Dialoogvenster</translation>
     </message>
     <message>
         <location filename="metadatatemplatedialog.ui" line="20"/>
         <location filename="build/QuickImport_autogen/include/ui_metadatatemplatedialog.h" line="261"/>
         <source>Content</source>
-        <translation type="unfinished"></translation>
+        <translation>Inhoud</translation>
     </message>
     <message>
         <location filename="metadatatemplatedialog.ui" line="37"/>
         <location filename="build/QuickImport_autogen/include/ui_metadatatemplatedialog.h" line="263"/>
         <source>Description/Captions:</source>
-        <translation type="unfinished"></translation>
+        <translation>Beschrijving/Bijschriften:</translation>
     </message>
     <message>
         <location filename="metadatatemplatedialog.ui" line="60"/>
@@ -415,25 +415,25 @@
         <location filename="build/QuickImport_autogen/include/ui_metadatatemplatedialog.h" line="270"/>
         <location filename="build/QuickImport_autogen/include/ui_metadatatemplatedialog.h" line="273"/>
         <source>...</source>
-        <translation type="unfinished"></translation>
+        <translation>...</translation>
     </message>
     <message>
         <location filename="metadatatemplatedialog.ui" line="85"/>
         <location filename="build/QuickImport_autogen/include/ui_metadatatemplatedialog.h" line="266"/>
         <source>Alt Text</source>
-        <translation type="unfinished"></translation>
+        <translation>Alt-tekst</translation>
     </message>
     <message>
         <location filename="metadatatemplatedialog.ui" line="133"/>
         <location filename="build/QuickImport_autogen/include/ui_metadatatemplatedialog.h" line="269"/>
         <source>Headline</source>
-        <translation type="unfinished"></translation>
+        <translation>Kop</translation>
     </message>
     <message>
         <location filename="metadatatemplatedialog.ui" line="181"/>
         <location filename="build/QuickImport_autogen/include/ui_metadatatemplatedialog.h" line="272"/>
         <source>Keywords</source>
-        <translation type="unfinished"></translation>
+        <translation>Trefwoorden</translation>
     </message>
 </context>
 <context>
@@ -442,13 +442,13 @@
         <location filename="selectcarddialog.ui" line="14"/>
         <location filename="build/QuickImport_autogen/include/ui_selectcarddialog.h" line="66"/>
         <source>Dialog</source>
-        <translation></translation>
+        <translation>Dialoogvenster</translation>
     </message>
     <message>
         <location filename="selectcarddialog.ui" line="23"/>
         <location filename="build/QuickImport_autogen/include/ui_selectcarddialog.h" line="67"/>
         <source>Select Card where to import files from:</source>
-        <translation>Selecteer Kaart waar u bestanden van wilt importeren:</translation>
+        <translation>Selecteer de kaart waarvan u bestanden wilt importeren:</translation>
     </message>
     <message>
         <location filename="selectcarddialog.cpp" line="26"/>
@@ -462,13 +462,13 @@
         <location filename="aboutdialog.ui" line="14"/>
         <location filename="build/QuickImport_autogen/include/ui_aboutdialog.h" line="99"/>
         <source>Dialog</source>
-        <translation></translation>
+        <translation>Dialoogvenster</translation>
     </message>
     <message>
         <location filename="aboutdialog.ui" line="26"/>
         <location filename="build/QuickImport_autogen/include/ui_aboutdialog.h" line="100"/>
         <source>About</source>
-        <translation></translation>
+        <translation>Over</translation>
     </message>
     <message>
         <location filename="aboutdialog.ui" line="38"/>
@@ -480,7 +480,7 @@
         <location filename="aboutdialog.ui" line="56"/>
         <location filename="build/QuickImport_autogen/include/ui_aboutdialog.h" line="103"/>
         <source>Don&apos;t show on statup</source>
-        <translation>Niet weergeven tijdens starten applicatie</translation>
+        <translation>Niet tonen bij opstarten</translation>
     </message>
     <message>
         <location filename="aboutdialog.cpp" line="14"/>
@@ -494,13 +494,13 @@
         <location filename="filecopydialog.ui" line="14"/>
         <location filename="build/QuickImport_autogen/include/ui_filecopydialog.h" line="121"/>
         <source>Dialog</source>
-        <translation></translation>
+        <translation>Dialoogvenster</translation>
     </message>
     <message>
         <location filename="filecopydialog.ui" line="84"/>
         <location filename="build/QuickImport_autogen/include/ui_filecopydialog.h" line="123"/>
         <source>Cancel</source>
-        <translation></translation>
+        <translation>Annuleren</translation>
     </message>
     <message>
         <location filename="filecopydialog.cpp" line="30"/>
@@ -511,7 +511,7 @@
         <location filename="filecopydialog.cpp" line="64"/>
         <location filename="filecopydialog.cpp" line="91"/>
         <source>Error</source>
-        <translation type="unfinished"></translation>
+        <translation>Fout</translation>
     </message>
     <message>
         <location filename="filecopydialog.cpp" line="116"/>
@@ -547,7 +547,7 @@
     <message>
         <location filename="filecopyworker.cpp" line="229"/>
         <source>MD5 check failed for %1 -&gt; %2</source>
-        <translation type="unfinished"></translation>
+        <translation>MD5-controle mislukt voor %1 → %2</translation>
     </message>
 </context>
 <context>
@@ -567,37 +567,37 @@
         <location filename="presetdialog.ui" line="14"/>
         <location filename="build/QuickImport_autogen/include/ui_presetdialog.h" line="138"/>
         <source>Dialog</source>
-        <translation type="unfinished"></translation>
+        <translation>Dialoogvenster</translation>
     </message>
     <message>
         <location filename="presetdialog.ui" line="20"/>
         <location filename="build/QuickImport_autogen/include/ui_presetdialog.h" line="139"/>
         <source>Preset</source>
-        <translation type="unfinished"></translation>
+        <translation>Voorinstelling</translation>
     </message>
     <message>
         <location filename="presetdialog.ui" line="28"/>
         <location filename="build/QuickImport_autogen/include/ui_presetdialog.h" line="140"/>
         <source>Name:</source>
-        <translation type="unfinished"></translation>
+        <translation>Naam:</translation>
     </message>
     <message>
         <location filename="presetdialog.ui" line="40"/>
         <location filename="build/QuickImport_autogen/include/ui_presetdialog.h" line="141"/>
         <source>Save</source>
-        <translation type="unfinished"></translation>
+        <translation>Opslaan</translation>
     </message>
     <message>
         <location filename="presetdialog.ui" line="54"/>
         <location filename="build/QuickImport_autogen/include/ui_presetdialog.h" line="142"/>
         <source>Presets</source>
-        <translation type="unfinished"></translation>
+        <translation>Voorinstellingen</translation>
     </message>
     <message>
         <location filename="presetdialog.ui" line="78"/>
         <location filename="build/QuickImport_autogen/include/ui_presetdialog.h" line="143"/>
         <source>verwijder</source>
-        <translation type="unfinished"></translation>
+        <translation>Verwijderen</translation>
     </message>
 </context>
 <context>
@@ -606,25 +606,25 @@
         <location filename="shortcutdialog.ui" line="14"/>
         <location filename="build/QuickImport_autogen/include/ui_shortcutdialog.h" line="77"/>
         <source>Dialog</source>
-        <translation type="unfinished"></translation>
+        <translation>Dialoogvenster</translation>
     </message>
     <message>
         <location filename="shortcutdialog.ui" line="20"/>
         <location filename="build/QuickImport_autogen/include/ui_shortcutdialog.h" line="78"/>
         <source>GroupBox</source>
-        <translation type="unfinished"></translation>
+        <translation>Groep</translation>
     </message>
     <message>
         <location filename="shortcutdialog.ui" line="26"/>
         <location filename="build/QuickImport_autogen/include/ui_shortcutdialog.h" line="79"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;{D} : day (2 digits)&lt;/p&gt;&lt;p&gt;{m} : month (2 digits)&lt;/p&gt;&lt;p&gt;{y} : year (2 digits)&lt;/p&gt;&lt;p&gt;{yy} : year (4 digits)&lt;/p&gt;&lt;p&gt;{W} : week number&lt;/p&gt;&lt;p&gt;{h} : hour (2 digits)&lt;/p&gt;&lt;p&gt;{H} : hour (4 digits)&lt;/p&gt;&lt;p&gt;{M}: minute (2 digits)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;{D} : dag (2 cijfers)&lt;/p&gt;&lt;p&gt;{m} : maand (2 cijfers)&lt;/p&gt;&lt;p&gt;{y} : jaar (2 cijfers)&lt;/p&gt;&lt;p&gt;{yy} : jaar (4 cijfers)&lt;/p&gt;&lt;p&gt;{W} : weeknummer&lt;/p&gt;&lt;p&gt;{h} : uur (2 cijfers)&lt;/p&gt;&lt;p&gt;{H} : uur (4 cijfers)&lt;/p&gt;&lt;p&gt;{M}: minuut (2 cijfers)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="shortcutdialog.ui" line="39"/>
         <location filename="build/QuickImport_autogen/include/ui_shortcutdialog.h" line="80"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;{i} : ISO&lt;/p&gt;&lt;p&gt;{c} : camera Serial&lt;/p&gt;&lt;p&gt;{T} : camera Model&lt;/p&gt;&lt;p&gt;{O} : owner&lt;/p&gt;&lt;p&gt;{o} : filename&lt;/p&gt;&lt;p&gt;{J} : project name&lt;/p&gt;&lt;p&gt;{e} : file extention&lt;/p&gt;&lt;p&gt;{r} : image number&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;{i} : ISO&lt;/p&gt;&lt;p&gt;{c} : cameraserienummer&lt;/p&gt;&lt;p&gt;{T} : cameramodel&lt;/p&gt;&lt;p&gt;{O} : eigenaar&lt;/p&gt;&lt;p&gt;{o} : bestandsnaam&lt;/p&gt;&lt;p&gt;{J} : projectnaam&lt;/p&gt;&lt;p&gt;{e} : bestandsextensie&lt;/p&gt;&lt;p&gt;{r} : afbeeldingsnummer&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
 </context>
 </TS>
