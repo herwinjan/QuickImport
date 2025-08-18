@@ -37,27 +37,31 @@
 QFileInfoList MainWindow::getFileListFromDir(const QString &directory) {
     qDebug() << "Search" << directory;
     QDir qdir(directory);
-    QFileInfoList fileList
-        = qdir.entryInfoList(QStringList() << "*.3fr" << "*.ari" << "*.arw" << "*.arq" << "*.bay"
-                                           << "*.braw" << "*.crw" << "*.cr2" << "*.cr3" << "*.cap"
-                                           << "*.data" << "*.dcs" << "*.dcr" << "*.dng" << "*.drf"
-                                           << "*.eip" << "*.erf" << "*.fff" << "*.gpr" << "*.heic"
-                                           << "*.iiq" << "*.k25" << "*.kdc" << "*.mdc" << "*.mef"
-                                           << "*.mos" << "*.mrw" << "*.nef" << "*.nrw" << "*.obm"
-                                           << "*.orf" << "*.pef" << "*.ptx" << "*.pxn" << "*.r3d"
-                                           << "*.raf" << "*.raw" << "*.rwl" << "*.rw2" << "*.rwz"
-                                           << "*.sr2" << "*.srf" << "*.srw" << "*.tif" << "*.x3f"
-                                           << "*.jpg" << "*.jpeg" << "*.mov" << "*.mp4" << "*.flv"
-                                           << "*.avi" << "*.wmv" << "*.wav" << "*.avchd" 
-                                           << "*.srt",
-                             QDir::Files);
+    // Files only, readable, do not follow symlinks (prevents odd loops)
+    qdir.setFilter(QDir::Files | QDir::NoSymLinks | QDir::Readable);
+    const QStringList patterns = QStringList()
+        << "*.3fr" << "*.ari" << "*.arw" << "*.arq" << "*.bay"
+        << "*.braw" << "*.crw" << "*.cr2" << "*.cr3" << "*.cap"
+        << "*.data" << "*.dcs" << "*.dcr" << "*.dng" << "*.drf"
+        << "*.eip" << "*.erf" << "*.fff" << "*.gpr" << "*.heic"
+        << "*.iiq" << "*.k25" << "*.kdc" << "*.mdc" << "*.mef"
+        << "*.mos" << "*.mrw" << "*.nef" << "*.nrw" << "*.obm"
+        << "*.orf" << "*.pef" << "*.ptx" << "*.pxn" << "*.r3d"
+        << "*.raf" << "*.raw" << "*.rwl" << "*.rw2" << "*.rwz"
+        << "*.sr2" << "*.srf" << "*.srw" << "*.tif" << "*.x3f"
+        << "*.jpg" << "*.jpeg" << "*.mov" << "*.mp4" << "*.flv"
+        << "*.avi" << "*.wmv" << "*.wav" << "*.avchd" << "*.srt";
 
+    QFileInfoList fileList = qdir.entryInfoList(patterns, QDir::Files);
     qDebug() << "Found:" << fileList.count();
-    for (const QFileInfo &subdir : qdir.entryInfoList(QDir::AllDirs | QDir::NoDotAndDotDot)) {
-        fileList << getFileListFromDir(subdir.absoluteFilePath()); // this is the recursion
-    }
 
-  return fileList;
+    // Recurse into subdirectories (no dot entries, no symlinks)
+    QDir subdirIter(directory);
+    const QFileInfoList subdirs = subdirIter.entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot | QDir::NoSymLinks | QDir::Readable);
+    for (const QFileInfo &subdir : subdirs) {
+        fileList << getFileListFromDir(subdir.absoluteFilePath());
+    }
+    return fileList;
 }
 
 MainWindow::MainWindow(QWidget *parent)
@@ -85,7 +89,7 @@ MainWindow::MainWindow(QWidget *parent)
   ejectIfEmpty = settings.value("ejectIfEmpty", false).toBool();
   doBackupImport = settings.value("doBackupImport", false).toBool();
   openApplicationAfterImport = settings.value("openApplicationAfterImport", false).toBool();
-  on_openApplicationAfterImport_stateChanged(openApplicationAfterImport);
+  ui->OpenApplicationLocation->setEnabled(openApplicationAfterImport);
   ui->openApplicationAfterImport->setCheckState(openApplicationAfterImport ? Qt::Checked
                                                                            : Qt::Unchecked);
 
@@ -171,9 +175,13 @@ MainWindow::MainWindow(QWidget *parent)
 void MainWindow::updatePresetList() {
     ui->presetComboBox->clear();
 
-    if (ui->presetComboBox->model())
-        delete ui->presetComboBox->model();
-    presetListModel *model = new presetListModel(presetList);
+    // Avoid deleting a model owned elsewhere; detach first, then delete if orphaned
+    QAbstractItemModel *old = ui->presetComboBox->model();
+    ui->presetComboBox->setModel(nullptr);
+    if (old && !old->parent()) {
+        delete old;
+    }
+    auto *model = new presetListModel(presetList);
     ui->presetComboBox->setModel(model);
 
     ui->presetComboBox->setPlaceholderText(QStringLiteral("--Select to load preset--"));
@@ -421,15 +429,13 @@ QList<QFileInfo> MainWindow::getFiles(QString map) {
 }
 void MainWindow::displayNoCardDialog()
 {
-    QMessageBox *msgBox = nullptr;
-    msgBox = new QMessageBox(this);
+    QMessageBox msgBox(this);
     qDebug() << "here4";
-    msgBox->setText(tr("No Card found, please insert card."));
-    msgBox->setIcon(QMessageBox::Critical);
+    msgBox.setText(tr("No Card found, please insert card."));
+    msgBox.setIcon(QMessageBox::Critical);
     qDebug() << "here4i1";
-    msgBox->exec();
+    msgBox.exec();
     qDebug() << "here5";
-    delete msgBox;
 }
 
 void MainWindow::on_selectCard_clicked() {
@@ -453,8 +459,10 @@ void MainWindow::on_selectCard_clicked() {
     if ((fs.contains("exfat") ||
          fs.contains("fat") ||    // fat, fat32, vfat, msdos
          fs.contains("vfat") ||
-         fs.contains("msdos")) &&
-        !storage.isReadOnly()) {
+         fs.contains("msdos")) 
+         
+        //       && !storage.isReadOnly()
+      ) {
       cardList.append(storage);
     }
   }
@@ -518,7 +526,8 @@ void MainWindow::reloadCard() {
         connect(ui->deviceWidget->fileModel,
                 &FileInfoModel::updateProcessStatus,
                 this,
-                &MainWindow::updateProcessStatus);
+                &MainWindow::updateProcessStatus,
+                Qt::UniqueConnection);
         ui->deviceWidget->setEnabled(false);
 
 #if defined(__APPLE__)
@@ -624,14 +633,14 @@ void MainWindow::selectedNode(TreeNode *image) {
   if (imageSelected && previewImage) {
     qDebug() << "preview";
     if (!imageSelected->isFile) {
-      // if not a image, try first child!
+      // if not an image, try first child (guard against empty list)
       qDebug() << "try first child";
-      TreeNode *child = imageSelected->children.at(0);
-
+      if (imageSelected->children.isEmpty()) {
+        return;
+      }
+      TreeNode *child = imageSelected->children.first();
       qDebug() << child;
       if (child) {
-        // imageSelected = child;
-        // image = child;
         selectedNode(child);
         return;
       }
@@ -640,18 +649,13 @@ void MainWindow::selectedNode(TreeNode *image) {
         qDebug() << "Is File";
         if (imageLoaderThread != nullptr) {
             qDebug() << "try";
-            try {
-                qDebug() << imageLoaderThread->isFinished() << imageLoaderThread->isRunning();
-                if (imageLoaderThread->isFinished()) {
-                    // imageLoaderThread->quit();
-                    imageLoaderThread->wait();
-                    delete imageLoaderThread;
-                    delete imageLoaderObject;
-                } else {
-                    return;
-                }
-            } catch (...) {
-                qDebug() << "error";
+            if (!imageLoaderThread->isFinished()) {
+                // Let current load finish; finshedImageLoading() will pick up the latest selection
+                return;
+            } else {
+                // Already finished; objects will be deleted via deleteLater; clear pointers
+                imageLoaderThread = nullptr;
+                imageLoaderObject = nullptr;
             }
         }
         qDebug() << "here";
@@ -681,6 +685,8 @@ void MainWindow::selectedNode(TreeNode *image) {
                          &imageLoader::finished,
                          this,
                          &MainWindow::finshedImageLoading);
+        QObject::connect(imageLoaderThread, &QThread::finished, imageLoaderThread, &QObject::deleteLater);
+        QObject::connect(imageLoaderObject, &imageLoader::finished, imageLoaderObject, &QObject::deleteLater);
 
         /*QObject::connect(imageLoaderObject,
                              &imageLoader::finished,
@@ -711,11 +717,13 @@ void MainWindow::selectedNode(TreeNode *image) {
 }
 
 void MainWindow::finshedImageLoading() {
-  imageLoaderThread->wait();
-  qDebug() << "Finished loading.. is latest slected? " << imageSelected
-           << imageShown;
-  if (imageSelected != imageShown)
+  qDebug() << "Finished loading.. is latest slected? " << imageSelected << imageShown;
+  // Objects are cleaned up via deleteLater; clear our pointers
+  imageLoaderThread = nullptr;
+  imageLoaderObject = nullptr;
+  if (imageSelected != imageShown) {
     selectedNode(imageSelected);
+  }
 }
 
 void MainWindow::showImage(const QImage &image, bool failed)
@@ -965,12 +973,13 @@ void MainWindow::spaceButtonPressed() {
 
 void MainWindow::on_quickViewButton_clicked() {
   if (ui->deviceWidget->model()) {
-    // QModelIndexList list =
-    // ui->deviceWidget->selectionModel()->selectedIndexes();
     QItemSelectionModel *selectionModel = ui->deviceWidget->selectionModel();
     if (selectionModel) {
-      QModelIndexList selectedIndexes = selectionModel->selectedIndexes();
-      QModelIndex index = selectedIndexes.at(0);
+      const QModelIndexList selectedIndexes = selectionModel->selectedIndexes();
+      if (selectedIndexes.isEmpty()) {
+        return;
+      }
+      const QModelIndex index = selectedIndexes.at(0);
       if (index.isValid()) {
         // Map the index to get the corresponding QFileInfo
         QModelIndex sourceIndex =
@@ -980,14 +989,14 @@ void MainWindow::on_quickViewButton_clicked() {
               static_cast<TreeNode *>(sourceIndex.internalPointer());
 
           if (node->isFile) {
-            displayImage(node->info.absoluteFilePath());
+            displayImage(node->info.absoluteFilePath(),0,0);
           } else {
             TreeNode *child = node->children.at(0);
 
             qDebug() << child;
             if (child) {
               if (child->isFile) {
-                displayImage(child->info.absoluteFilePath(), true);
+                displayImage(child->info.absoluteFilePath(), true,0,0);
               }
             }
           }
@@ -1017,53 +1026,53 @@ void MainWindow::on_ejectButton_clicked() {
 }
 
 void MainWindow::on_previewImageCheckBox_stateChanged(int arg1) {
-  previewImage = arg1;
+  previewImage =  (arg1 == Qt::Checked);
   QSettings settings("HJ Steehouwer", "QuickImport");
-  settings.setValue("previewImage", (bool)arg1);
+  settings.setValue("previewImage", previewImage);
   if (!previewImage)
     ui->image->setPixmap(QPixmap());
 }
 
 void MainWindow::on_reloadButton_clicked() { reloadCard(); }
 void MainWindow::on_mdCheckBox_stateChanged(int arg1) {
-  md5Check = arg1;
+  md5Check =  (arg1 == Qt::Checked);
   QSettings settings("HJ Steehouwer", "QuickImport");
-  settings.setValue("md5Check", (bool)arg1);
+  settings.setValue("md5Check", md5Check);
 }
 
 void MainWindow::on_deleteAfterImportBox_stateChanged(int arg1) {
-  deleteAfterImport = arg1;
+  deleteAfterImport =  (arg1 == Qt::Checked);
   QSettings settings("HJ Steehouwer", "QuickImport");
-  settings.setValue("deleteAfterImport", (bool)arg1);
+  settings.setValue("deleteAfterImport", deleteAfterImport);
 }
 
 void MainWindow::on_ejectBox_stateChanged(int arg1) {
-  ejectAfterImport = arg1;
+  ejectAfterImport =  (arg1 == Qt::Checked);
   QSettings settings("HJ Steehouwer", "QuickImport");
-  settings.setValue("ejectAfterImport", (bool)arg1);
+  settings.setValue("ejectAfterImport", ejectAfterImport);
 }
 void MainWindow::on_deleteExistingBox_stateChanged(int arg1) {
-  deleteExisting = arg1;
+  deleteExisting =  (arg1 == Qt::Checked);
   QSettings settings("HJ Steehouwer", "QuickImport");
-  settings.setValue("deleteExisting", (bool)arg1);
+  settings.setValue("deleteExisting", deleteExisting);
 }
 
 void MainWindow::on_quitEmptyCardBox_stateChanged(int arg1) {
-  quitEmptyCard = arg1;
+  quitEmptyCard =  (arg1 == Qt::Checked);
   QSettings settings("HJ Steehouwer", "QuickImport");
-  settings.setValue("quitEmptyCard", (bool)arg1);
+  settings.setValue("quitEmptyCard", quitEmptyCard);
 }
 
 void MainWindow::on_ejectIfEmptyBox_stateChanged(int arg1) {
-  ejectIfEmpty = arg1;
+  ejectIfEmpty =  (arg1 == Qt::Checked);
   QSettings settings("HJ Steehouwer", "QuickImport");
-  settings.setValue("ejectIfEmpty", (bool)arg1);
+  settings.setValue("ejectIfEmpty", ejectIfEmpty);
 }
 
 void MainWindow::on_quitAfterImportBox_stateChanged(int arg1) {
-  quitAfterImport = arg1;
+  quitAfterImport =  (arg1 == Qt::Checked);
   QSettings settings("HJ Steehouwer", "QuickImport");
-  settings.setValue("quitAfterImport", (bool)arg1);
+  settings.setValue("quitAfterImport", quitAfterImport);
 }
 
 void MainWindow::on_toolButton_clicked() {
@@ -1373,8 +1382,8 @@ void MainWindow::shortcutWindowFinisched(int) {
 
 void MainWindow::on_backupBox_stateChanged(int arg1) {
   QSettings settings("HJ Steehouwer", "QuickImport");
-  settings.setValue("doBackupImport", (bool)arg1);
-  doBackupImport = (bool)arg1;
+  doBackupImport = (arg1 == Qt::Checked);
+  settings.setValue("doBackupImport", doBackupImport);
   if (doBackupImport) {
       // ui->backupLabel->setEnabled(true);
       ui->importBackupLocation->setEnabled(true);
@@ -1465,12 +1474,8 @@ void MainWindow::on_OpenApplicationLocation_clicked()
 
 void MainWindow::on_openApplicationAfterImport_stateChanged(int arg1)
 {
-    openApplicationAfterImport = (bool) arg1;
+    openApplicationAfterImport = (arg1 == Qt::Checked);
     QSettings settings("HJ Steehouwer", "QuickImport");
-    settings.setValue("openApplicationAfterImport", (bool) arg1);
-    if ((bool) arg1) {
-        ui->OpenApplicationLocation->setEnabled(true);
-    } else {
-        ui->OpenApplicationLocation->setEnabled(false);
-    }
+    settings.setValue("openApplicationAfterImport", openApplicationAfterImport);
+    ui->OpenApplicationLocation->setEnabled(openApplicationAfterImport);
 }

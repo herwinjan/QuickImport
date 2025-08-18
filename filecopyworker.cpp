@@ -46,7 +46,7 @@ QList<QString> fileCopyWorker::processNewFileName(QString importFolder,
     project.replace("{y}", lastModified.toString("yy"));
     project.replace("{Y}", lastModified.toString("yyyy"));
 
-    project.replace("{W}", QString("%1").arg(lastModified.date().weekNumber()));
+    project.replace("{W}", QString("%1").arg(lastModified.date().weekNumber(), 2, 10, QLatin1Char('0')));
     project.replace("{h}", lastModified.toString("h"));
     project.replace("{H}", lastModified.toString("hh"));
     project.replace("{M}", lastModified.toString("mm"));
@@ -63,7 +63,7 @@ QList<QString> fileCopyWorker::processNewFileName(QString importFolder,
     fileNameFormat.replace("{y}", lastModified.toString("yy"));
     fileNameFormat.replace("{Y}", lastModified.toString("yyyy"));
 
-    fileNameFormat.replace("{W}", QString("%1").arg(lastModified.date().weekNumber()));
+    fileNameFormat.replace("{W}", QString("%1").arg(lastModified.date().weekNumber(), 2, 10, QLatin1Char('0')));
     fileNameFormat.replace("{h}", lastModified.toString("h"));
     fileNameFormat.replace("{H}", lastModified.toString("hh"));
     fileNameFormat.replace("{M}", lastModified.toString("mm"));
@@ -96,7 +96,7 @@ QList<QString> fileCopyWorker::processNewFileName(QString importFolder,
     QRegularExpressionMatch match2 = regex.match(fullPath);
 
     if (match2.hasMatch()) {
-        dir = match2.captured(1).isEmpty() ? "Root or same directory" : match2.captured(1);
+        dir = match2.captured(1).isEmpty() ? importFolder : match2.captured(1);
         file = match2.captured(2);
     }
 
@@ -160,8 +160,16 @@ void fileCopyWorker::copyImages()
         qDebug() << fileTodo;
         qDebug() << fileTodo[0] << fileTodo[1] << fileTodo[2];
 
-        bool destExisted = QFile::exists(file.fileInfo.filePath());
-        bool ok = QFile::copy(file.fileInfo.filePath(), newFile);
+        bool destExisted = QFile::exists(newFile);
+        bool ok = false;
+        // If we are going to delete the source anyway and no backup is required,
+        // try a fast rename (same-filesystem move). This is much faster than copy.
+        if (deleteAfterImport && !doBackup) {
+            ok = QFile::rename(file.fileInfo.filePath(), newFile);
+        }
+        if (!ok) {
+            ok = QFile::copy(file.fileInfo.filePath(), newFile);
+        }
         bool backupOK = false;
 
         if (doBackup) {
@@ -198,7 +206,7 @@ void fileCopyWorker::copyImages()
                 if (!f.open(QIODevice::ReadOnly))
                     return QByteArray();
                 QCryptographicHash hash(QCryptographicHash::Md5);
-                const qsizetype chunkSize = 1024 * 1024; // 1MB
+                const qsizetype chunkSize = 16 * 1024 * 1024; // 16MB
                 while (!f.atEnd()) {
                     QByteArray chunk = f.read(chunkSize);
                     hash.addData(chunk);
@@ -210,7 +218,7 @@ void fileCopyWorker::copyImages()
             QByteArray destinationMd5 = calcMd5(newFileInfo.filePath());
 
             // Compare MD5 hashes
-            if (sourceMd5.isEmpty() || destinationMd5.isEmpty() ||sourceMd5 != destinationMd5) {
+            if (sourceMd5.isEmpty() || destinationMd5.isEmpty() || sourceMd5 != destinationMd5) {
                // QMessageBox::critical(nullptr,
                //                       tr("Error"),
                //                       tr("MD5 check failed (files are different)."));

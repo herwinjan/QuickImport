@@ -59,6 +59,7 @@ void deviceList::expandTree()
             }
         }
     }
+    
 
     // Get the current width of the column
     // int currentWidth = columnWidth(0);
