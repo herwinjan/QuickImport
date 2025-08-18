@@ -77,7 +77,7 @@ MainWindow::MainWindow(QWidget *parent)
   loadFileNameFormat();
 
   //    updateImportToLabel();
-  setWindowTitle("Quick Import");
+  setWindowTitle(QString("Quick Import %1").arg(QCoreApplication::applicationVersion()));
 
   md5Check = settings.value("md5Check", false).toBool();
   ejectAfterImport = settings.value("ejectAfterImport", false).toBool();
@@ -171,6 +171,9 @@ MainWindow::MainWindow(QWidget *parent)
     if (showAbout) {
       showAboutDialog();
     }
+    this->raise();
+    this->activateWindow();
+    this->setFocus(Qt::ActiveWindowFocusReason);
     on_selectCard_clicked();
   });
 
@@ -494,6 +497,9 @@ void MainWindow::on_selectCard_clicked() {
       }
   }
   reloadCard();
+  raise();
+  activateWindow();
+  setFocus(Qt::ActiveWindowFocusReason);
 }
 void MainWindow::doneLoadingCard()
 {

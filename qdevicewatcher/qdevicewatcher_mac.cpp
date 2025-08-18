@@ -87,7 +87,7 @@ static void onDiskAppear(DADiskRef disk, void *context)
     }
 
     QString disk_name = DADiskGetBSDName(disk);
-    if (disk_name.count() <= 0) {
+    if (disk_name.size() <= 0) {
         //  qDebug() << "No Name";
         return;
     }
@@ -126,6 +126,7 @@ bool QDeviceWatcherPrivate::stop()
     //DAUnregisterApprovalCallback
     DAUnregisterCallback(mSession, (void *) onDiskAppear, this);
     DAUnregisterCallback(mSession, (void *) onDiskDisappear, this);
+    return true;
 }
 
 void QDeviceWatcherPrivate::parseDeviceInfo() {}
@@ -138,6 +139,7 @@ bool QDeviceWatcherPrivate::init()
 
     DARegisterDiskAppearedCallback(mSession, NULL, onDiskAppear, this);
     DARegisterDiskDisappearedCallback(mSession, NULL, onDiskDisappear, this);
+    return true;
 }
 
 void QDeviceWatcherPrivate::run()

@@ -13,6 +13,9 @@ int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
 
+    QCoreApplication::setApplicationName("QuickImport");
+    QCoreApplication::setApplicationVersion("0.1.0");
+    QCoreApplication::setOrganizationName("HJ Steehouwer");
     QTranslator translator;
     
 
