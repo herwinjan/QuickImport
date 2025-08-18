@@ -33,6 +33,7 @@
 
 #include <QJsonDocument>
 #include <QShortcut>
+#include <QTimer>
 
 QFileInfoList MainWindow::getFileListFromDir(const QString &directory) {
     qDebug() << "Search" << directory;
@@ -164,11 +165,14 @@ MainWindow::MainWindow(QWidget *parent)
   loadPresets();
 
   show();
-  if (!settings.value("dontShowAboutDialog", false).toBool()) {
-    showAboutDialog();
-  }
 
-  on_selectCard_clicked();
+  const bool showAbout = !settings.value("dontShowAboutDialog", false).toBool();
+  QTimer::singleShot(0, this, [this, showAbout]() {
+    if (showAbout) {
+      showAboutDialog();
+    }
+    on_selectCard_clicked();
+  });
 
   // XMPEngine test;
 }

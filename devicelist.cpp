@@ -10,10 +10,29 @@
 #include <QStorageInfo>
 #include <QFileSystemModel>
 #include <QAbstractItemModel>
+#include <QDebug>
+#include <QKeyEvent>
+#include <QItemSelection>
+#include <QHeaderView>
 
 deviceList::deviceList(QWidget *parent ) :
     QTreeView(parent)
-{}
+{
+    // Ensure pointer is initialized to avoid undefined behavior on first use
+    fileModel = nullptr;
+
+    // Configure once rather than on every expand
+    setSelectionMode(QAbstractItemView::ExtendedSelection);
+
+    // Make columns auto-size to fit their content
+    if (auto *hdr = header()) {
+        hdr->setSectionResizeMode(QHeaderView::ResizeToContents);
+        hdr->setStretchLastSection(false);
+    }
+
+    // Optional performance hint for tree views with consistent row heights
+    setUniformRowHeights(true);
+}
 
 void deviceList::setFiles(QList<QFileInfo> files)
 {
@@ -30,15 +49,18 @@ void deviceList::setFiles(QList<QFileInfo> files)
     connect(fileModel, &FileInfoModel::treeBuildingFinished, this, &deviceList::expandTree);
 
     this->setModel(fileModel);
-    //
+    // Ensure columns fit contents after (re)setting the model
+    const int cols = fileModel->columnCount();
+    for (int c = 0; c < cols; ++c) {
+        resizeColumnToContents(c);
+    }
 }
 void deviceList::expandTree()
 {
     if (!fileModel)
         return;
 
-    this->expandAll();
-    // Assuming treeView is your QTreeView object and columnIndex is the index of the column you want to expand
+    // Expand only the relevant levels (year and month) and size the first column
     resizeColumnToContents(0);
 
     // Expand only year and month levels
@@ -71,12 +93,20 @@ void deviceList::expandTree()
     // Set the new width for the column
     // setColumnWidth(0, newWidth);
 
-    //setSelectionBehavior(QAbstractItemView::SelectItems);
-    setSelectionMode(QAbstractItemView::ExtendedSelection); // Allow multiple selections
     if (fileModel->rowCount() > 0) {
-        QModelIndex selectedFirst = fileModel->index(0, 0);
-        TreeNode *node = static_cast<TreeNode *>(selectedFirst.internalPointer());
-        emit selectedNode(node);
+        const QModelIndex selectedFirst = fileModel->index(0, 0);
+        if (selectedFirst.isValid()) {
+            if (auto *node = static_cast<TreeNode *>(selectedFirst.internalPointer())) {
+                emit selectedNode(node);
+            }
+        }
+    }
+    // After expanding, ensure all columns are sized to fit current contents
+    if (fileModel) {
+        const int cols = fileModel->columnCount();
+        for (int c = 0; c < cols; ++c) {
+            resizeColumnToContents(c);
+        }
     }
     emit doneLoading();
 }
@@ -93,7 +123,7 @@ void deviceList::updateSelectedCount(const QModelIndex &topLeft, const QModelInd
 
 void deviceList::keyPressEvent(QKeyEvent *event)
 {
-    if (event->key() == Qt::Key_Return) {
+    if (event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter) {
         emit returnButtonPressed();
         return;
     }
@@ -107,10 +137,11 @@ void deviceList::keyPressEvent(QKeyEvent *event)
 void deviceList::selectionChanged(const QItemSelection &selected, const QItemSelection &deselected)
 {
     if (!selected.isEmpty()) {
-        QModelIndex selectedFirst = selected.at(0).topLeft();
-        TreeNode *node = static_cast<TreeNode *>(selectedFirst.internalPointer());
-        if (node) {
-            emit selectedNode(node);
+        const QModelIndex selectedFirst = selected.at(0).topLeft();
+        if (selectedFirst.isValid()) {
+            if (auto *node = static_cast<TreeNode *>(selectedFirst.internalPointer())) {
+                emit selectedNode(node);
+            }
         }
     }
 

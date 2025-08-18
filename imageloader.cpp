@@ -5,6 +5,7 @@
 #include <QImageReader>
 #include <memory>
 #include <libraw/libraw.h>
+#include <QBuffer>
 
 imageLoader::imageLoader(QObject *parent)
     : QObject(parent)
@@ -17,12 +18,12 @@ void imageLoader::loadImageFile(const TreeNode *_node)
 }
 void imageLoader::loadImage()
 {
-    LibRaw *rawProc = nullptr;
     QImage thumbnail;
+    constexpr int kMaxDim = 1024;
 
     // safety: ensure node is valid
     if (!node) {
-        QImage img(1024, 682, QImage::Format_RGB32);
+        QImage img(kMaxDim, (kMaxDim * 2) / 3, QImage::Format_RGB32);
         img.fill(Qt::black);
         emit imageLoaded(img, true);
         emit loadingFailed();
@@ -33,8 +34,23 @@ void imageLoader::loadImage()
     if (node->isFile) {
         QList<QByteArray> items = QImageReader::supportedImageFormats();
         if (items.indexOf(node->info.suffix().toLower().toLocal8Bit()) >= 0) {
-            thumbnail = QImage(node->filePath);
-            thumbnail = thumbnail.scaled(1024, 1024, Qt::KeepAspectRatio);
+            QImageReader reader(node->filePath);
+            reader.setAutoTransform(true); // honor EXIF orientation
+            // Read at most kMaxDim in either dimension to save memory/time
+            const QSize origSize = reader.size();
+            if (origSize.isValid()) {
+                QSize target = origSize;
+                target.scale(kMaxDim, kMaxDim, Qt::KeepAspectRatio);
+                if (target != origSize)
+                    reader.setScaledSize(target);
+            }
+            if (!reader.read(&thumbnail)) {
+                // Fallback: try basic QImage load
+                QImage img(node->filePath);
+                if (!img.isNull()) {
+                    thumbnail = img.scaled(kMaxDim, kMaxDim, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+                }
+            }
         } else {
             std::unique_ptr<LibRaw> rawProc(new LibRaw());
             // keep path bytes alive for the call
@@ -44,50 +60,56 @@ void imageLoader::loadImage()
                 // clean up and emit failure
                 
                 rawProc.reset();
-                QImage img(1024, 682, QImage::Format_RGB32);
+                QImage img(kMaxDim, (kMaxDim * 2) / 3, QImage::Format_RGB32);
                 img.fill(Qt::black);
-                img = img.scaled(1024, 682, Qt::KeepAspectRatio);
                 emit imageLoaded(img, true);
                 emit loadingFailed();
                 emit finished();
                 return;
             }
 
-            // try to ensure a thumbnail is available
-            if (!(rawProc->imgdata.thumbnail.thumb)) {
-                int ret = rawProc->unpack_thumb();
-                Q_UNUSED(ret);
-                // optionally check ret != LIBRAW_SUCCESS and handle
+            // Ensure a thumbnail is available
+            int ret = LIBRAW_SUCCESS;
+            if (!rawProc->imgdata.thumbnail.thumb) {
+                ret = rawProc->unpack_thumb();
             }
 
-            // load thumbnail data safely into a QByteArray so we can delete rawProc before using it
-            if (LIBRAW_THUMBNAIL_JPEG == rawProc->imgdata.thumbnail.tformat
-                && rawProc->imgdata.thumbnail.thumb
-                && rawProc->imgdata.thumbnail.tlength > 0) {
+            if (ret == LIBRAW_SUCCESS && rawProc->imgdata.thumbnail.thumb && rawProc->imgdata.thumbnail.tlength > 0) {
                 QByteArray thumbData(reinterpret_cast<const char*>(rawProc->imgdata.thumbnail.thumb),
                                      static_cast<int>(rawProc->imgdata.thumbnail.tlength));
-                thumbnail.loadFromData(reinterpret_cast<const uchar*>(thumbData.constData()),
-                                       thumbData.size(),
-                                       "JPEG");
+                QBuffer buf(&thumbData);
+                buf.open(QIODevice::ReadOnly);
+                QImageReader r(&buf);
+                r.setDecideFormatFromContent(true);
+                r.setAutoTransform(true);
+                if (!r.read(&thumbnail)) {
+                    // Fallback to direct loadFromData
+                    QImage tmp;
+                    if (tmp.loadFromData(reinterpret_cast<const uchar*>(thumbData.constData()), thumbData.size())) {
+                        thumbnail = tmp;
+                    }
+                }
             }
 
             // free libraw object before further processing
             rawProc.reset();
-            
 
-            if (!thumbnail.isNull())
-                thumbnail = thumbnail.scaled(1024, 1024, Qt::KeepAspectRatio);
+            if (!thumbnail.isNull()) {
+                thumbnail = thumbnail.scaled(kMaxDim, kMaxDim, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+            }
         }
     }
 
     // Check if the image was loaded successfully
     if (thumbnail.isNull()) {
-        QImage img(1024, 682, QImage::Format_RGB32);
+        QImage img(kMaxDim, (kMaxDim * 2) / 3, QImage::Format_RGB32);
         img.fill(Qt::black);
-        img = img.scaled(1024, 682, Qt::KeepAspectRatio);
         emit imageLoaded(img, true);
         emit loadingFailed();
     } else {
+        if (thumbnail.width() > kMaxDim || thumbnail.height() > kMaxDim) {
+            thumbnail = thumbnail.scaled(kMaxDim, kMaxDim, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+        }
         emit imageLoaded(thumbnail);
     }
 

@@ -4,6 +4,8 @@
 #include <QDir>
 #include <QFile>
 #include <QMessageBox>
+#include <QRegularExpression>
+#include <QMap>
 
 fileCopyWorker::fileCopyWorker(const QList<fileInfoStruct> &list,
                                const QString &importFolder,
@@ -28,6 +30,14 @@ void fileCopyWorker::cancel()
     doCancel = true;
 }
 
+static QString replaceTokens(QString input, const QMap<QString, QString>& tokens)
+{
+    for (auto it = tokens.constBegin(); it != tokens.constEnd(); ++it) {
+        input.replace(it.key(), it.value());
+    }
+    return input;
+}
+
 /*
  * Return: List: 0 = file, 1 = directory, 2 = total path
  */
@@ -41,42 +51,30 @@ QList<QString> fileCopyWorker::processNewFileName(QString importFolder,
 {
     QString project = projectName;
 
-    project.replace("{D}", lastModified.toString("dd"));
-    project.replace("{m}", lastModified.toString("mm"));
-    project.replace("{y}", lastModified.toString("yy"));
-    project.replace("{Y}", lastModified.toString("yyyy"));
+    // Prepare common time/camera tokens once
+    const QDateTime& ts = lastModified;
+    const QString weekStr = QString("%1").arg(ts.date().weekNumber(), 2, 10, QLatin1Char('0'));
 
-    project.replace("{W}", QString("%1").arg(lastModified.date().weekNumber(), 2, 10, QLatin1Char('0')));
-    project.replace("{h}", lastModified.toString("h"));
-    project.replace("{H}", lastModified.toString("hh"));
-    project.replace("{M}", lastModified.toString("mm"));
+    QMap<QString, QString> baseTokens{
+        {"{D}", ts.toString("dd")},
+        {"{m}", ts.toString("MM")},    // month (fixed: was using minutes)
+        {"{y}", ts.toString("yy")},
+        {"{Y}", ts.toString("yyyy")},
+        {"{W}", weekStr},
+        {"{h}", ts.toString("h")},
+        {"{H}", ts.toString("hh")},
+        {"{M}", ts.toString("mm")},    // minutes
+        {"{i}", QString::number(imageInfo.isoValue)},
+        {"{c}", QString::fromUtf8(imageInfo.serialNumber.toUtf8())},
+        {"{T}", QString::fromUtf8(imageInfo.cameraName.toUtf8())},
+        {"{O}", QString::fromUtf8(imageInfo.ownerName.toUtf8())},
+        {"{o}", info.fileName()}
+    };
 
-    project.replace("{i}", QString("%1").arg(imageInfo.isoValue));
-    project.replace("{c}", QString("%1").arg(imageInfo.serialNumber));
-    project.replace("{T}", QString("%1").arg(imageInfo.cameraName));
-    project.replace("{O}", QString("%1").arg(imageInfo.ownerName));
+    // First, resolve tokens for the project part
+    const QString projectResolved = replaceTokens(project, baseTokens);
 
-    //File name
-
-    fileNameFormat.replace("{D}", lastModified.toString("dd"));
-    fileNameFormat.replace("{m}", lastModified.toString("MM"));
-    fileNameFormat.replace("{y}", lastModified.toString("yy"));
-    fileNameFormat.replace("{Y}", lastModified.toString("yyyy"));
-
-    fileNameFormat.replace("{W}", QString("%1").arg(lastModified.date().weekNumber(), 2, 10, QLatin1Char('0')));
-    fileNameFormat.replace("{h}", lastModified.toString("h"));
-    fileNameFormat.replace("{H}", lastModified.toString("hh"));
-    fileNameFormat.replace("{M}", lastModified.toString("mm"));
-
-    fileNameFormat.replace("{i}", QString("%1").arg(imageInfo.isoValue));
-    fileNameFormat.replace("{c}", QString("%1").arg(imageInfo.serialNumber));
-    fileNameFormat.replace("{T}", QString("%1").arg(imageInfo.cameraName));
-    fileNameFormat.replace("{O}", QString("%1").arg(imageInfo.ownerName));
-    fileNameFormat.replace("{o}", QString("%1").arg(info.fileName()));
-    fileNameFormat.replace("{J}", QString("%1").arg(project));
-
-    QRegularExpression regex;
-    regex.setPattern("_(\\d+)\\.(\\w+)$");
+    QRegularExpression regex("_(\\d+)\\.(\\w+)$");
     QRegularExpressionMatch match = regex.match(info.fileName());
     QString sequenceNumber;
     QString extension;
@@ -85,12 +83,18 @@ QList<QString> fileCopyWorker::processNewFileName(QString importFolder,
         sequenceNumber = match.captured(1);
         extension = match.captured(2);
     }
-    fileNameFormat.replace("{e}", QString(".%1").arg(extension));
-    fileNameFormat.replace("{r}", QString("%1").arg(sequenceNumber));
-    QString file = fileNameFormat;
+
+    QMap<QString, QString> fileTokens = baseTokens; // start with base
+    fileTokens.insert("{r}", sequenceNumber);
+    fileTokens.insert("{e}", extension.isEmpty() ? QString() : QString(".%1").arg(extension));
+    fileTokens.insert("{J}", projectResolved); // allow {J} to embed resolved project
+
+    const QString resolvedFileName = replaceTokens(fileNameFormat, fileTokens);
+
+    QString file = resolvedFileName;
     QString dir = importFolder;
 
-    QString fullPath = QString("%1/%2").arg(importFolder, fileNameFormat);
+    const QString fullPath = QString("%1/%2").arg(importFolder, resolvedFileName);
 
     regex.setPattern("^(.*/)?([^/]+)?$");
     QRegularExpressionMatch match2 = regex.match(fullPath);

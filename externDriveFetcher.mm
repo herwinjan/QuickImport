@@ -11,12 +11,31 @@ QIcon ExternalDriveIconFetcher::getExternalDriveIcon(const QString &drivePath)
     NSURL *url = [NSURL fileURLWithPath:path];
     NSImage *iconImage = [workspace iconForFile:url.path];
 
-        NSBitmapImageRep *imageRep = [NSBitmapImageRep imageRepWithData:[iconImage TIFFRepresentation]];
-        QImage image = QImage([imageRep bitmapData], [imageRep pixelsWide], [imageRep pixelsHigh], QImage::Format_RGBA8888); // Assuming 32-bit RGBA format
-        QPixmap pixmap = QPixmap::fromImage(image);
-    
-    
-        return QIcon(pixmap);
+    // Prefer PNG to avoid requiring the Qt TIFF plugin
+    NSData *tiffData = [iconImage TIFFRepresentation];
+    if (!tiffData) {
+      return QIcon();
+    }
+    NSBitmapImageRep *rep = [NSBitmapImageRep imageRepWithData:tiffData];
+    if (!rep) {
+      return QIcon();
+    }
+    NSData *pngData = [rep representationUsingType:NSBitmapImageFileTypePNG properties:@{}];
+    if (!pngData) {
+      return QIcon();
+    }
+
+    QImage qimg;
+    if (!qimg.loadFromData(reinterpret_cast<const uchar *>(pngData.bytes), static_cast<uint>(pngData.length), "PNG")) {
+      // Fallback: try raw bitmap data (and copy to own buffer)
+      QImage fallbackImg((const uchar *)[rep bitmapData], [rep pixelsWide], [rep pixelsHigh], QImage::Format_RGBA8888);
+      if (fallbackImg.isNull()) {
+        return QIcon();
+      }
+      qimg = fallbackImg.copy();
+    }
+
+    return QIcon(QPixmap::fromImage(qimg));
   } catch (...) {
     return QIcon();
   }
@@ -29,12 +48,31 @@ QPixmap ExternalDriveIconFetcher::getExternalDrivePixmap(const QString &drivePat
     NSURL *url = [NSURL fileURLWithPath:path];
     NSImage *iconImage = [workspace iconForFile:url.path];
 
-    // Convert NSImage to QPixmap
-    NSBitmapImageRep *imageRep = [NSBitmapImageRep imageRepWithData:[iconImage TIFFRepresentation]];
-    QImage image = QImage([imageRep bitmapData], [imageRep pixelsWide], [imageRep pixelsHigh], QImage::Format_RGBA8888); // Assuming 32-bit RGBA format
-    QPixmap pixmap = QPixmap::fromImage(image);
+    // Prefer PNG to avoid requiring the Qt TIFF plugin
+    NSData *tiffData = [iconImage TIFFRepresentation];
+    if (!tiffData) {
+      return QPixmap();
+    }
+    NSBitmapImageRep *rep = [NSBitmapImageRep imageRepWithData:tiffData];
+    if (!rep) {
+      return QPixmap();
+    }
+    NSData *pngData = [rep representationUsingType:NSBitmapImageFileTypePNG properties:@{}];
+    if (!pngData) {
+      return QPixmap();
+    }
 
-    return pixmap;
+    QImage qimg;
+    if (!qimg.loadFromData(reinterpret_cast<const uchar *>(pngData.bytes), static_cast<uint>(pngData.length), "PNG")) {
+      // Fallback: try raw bitmap data (and copy to own buffer)
+      QImage fallbackImg((const uchar *)[rep bitmapData], [rep pixelsWide], [rep pixelsHigh], QImage::Format_RGBA8888);
+      if (fallbackImg.isNull()) {
+        return QPixmap();
+      }
+      qimg = fallbackImg.copy();
+    }
+
+    return QPixmap::fromImage(qimg);
   } catch (...) {
     return QPixmap();
   }

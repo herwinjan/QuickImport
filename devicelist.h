@@ -1,5 +1,4 @@
-#ifndef DEVICELIST_H
-#define DEVICELIST_H
+#pragma once
 
 #include <QApplication>
 #include <QDialog>
@@ -40,4 +39,4 @@ public slots:
     void expandTree();
 };
 
-#endif // DEVICELIST_H
+

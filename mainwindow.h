@@ -1,5 +1,5 @@
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#pragma once
+
 
 #include "fileinfomodel.h"
 #include "imageloader.h"
@@ -165,4 +165,4 @@ private slots:
 private:
     void displayNoCardDialog();
 };
-#endif // MAINWINDOW_H
+
