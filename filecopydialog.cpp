@@ -1,6 +1,8 @@
 #include "filecopydialog.h"
 #include <QCryptographicHash>
+#include <QHash>
 #include <QMessageBox>
+#include <QSet>
 #include <QThread>
 #include <QTimer>
 #include "ui_filecopydialog.h"
@@ -17,9 +19,6 @@ fileCopyDialog::fileCopyDialog(const QList<fileInfoStruct> &list,
     : QDialog(parent)
     , ui(new Ui::fileCopyDialog)
 {
-    // Create first thread
-    m_thread = new QThread(this);
-
     ui->setupUi(this);
     ui->progressBar->setRange(0, 100);
 
@@ -30,82 +29,155 @@ fileCopyDialog::fileCopyDialog(const QList<fileInfoStruct> &list,
     ui->status->setText(QString(tr("Copy file %1 of %2.")).arg(0).arg(count));
     ui->progressBar->setValue(0);
 
-    // Split the list into up to two halves for parallel copying
-    QList<fileInfoStruct> firstHalf;
-    QList<fileInfoStruct> secondHalf;
-    int half = count / 2;
-    if (half > 0) {
-        firstHalf = list.mid(0, half);
-        secondHalf = list.mid(half);
-    } else {
-        firstHalf = list;
+    m_importFolder = importFolder;
+    m_projectName = projectName;
+    m_fileNameFormat = fileNameFormat;
+    m_md5Check = md5Check;
+    m_deleteAfterImport = deleteAfterImport;
+    m_deleteExisting = deleteExisting;
+    m_importBackupFolder = importBackupFolder;
+
+    // With duplicate destination paths two workers could write to the same
+    // target file concurrently, so stay single-threaded in that case.
+    // Checking the import destinations also covers the backup destinations:
+    // both use the same resolved file name, only the folder prefix differs.
+    bool hasDuplicateDestinations = false;
+    QSet<QString> seenDestinations;
+    QHash<QString, QString> sourceByDestination;
+    for (const fileInfoStruct &file : list) {
+        const QList<QString> fileTodo = fileCopyWorker::processNewFileName(importFolder,
+                                                                           projectName,
+                                                                           fileCopyWorker::captureTimestamp(file.fileInfo, file.imageInfo),
+                                                                           file.imageInfo,
+                                                                           file.fileInfo,
+                                                                           fileNameFormat);
+        const QString destinationPath = fileTodo.value(2);
+        if (seenDestinations.contains(destinationPath)) {
+            hasDuplicateDestinations = true;
+            qWarning() << "Duplicate import destination detected:" << destinationPath
+                       << "for" << sourceByDestination.value(destinationPath)
+                       << "and" << file.fileInfo.filePath();
+            break;
+        }
+        seenDestinations.insert(destinationPath);
+        sourceByDestination.insert(destinationPath, file.fileInfo.filePath());
     }
 
-    m_workerCount = secondHalf.isEmpty() ? 1 : 2;
+    m_allowSecondWorker = !hasDuplicateDestinations;
 
-    // Worker 1
-    m_worker = new fileCopyWorker(firstHalf,
-                                  importFolder,
-                                  projectName,
-                                  fileNameFormat,
-                                  md5Check,
-                                  deleteAfterImport,
-                                  deleteExisting,
-                                  importBackupFolder);
-    m_worker->moveToThread(m_thread);
-    connect(m_thread, &QThread::started, m_worker, &fileCopyWorker::copyImages);
-    connect(m_worker, &fileCopyWorker::progressUpdated, this,
-            [this](int progress, int done, int cnt, int fail, int del){
-                handleProgressFromWorker(0, progress, done, cnt, fail, del);
+    // All workers share one queue. Start with a single worker; a second one
+    // is only started from handleFileProcessed() when the measured
+    // throughput shows a fast reader (e.g. CFexpress instead of SD).
+    m_totalSourceBytes = 0;
+    for (const fileInfoStruct &file : list)
+        m_totalSourceBytes += file.fileInfo.size();
+
+    m_queue = std::make_shared<fileCopyQueue>(list);
+    m_workerCount = 1;
+    m_copyTimer.start();
+    startWorker(0);
+}
+
+void fileCopyDialog::handleBytesAccounted(qint64 delta)
+{
+    m_bytesAccounted += delta;
+    if (m_totalSourceBytes > 0) {
+        const qint64 pct = (m_bytesAccounted * 100) / m_totalSourceBytes;
+        const int progress = int(qMin<qint64>(qMax<qint64>(pct, 0), 100));
+        ui->progressBar->setValue(progress);
+    }
+}
+
+void fileCopyDialog::startWorker(int workerIndex)
+{
+    auto *thread = new QThread(this);
+    auto *worker = new fileCopyWorker(m_queue,
+                                      m_importFolder,
+                                      m_projectName,
+                                      m_fileNameFormat,
+                                      m_md5Check,
+                                      m_deleteAfterImport,
+                                      m_deleteExisting,
+                                      m_importBackupFolder);
+    if (workerIndex == 0) {
+        m_thread = thread;
+        m_worker = worker;
+    } else {
+        m_thread2 = thread;
+        m_worker2 = worker;
+    }
+
+    worker->moveToThread(thread);
+    connect(thread, &QThread::started, worker, &fileCopyWorker::copyImages);
+    connect(worker, &fileCopyWorker::progressUpdated, this,
+            [this, workerIndex](int progress, int done, int cnt, int fail, int del){
+                handleProgressFromWorker(workerIndex, progress, done, cnt, fail, del);
             });
-    connect(m_worker, &fileCopyWorker::lastLocationImportedTo,
+    connect(worker, &fileCopyWorker::fileProcessed,
+            this, &fileCopyDialog::handleFileProcessed);
+    connect(worker, &fileCopyWorker::bytesAccounted,
+            this, &fileCopyDialog::handleBytesAccounted);
+    connect(worker, &fileCopyWorker::lastLocationImportedTo,
             this, &fileCopyDialog::lastLocationImportedToSlot);
-    connect(m_worker, &fileCopyWorker::errorOccurred, this, [this](const QString &msg){
+    connect(worker, &fileCopyWorker::errorOccurred, this, [this](const QString &msg){
                QMessageBox::critical(this, tr("Error"), msg);
            }, Qt::QueuedConnection);
-    connect(m_worker, &fileCopyWorker::copyingFinished, this, &fileCopyDialog::handleWorkerFinished);
-    connect(m_thread, &QThread::finished, m_worker, &QObject::deleteLater);
-    connect(m_thread, &QThread::finished, m_thread, &QObject::deleteLater);
-    m_thread->start();
+    connect(worker, &fileCopyWorker::copyingFinished, this, &fileCopyDialog::handleWorkerFinished);
+    connect(thread, &QThread::finished, worker, &QObject::deleteLater);
+    connect(thread, &QThread::finished, thread, &QObject::deleteLater);
+    connect(thread, &QThread::finished, this, [this, workerIndex]() { handleThreadStopped(workerIndex); });
+    thread->start();
+}
 
-    // Worker 2 (optional)
-    if (!secondHalf.isEmpty()) {
-        m_thread2 = new QThread(this);
-        m_worker2 = new fileCopyWorker(secondHalf,
-                                       importFolder,
-                                       projectName,
-                                       fileNameFormat,
-                                       md5Check,
-                                       deleteAfterImport,
-                                       deleteExisting,
-                                       importBackupFolder);
-        m_worker2->moveToThread(m_thread2);
-        connect(m_thread2, &QThread::started, m_worker2, &fileCopyWorker::copyImages);
-        connect(m_worker2, &fileCopyWorker::progressUpdated, this,
-                [this](int progress, int done, int cnt, int fail, int del){
-                    handleProgressFromWorker(1, progress, done, cnt, fail, del);
-                });
-        connect(m_worker2, &fileCopyWorker::lastLocationImportedTo,
-                this, &fileCopyDialog::lastLocationImportedToSlot);
-        connect(m_worker2, &fileCopyWorker::errorOccurred, this, [this](const QString &msg){
-                   QMessageBox::critical(this, tr("Error"), msg);
-               }, Qt::QueuedConnection);
-        connect(m_worker2, &fileCopyWorker::copyingFinished, this, &fileCopyDialog::handleWorkerFinished);
-        connect(m_thread2, &QThread::finished, m_worker2, &QObject::deleteLater);
-        connect(m_thread2, &QThread::finished, m_thread2, &QObject::deleteLater);
-        m_thread2->start();
+void fileCopyDialog::handleFileProcessed(qint64 copiedBytes)
+{
+    m_bytesProcessed += copiedBytes;
+
+    if (m_secondWorkerDecided || !m_allowSecondWorker)
+        return;
+
+    // Decide once, after enough data has flowed to give a stable measurement.
+    constexpr qint64 kProbeBytes = 200LL * 1000 * 1000; // 200 MB
+    constexpr double kMinCardReadMBps = 300.0;          // below this a 2nd worker hurts
+
+    if (m_bytesProcessed < kProbeBytes)
+        return;
+    m_secondWorkerDecided = true;
+
+    const double seconds = m_copyTimer.elapsed() / 1000.0;
+    if (seconds <= 0)
+        return;
+
+    // The tee-copy reads the source exactly once (MD5 is hashed during the
+    // copy), so copied bytes equal card reads.
+    const double cardMBps = m_bytesProcessed / 1e6 / seconds;
+    qDebug() << "Copy throughput probe:" << cardMBps << "MB/s (card read estimate)";
+
+    if (cardMBps >= kMinCardReadMBps && m_queue->remaining() > 1
+        && m_finishedWorkers == 0 && !m_cancelRequested) {
+        qDebug() << "Fast reader detected, starting second copy worker";
+        m_workerCount = 2;
+        startWorker(1);
     }
-
 }
 
 fileCopyDialog::~fileCopyDialog()
 {
+    if (m_thread && m_thread->isRunning()) {
+        m_thread->quit();
+        m_thread->wait();
+    }
+    if (m_thread2 && m_thread2->isRunning()) {
+        m_thread2->quit();
+        m_thread2->wait();
+    }
     delete ui;
 }
 
 void fileCopyDialog::on_cancelButton_clicked()
 {
-    m_worker->cancel();
+    ui->cancelButton->setEnabled(false);
+    if (m_worker) m_worker->cancel();
     if (m_worker2) m_worker2->cancel();
 }
 
@@ -155,8 +227,6 @@ void fileCopyDialog::handleProgressFromWorker(int workerIndex, int progress, int
     int totalFail = m_fail[0] + m_fail[1];
     int totalDel  = m_del[0]  + m_del[1];
 
-    int overallProgress = (m_totalFiles > 0) ? ((totalDone * 100) / m_totalFiles) : progress;
-
     QString err;
     if (totalCnt > 0)
         err += QString(tr("%1 copied. ")).arg(totalCnt);
@@ -166,12 +236,18 @@ void fileCopyDialog::handleProgressFromWorker(int workerIndex, int progress, int
         err += QString(tr("%1 deleted. ")).arg(totalDel);
 
     ui->status->setText(QString(tr("Copying: %1 of %2 processed. %3")).arg(totalDone).arg(m_totalFiles).arg(err));
-    ui->progressBar->setValue(overallProgress);
+
+    // The progress bar is normally driven byte-by-byte via
+    // handleBytesAccounted(); fall back to file counts when the total size
+    // is unknown (e.g. all files report size 0).
+    if (m_totalSourceBytes <= 0) {
+        int overallProgress = (m_totalFiles > 0) ? ((totalDone * 100) / m_totalFiles) : progress;
+        ui->progressBar->setValue(overallProgress);
+    }
 }
 
 void fileCopyDialog::handleWorkerFinished()
 {
-    // Quit the thread of the sender
     QObject *s = sender();
     if (s == m_worker && m_thread) {
         m_thread->quit();
@@ -180,11 +256,38 @@ void fileCopyDialog::handleWorkerFinished()
     }
 
     m_finishedWorkers++;
-    if ((m_worker && m_worker->doCancel) || (m_worker2 && m_worker2->doCancel)) {
-        reject();
-        return;
+    if ((m_worker && m_worker->wasCancelled()) || (m_worker2 && m_worker2->wasCancelled())) {
+        m_cancelRequested = true;
     }
-    if (m_finishedWorkers >= m_workerCount) {
+    finalizeIfReady();
+}
+
+void fileCopyDialog::handleThreadStopped(int workerIndex)
+{
+    if (workerIndex == 0) {
+        m_thread = nullptr;
+        m_worker = nullptr;
+    } else if (workerIndex == 1) {
+        m_thread2 = nullptr;
+        m_worker2 = nullptr;
+    }
+
+    m_stoppedThreads++;
+    finalizeIfReady();
+}
+
+void fileCopyDialog::finalizeIfReady()
+{
+    if (m_closeScheduled)
+        return;
+
+    if (m_finishedWorkers < m_workerCount || m_stoppedThreads < m_workerCount)
+        return;
+
+    m_closeScheduled = true;
+    if (m_cancelRequested) {
+        reject();
+    } else {
         accept();
     }
 }

@@ -6,8 +6,10 @@
 #include "presetlistmodel.h"
 #include "shortcutdialog.h"
 
+#include <QElapsedTimer>
 #include <QFileInfoList>
 #include <QMainWindow>
+#include <QSet>
 #include <QShortcut>
 #include <QStorageInfo>
 #include <QThread>
@@ -47,8 +49,6 @@ public slots:
 
     void slotDeviceRemoved(const QString &dev);
 
-    void reloadPresetComboBox();
-
     void doneLoadingCard();
     void updateProcessStatus(QString);
 
@@ -74,9 +74,8 @@ public:
     qint64 freeProjectSpace = 0;
     Ui::MainWindow *ui;
     void emptyMainWindow();
-    imageLoader *imageLoaderObject;
-    QThread *imageLoaderThread = nullptr;
-    TreeNode *imageShown, *imageSelected;
+    imageLoader *m_previewLoader = nullptr;
+    QThread *m_previewThread = nullptr;
     bool doBackupImport = false;
 
     bool deleteExisting;
@@ -106,7 +105,7 @@ public:
     void loadProjectName();
     void resetProjectName(int sel);
     void loadFileNameFormat();
-    void resetFileNameFomat(int sel);
+    void resetFileNameFormat(int sel);
     void saveFileNameFormat(int sel = -1);
     void saveBackupPresetsLocations(int sel);
 private slots:
@@ -127,7 +126,7 @@ private slots:
     void on_quickViewButton_clicked();
     void spaceButtonPressed();
     void returnButtonPressed();
-    void finshedImageLoading();
+    void previewLoaded(const QString &path, const QImage &image, bool failed);
 
     void on_ejectButton_clicked();
 
@@ -153,7 +152,7 @@ private slots:
 
     void on_deleteLocationButton_clicked();
     void on_shortcutDialogButton_clicked();
-    void shortcutWindowFinisched(int);
+    void shortcutWindowFinished(int);
     void on_backupBox_stateChanged(int arg1);
     void on_selectBackupLocation_clicked();
     void on_deleteBackupLocationButton_clicked();
@@ -164,5 +163,29 @@ private slots:
 
 private:
     void displayNoCardDialog();
+
+    // Persist a checkbox-backed bool setting and update the member
+    void saveBoolSetting(const QString &key, bool &member, int state);
+    // Enable/disable the backup location controls as one group
+    void setBackupUiEnabled(bool enabled);
+    // Shared implementation of check/uncheck/flip on the view selection
+    enum class CheckAction { Check, Uncheck, Flip };
+    void applyCheckToSelection(CheckAction action);
+
+    // Free-space labels: QStorageInfo does real disk I/O, so cache the
+    // values briefly instead of querying on every keystroke
+    QElapsedTimer m_freeSpaceTimer;
+    QString m_freeSpaceFolder;
+    QString m_freeSpaceBackupFolder;
+    bool m_freeSpaceBackupEnabled = false;
+    qint64 m_freeBackupSpace = -1;
+
+    // Card-insertion detection: the disk event fires before the volume is
+    // mounted, so we poll for the mount before asking to open the card
+    void waitForVolumeMount(const QString &devicePath, int attemptsLeft);
+    void askToOpenInsertedCard();
+    QSet<QString> m_pendingInsertedDevices;
+    bool m_insertPromptOpen = false;
+    QElapsedTimer m_appStartTimer; // suppress the startup device enumeration
 };
 

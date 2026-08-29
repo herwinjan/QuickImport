@@ -21,3 +21,26 @@ Quick Import makes it fast and simple to transfer photos from your memory card s
 - **Custom Naming:** Rename files and folders with flexible templates  
 
 Experience a smoother, safer, and faster photo import process with **Quick Import**.
+
+## Building from source
+
+Requirements: CMake ≥ 3.21, Qt 6 (Core, Gui, Concurrent, Widgets, LinguistTools), [LibRaw](https://www.libraw.org/) and [Exiv2](https://exiv2.org/).
+
+```sh
+cmake -S . -B build \
+    -DLIBRAW_ROOT=/path/to/libraw \
+    -DEXIV2_ROOT=/path/to/exiv2
+cmake --build build
+```
+
+`LIBRAW_ROOT` and `EXIV2_ROOT` point at an installation prefix or a
+source/build tree; without them CMake falls back to common locations such as
+`/opt/homebrew` and `/usr/local` (the environment variables `LIBRAW_ROOT` /
+`EXIV2_ROOT` work too).
+
+**macOS note:** the project targets macOS 14.0, but Homebrew builds its
+libraries for your current macOS version only. To produce a binary that runs
+on macOS 14, build LibRaw and Exiv2 yourself with
+`MACOSX_DEPLOYMENT_TARGET=14.0` and point the `*_ROOT` options at those
+builds. For distribution, bundle the LibRaw dylib into the app bundle
+(e.g. with `macdeployqt`).

@@ -1,16 +1,69 @@
 #include "fileinfomodel.h"
 #include <QApplication>
 #include <QDateTime>
+#include <QFile>
 #include <QFileInfo>
+#include <QtConcurrent/QtConcurrentMap>
+#include <QtEndian>
+#include <atomic>
+#include <exiv2/exiv2.hpp>
+#include <functional>
+#include <mutex>
 #include <QFileSystemModel>
 #include <QList>
+#include <QPointer>
 #include <QStyledItemDelegate>
 #include <QTreeView>
 #include <QVariant>
 
+namespace {
+TreeNode *findOrCreateTreeNode(const QString &text, TreeNode *parent)
+{
+    for (TreeNode *child : parent->children) {
+        if (child->data == text)
+            return child;
+    }
+
+    TreeNode *newNode = new TreeNode();
+    newNode->data = text;
+    newNode->isSelected = false;
+    newNode->parent = parent;
+    parent->children.append(newNode);
+    return newNode;
+}
+}
+
+namespace {
+// EXIF byte order marker: 0x4949 ("II") = little-endian, 0x4D4D ("MM") = big-endian
+bool exifIsBigEndian(unsigned int ord)
+{
+    return ord == 0x4D4D;
+}
+
+quint16 readExifU16(LibRaw_abstract_datastream *data, unsigned int ord)
+{
+    quint16 v = 0;
+    data->read(&v, sizeof(v), 1);
+    return exifIsBigEndian(ord) ? qFromBigEndian(v) : qFromLittleEndian(v);
+}
+
+quint32 readExifU32(LibRaw_abstract_datastream *data, unsigned int ord)
+{
+    quint32 v = 0;
+    data->read(&v, sizeof(v), 1);
+    return exifIsBigEndian(ord) ? qFromBigEndian(v) : qFromLittleEndian(v);
+}
+
+double readExifURational(LibRaw_abstract_datastream *data, unsigned int ord)
+{
+    const quint32 num = readExifU32(data, ord);
+    const quint32 den = readExifU32(data, ord);
+    return den != 0 ? static_cast<double>(num) / den : 0.0;
+}
+}
+
 void exif_callback(void *context, int tag, int type, int len, unsigned int ord, void *ifp, long long)
 {
-    Q_UNUSED(ord);
     auto *data = static_cast<LibRaw_abstract_datastream *>(ifp);
     auto *mycontext = static_cast<imageInfoStruct *>(context);
     LibRaw_abstract_datastream *stream = (LibRaw_abstract_datastream *) ifp;
@@ -19,9 +72,7 @@ void exif_callback(void *context, int tag, int type, int len, unsigned int ord, 
     switch (tag) {
     case 0x8827:                     // ISO Speed Ratings
         if (type == 3 && len == 1) { // 3: unsigned short
-            unsigned short isoValue;
-            data->read(&isoValue, sizeof(isoValue), 1);
-            mycontext->isoValue = isoValue;
+            mycontext->isoValue = readExifU16(data, ord);
         }
         break;
     case 0xA430: // Owner Name
@@ -34,18 +85,7 @@ void exif_callback(void *context, int tag, int type, int len, unsigned int ord, 
     }
     case 0x829A:                     // Exposure Time (shutter speed)
         if (type == 5 && len == 1) { // 5: unsigned rational
-            unsigned int num, den;
-            data->read(&num, sizeof(num), 1);
-            data->read(&den, sizeof(den), 1);
-            mycontext->shutterSpeed = static_cast<double>(num) / den;
-        }
-        break;
-    case 0x9201:                      // Shutter speed value (APEX)
-        if (type == 10 && len == 1) { // 10: signed rational
-            int num, den;
-            data->read(&num, sizeof(num), 1);
-            data->read(&den, sizeof(den), 1);
-            //            mycontext->shutterSpeed = pow(2, static_cast<double>(num) / den);
+            mycontext->shutterSpeed = readExifURational(data, ord);
         }
         break;
     case 0x0110: // Camera Model Name
@@ -58,59 +98,43 @@ void exif_callback(void *context, int tag, int type, int len, unsigned int ord, 
     }
     case 0x829D:                     // FNumber (aperture)
         if (type == 5 && len == 1) { // 5: unsigned rational
-            unsigned int num, den;
-            data->read(&num, sizeof(num), 1);
-            data->read(&den, sizeof(den), 1);
-            mycontext->aperture = static_cast<double>(num) / den;
+            mycontext->aperture = readExifURational(data, ord);
         }
         break;
     case 0xA002:                     // Image Width
         if (type == 4 && len == 1) { // 4: unsigned long
-            unsigned int width;
-            data->read(&width, sizeof(width), 1);
-            mycontext->resolutionWidth = static_cast<int>(width);
+            mycontext->resolutionWidth = static_cast<int>(readExifU32(data, ord));
         }
         break;
     case 0xA003:                     // Image Height
         if (type == 4 && len == 1) { // 4: unsigned long
-            unsigned int height;
-            data->read(&height, sizeof(height), 1);
-            mycontext->resolutionHeight = static_cast<int>(height);
+            mycontext->resolutionHeight = static_cast<int>(readExifU32(data, ord));
         }
         break;
     case 0x0103:                     // Compression
         if (type == 3 && len == 1) { // 3: unsigned short
-            unsigned short compressionValue;
-            data->read(&compressionValue, sizeof(compressionValue), 1);
-            mycontext->compression = compressionValue;
+            mycontext->compression = readExifU16(data, ord);
         }
         break;
     case 0xA433: // Lens make
     {
-        char lens[128]; // Adjust size as necessary
-        stream->read(lens, len, 1);
-        lens[len] = '\0';
-        mycontext->lensMake = QString::fromLatin1(lens);
-        //  qDebug() << mycontext->lensMake;
-
+        std::vector<char> buffer(len + 1);
+        stream->read(buffer.data(), len, 1);
+        buffer[len] = '\0';
+        mycontext->lensMake = QString::fromLatin1(buffer.data());
         break;
     }
     case 0xA434: // Lens Model
     {
-        char lens[128]; // Adjust size as necessary
-        stream->read(lens, len, 1);
-        lens[len] = '\0';
-        mycontext->lensModel = QString::fromLatin1(lens);
-        //        qDebug() << mycontext->lensModel;
-
+        std::vector<char> buffer(len + 1);
+        stream->read(buffer.data(), len, 1);
+        buffer[len] = '\0';
+        mycontext->lensModel = QString::fromLatin1(buffer.data());
         break;
     }
     case 0x920A:                     // Focal Length
         if (type == 5 && len == 1) { // 5: unsigned rational
-            unsigned int num, den;
-            data->read(&num, sizeof(num), 1);
-            data->read(&den, sizeof(den), 1);
-            mycontext->focalLength = static_cast<double>(num) / den;
+            mycontext->focalLength = readExifURational(data, ord);
         }
         break;
     case 0x9003: // DateTimeOriginal
@@ -143,19 +167,103 @@ void exif_callback(void *context, int tag, int type, int len, unsigned int ord, 
     }
 }
 
+namespace {
+// EXIF fallback for files LibRaw cannot open (JPEG/HEIC/TIFF), so RAW+JPEG
+// pairs get the same capture timestamp and never split across folders.
+bool parseExifWithExiv2(const QString &path, imageInfoStruct *info)
+{
+    // Exiv2 is thread-safe for independent images once the XMP parser has
+    // been initialized exactly once before concurrent use.
+    static std::once_flag xmpInitFlag;
+    std::call_once(xmpInitFlag, []() { Exiv2::XmpParser::initialize(); });
+
+    try {
+        auto image = Exiv2::ImageFactory::open(
+            std::string(QFile::encodeName(path).constData()));
+        if (!image)
+            return false;
+        image->readMetadata();
+        const Exiv2::ExifData &exif = image->exifData();
+        if (exif.empty())
+            return false;
+
+        auto str = [&exif](const char *key) -> QString {
+            const auto it = exif.findKey(Exiv2::ExifKey(key));
+            return it != exif.end() ? QString::fromStdString(it->toString()).trimmed()
+                                    : QString();
+        };
+        auto rational = [&exif](const char *key, double *out) {
+            const auto it = exif.findKey(Exiv2::ExifKey(key));
+            if (it == exif.end())
+                return;
+            const Exiv2::Rational r = it->toRational();
+            if (r.second != 0)
+                *out = static_cast<double>(r.first) / r.second;
+        };
+
+        const QString dt = str("Exif.Photo.DateTimeOriginal");
+        if (!dt.isEmpty()) {
+            const QDateTime parsed = QDateTime::fromString(dt, "yyyy:MM:dd HH:mm:ss");
+            if (parsed.isValid())
+                info->dateTimeOriginal = parsed;
+        }
+
+        const auto iso = exif.findKey(Exiv2::ExifKey("Exif.Photo.ISOSpeedRatings"));
+        if (iso != exif.end())
+            info->isoValue = static_cast<int>(iso->toInt64());
+        rational("Exif.Photo.ExposureTime", &info->shutterSpeed);
+        rational("Exif.Photo.FNumber", &info->aperture);
+        rational("Exif.Photo.FocalLength", &info->focalLength);
+        if (info->cameraName.isEmpty())
+            info->cameraName = str("Exif.Image.Model");
+        if (info->serialNumber.isEmpty())
+            info->serialNumber = str("Exif.Photo.BodySerialNumber");
+        if (info->ownerName.isEmpty())
+            info->ownerName = str("Exif.Photo.CameraOwnerName");
+        if (info->lensMake.isEmpty())
+            info->lensMake = str("Exif.Photo.LensMake");
+        if (info->lensModel.isEmpty())
+            info->lensModel = str("Exif.Photo.LensModel");
+
+        return info->dateTimeOriginal.isValid();
+    } catch (const std::exception &e) {
+        qWarning() << "Exiv2 EXIF parse failed for" << path << ":" << e.what();
+        return false;
+    } catch (...) {
+        qWarning() << "Unknown exception in Exiv2 EXIF parse for" << path;
+        return false;
+    }
+}
+}
+
+FileInfoModel::~FileInfoModel()
+{
+    if (m_treeWatcher.isRunning())
+        m_treeWatcher.waitForFinished();
+
+    if (m_treeWatcher.future().isFinished()) {
+        TreeNode *pendingRoot = m_treeWatcher.result();
+        if (pendingRoot && pendingRoot != rootItem)
+            delete pendingRoot;
+    }
+
+    delete rootItem;
+}
+
 FileInfoModel::FileInfoModel(const QList<QFileInfo> &fileInfoList, QObject *parent)
     : QAbstractItemModel(parent)
     , m_fileInfoList(fileInfoList)
+    , rootItem(new TreeNode())
 {
     qDebug() << "FileInfoModek init:" << m_fileInfoList.count();
-    connect(&m_treeWatcher,
-            &QFutureWatcher<void>::finished,
-            this,
-            &FileInfoModel::onTreeBuildingFinished);
-
-    setupModelData();
+    rootItem->data = "Root";
+    connect(&m_treeWatcher, &QFutureWatcher<TreeNode *>::finished, this, &FileInfoModel::onTreeBuildingFinished);
 
     view = static_cast<QTreeView *>(parent);
+
+    // Defer the initial build until the event loop starts so the view has time
+    // to connect to our signals before we reset the model.
+    QTimer::singleShot(0, this, &FileInfoModel::setupModelData);
 }
 
 QModelIndex FileInfoModel::index(int row, int column, const QModelIndex& parent ) const  {
@@ -279,7 +387,7 @@ bool FileInfoModel::setData(const QModelIndex &index, const QVariant &value, int
 
     if (!node->isFile) {
         setSelected(node);
-        emit dataChanged(QModelIndex(), QModelIndex());
+        refreshChecks();
     }
 
     emit dataChanged(index, index);
@@ -301,79 +409,107 @@ QString formatHour(int hour)
 }
 void FileInfoModel::setupModelData()
 {
-    rootItem = new TreeNode();
-    rootItem->data = "Root";
+    const QList<QFileInfo> fileInfoList = m_fileInfoList;
+    QPointer<FileInfoModel> self(this);
 
-    auto buildTree = [this]() {
-        QMutexLocker locker(&m_mutex);
-        int items = 0;
-        qDebug() << "Loop Model init:" << m_fileInfoList.count();
-        for (const QFileInfo &fileInfo : m_fileInfoList) {
-            QDateTime dateTime = fileInfo.lastModified();
-            QString year = QString::number(dateTime.date().year());
-            QString month = QString::number(dateTime.date().month());
-            QString day = QString::number(dateTime.date().day());
-            // QString hour = QString::number(dateTime.time().hour()) + QString(tr(" uur"));
-            QString hour = formatHour(dateTime.time().hour());
-            QString fileName = fileInfo.fileName();
+    auto future = QtConcurrent::run([fileInfoList, self]() -> TreeNode * {
+        const int total = fileInfoList.count();
+        qDebug() << "Loop Model init:" << total;
 
-            TreeNode *yearNode = findOrCreateNode(year, rootItem);
-            TreeNode *monthNode = findOrCreateNode(month, yearNode);
-            TreeNode *dayNode = findOrCreateNode(day, monthNode);
-            TreeNode *hourNode = findOrCreateNode(hour, dayNode);
+        // Phase 1: parse EXIF for all files in parallel on the thread pool.
+        // Each file is independent; every functor uses its own LibRaw
+        // instance. Status updates are throttled to avoid flooding the GUI
+        // event loop with one queued call per file.
+        auto counter = std::make_shared<std::atomic_int>(0);
+        constexpr int kStatusEvery = 25;
+
+        std::function<imageInfoStruct(const QFileInfo &)> parseExif =
+            [self, counter, total](const QFileInfo &fileInfo) -> imageInfoStruct {
+            imageInfoStruct info;
+            int ret = LIBRAW_SUCCESS;
+            try {
+                std::unique_ptr<LibRaw> localRawProc(new LibRaw());
+                localRawProc->set_exifparser_handler(exif_callback, &info);
+                ret = localRawProc->open_file(
+                    QFile::encodeName(fileInfo.filePath()).constData());
+            } catch (const std::exception &e) {
+                ret = LIBRAW_UNSPECIFIED_ERROR;
+                qWarning() << "Exception caught during LibRaw processing:" << e.what();
+            } catch (...) {
+                ret = LIBRAW_UNSPECIFIED_ERROR;
+                qWarning() << "Unknown exception caught during LibRaw processing";
+            }
+
+            if (ret != LIBRAW_SUCCESS) {
+                // Not a RAW file LibRaw understands; JPEG/HEIC/TIFF still
+                // carry EXIF — read it with Exiv2 instead.
+                static const QSet<QString> exiv2Formats
+                    = {"jpg", "jpeg", "heic", "heif", "tif", "tiff"};
+                const QString suffix = fileInfo.suffix().toLower();
+                if (exiv2Formats.contains(suffix)) {
+                    parseExifWithExiv2(fileInfo.filePath(), &info);
+                } else {
+                    qDebug() << "No EXIF source for" << fileInfo.filePath()
+                             << "LibRaw error:" << ret;
+                }
+            }
+
+            const int done = counter->fetch_add(1, std::memory_order_relaxed) + 1;
+            if (self && (done % kStatusEvery == 0 || done == total)) {
+                const QString message =
+                    self->tr("loading EXIF data #%1 of %2.").arg(done).arg(total);
+                QMetaObject::invokeMethod(
+                    self,
+                    [self, message]() {
+                        if (self)
+                            emit self->updateProcessStatus(message);
+                    },
+                    Qt::QueuedConnection);
+            }
+            return info;
+        };
+
+        const QList<imageInfoStruct> exifInfos =
+            QtConcurrent::blockingMapped(fileInfoList, parseExif);
+
+        // Phase 2: build the tree sequentially (cheap compared to the EXIF
+        // parsing). blockingMapped preserves order, so infos line up with
+        // the file list.
+        auto *newRoot = new TreeNode();
+        newRoot->data = "Root";
+
+        for (int i = 0; i < total; ++i) {
+            const QFileInfo &fileInfo = fileInfoList.at(i);
+            // Group by capture time (EXIF) when available; fall back to the
+            // file's modification time (same rule as the naming tokens).
+            const QDateTime exifTime = exifInfos.at(i).dateTimeOriginal;
+            const QDateTime dateTime = exifTime.isValid() ? exifTime
+                                                          : fileInfo.lastModified();
+            const QString year = QString::number(dateTime.date().year());
+            const QString month = QString::number(dateTime.date().month());
+            const QString day = QString::number(dateTime.date().day());
+            const QString hour = formatHour(dateTime.time().hour());
+
+            TreeNode *yearNode = findOrCreateTreeNode(year, newRoot);
+            TreeNode *monthNode = findOrCreateTreeNode(month, yearNode);
+            TreeNode *dayNode = findOrCreateTreeNode(day, monthNode);
+            TreeNode *hourNode = findOrCreateTreeNode(hour, dayNode);
             TreeNode *fileNode = new TreeNode();
-            fileNode->data = fileName;
+            fileNode->data = fileInfo.fileName();
             fileNode->filePath = fileInfo.filePath();
             fileNode->isSelected = false;
             fileNode->info = fileInfo;
             fileNode->isFile = true;
-
             fileNode->parent = hourNode;
-            beginInsertRows(QModelIndex(), items, items);
-            items++;
-            emit updateProcessStatus(
-                QString(tr("loading EXIF data #%1 of %2.")).arg(items).arg(m_fileInfoList.count()));
+            fileNode->imageInfo = exifInfos.at(i);
             hourNode->children.append(fileNode);
-            endInsertRows();
-
-            try {
-                LibRaw *localRawProc = nullptr;
-                try {
-                    localRawProc = new LibRaw();
-                    localRawProc->set_exifparser_handler(exif_callback, &fileNode->imageInfo);
-                    int ret = localRawProc->open_file(fileNode->filePath.toLatin1().data());
-                    if (ret != LIBRAW_SUCCESS) {
-                        // qWarning()
-                        // << "Failed to open file:" << fileNode->filePath << "Error:" << ret;
-                        // delete localRawProc;
-                        // return;
-                    }
-                } catch (const std::exception &e) {
-                    qWarning() << "Exception caught during LibRaw processing:" << e.what();
-                    // if (localRawProc) {
-                    // delete localRawProc;
-                    // }
-                    // return;
-                } catch (...) {
-                    qWarning() << "Unknown exception caught during LibRaw processing";
-                    // if (localRawProc) {
-                    // delete localRawProc;
-                    // }
-                    // return;
-                }
-                delete localRawProc;
-            } catch (const std::exception &e) {
-                qWarning() << "Exception caught in loadExifData:" << e.what();
-            } catch (...) {
-                qWarning() << "Unknown exception caught in loadExifData";
-            }
-            //  qDebug() << "Added" << fileNode->filePath << fileNode->data;
         }
-        qDebug() << "Tree structure built." << items << m_fileInfoList.count();
-    };
 
-    QFuture<void> treeFuture = QtConcurrent::run(buildTree);
-    m_treeWatcher.setFuture(treeFuture);
+        qDebug() << "Tree structure built." << total;
+        return newRoot;
+    });
+
+    m_treeWatcher.setFuture(future);
 }
 
 void FileInfoModel::collectFileNodes(TreeNode *node, QList<TreeNode *> &fileNodes)
@@ -386,22 +522,9 @@ void FileInfoModel::collectFileNodes(TreeNode *node, QList<TreeNode *> &fileNode
     }
 }
 
-TreeNode *FileInfoModel::findOrCreateNode(const QString &text, TreeNode *parent)
+void FileInfoModel::refreshChecks()
 {
-    for (TreeNode *child : parent->children) {
-        if (child->data == text)
-            return child;
-    }
-
-    TreeNode *newNode = new TreeNode();
-    newNode->data = text;
-    newNode->isSelected = false;
-    newNode->parent = parent;
-    beginInsertRows(QModelIndex(), rowCount(), rowCount());
-
-    parent->children.append(newNode);
-    endInsertRows();
-    return newNode;
+    emit layoutChanged();
 }
 
 void FileInfoModel::setSelected(TreeNode *node)
@@ -428,12 +551,12 @@ void FileInfoModel::setDeselect(TreeNode *node)
 void FileInfoModel::selectAll()
 {
     setSelect(rootItem);
-    emit dataChanged(QModelIndex(), QModelIndex());
+    refreshChecks();
 }
 void FileInfoModel::deSelectAll()
 {
     setDeselect(rootItem);
-    emit dataChanged(QModelIndex(), QModelIndex());
+    refreshChecks();
 }
 int FileInfoModel::countSelected()
 {
@@ -497,7 +620,15 @@ int FileInfoModel::getCountSelectedItems(TreeNode *node, int count)
 
 void FileInfoModel::onTreeBuildingFinished()
 {
+    TreeNode *newRoot = m_treeWatcher.result();
+    if (!newRoot)
+        return;
+
+    beginResetModel();
+    delete rootItem;
+    rootItem = newRoot;
+    endResetModel();
+
     qDebug() << "Tree building finished. Starting EXIF data loading...";
     emit treeBuildingFinished();
-    // emit dataChanged(QModelIndex(), QModelIndex())
 }

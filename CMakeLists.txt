@@ -11,8 +11,76 @@ set(CMAKE_AUTOUIC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# ---- macOS OpenGL compatibility ----
+# Qt's FindWrapOpenGL tries to link the deprecated AGL framework on macOS.
+# Recent Xcode/CLT setups no longer ship a linkable AGL framework, so provide
+# a compatible replacement target before Qt is discovered.
+if(APPLE AND NOT TARGET WrapOpenGL::WrapOpenGL)
+    add_library(WrapOpenGL::WrapOpenGL INTERFACE IMPORTED)
+    target_link_libraries(WrapOpenGL::WrapOpenGL INTERFACE "-framework OpenGL")
+    set(WrapOpenGL_FOUND ON)
+endif()
+
 # ---- Qt 6 ----
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Concurrent Widgets LinguistTools)
+
+set(LIBRAW_ROOT "" CACHE PATH "Optional root path for a LibRaw installation")
+set(EXIV2_ROOT "" CACHE PATH "Optional root path for an Exiv2 installation")
+
+# Local source builds go BEFORE the system prefixes: Homebrew builds its
+# libraries for the host macOS only, which conflicts with our 14.0
+# deployment target (linker warning "built for newer version").
+set(QUICKIMPORT_DEP_HINTS
+    ${LIBRAW_ROOT}
+    ${EXIV2_ROOT}
+    $ENV{LIBRAW_ROOT}
+    $ENV{EXIV2_ROOT}
+    /Users/herwin/devel/LibRaw
+    /Users/herwin/devel/exiv2
+    /opt/homebrew
+    /usr/local
+)
+
+find_path(LIBRAW_INCLUDE_DIR
+    NAMES libraw/libraw.h
+    HINTS ${QUICKIMPORT_DEP_HINTS}
+    PATH_SUFFIXES include
+)
+
+find_library(LIBRAW_LIBRARY
+    NAMES raw_r libraw_r raw libraw
+    HINTS ${QUICKIMPORT_DEP_HINTS}
+    PATH_SUFFIXES lib lib64 lib/.libs bin
+)
+
+find_path(EXIV2_INCLUDE_DIR
+    NAMES exiv2/exiv2.hpp
+    HINTS ${QUICKIMPORT_DEP_HINTS}
+    PATH_SUFFIXES include
+)
+
+find_library(EXIV2_LIBRARY
+    NAMES exiv2 libexiv2
+    HINTS ${QUICKIMPORT_DEP_HINTS}
+    PATH_SUFFIXES lib lib64
+)
+
+# exiv2lib_export.h is generated into the exiv2 build tree; when building
+# against an exiv2 source/build tree it lives outside the include/ directory.
+find_path(EXIV2_EXPORT_INCLUDE_DIR
+    NAMES exiv2lib_export.h
+    HINTS ${QUICKIMPORT_DEP_HINTS} ${EXIV2_INCLUDE_DIR}
+    PATH_SUFFIXES . include include/exiv2
+)
+
+if(NOT LIBRAW_INCLUDE_DIR OR NOT LIBRAW_LIBRARY)
+    message(FATAL_ERROR "LibRaw not found. Set LIBRAW_ROOT or install libraw.")
+endif()
+
+if(NOT EXIV2_INCLUDE_DIR OR NOT EXIV2_LIBRARY)
+    message(FATAL_ERROR "Exiv2 not found. Set EXIV2_ROOT or install exiv2.")
+endif()
+
 
 set(TS_FILES
     quickimport_en.ts
@@ -89,7 +157,13 @@ target_include_directories(QuickImport
         ${CMAKE_CURRENT_SOURCE_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}/qdevicewatcher
         ${CMAKE_CURRENT_BINARY_DIR} # (good practice for generated headers)
+        ${LIBRAW_INCLUDE_DIR}
+        ${EXIV2_INCLUDE_DIR}
 )
+
+if(EXIV2_EXPORT_INCLUDE_DIR)
+    target_include_directories(QuickImport PRIVATE ${EXIV2_EXPORT_INCLUDE_DIR})
+endif()
 
 target_compile_definitions(QuickImport PRIVATE
     CONFIG_DEBUG
@@ -167,22 +241,17 @@ if(APPLE)
     )
 
     # Include paths
-    target_include_directories(QuickImport PRIVATE
-        /Users/herwin/devel/LibRaw/
-        /Users/herwin/devel/exiv2/include
-        /Users/herwin/devel/exiv2
-    )
-
-    # Static libs & system deps
+    # System deps
     target_link_libraries(QuickImport PRIVATE
-        /Users/herwin/devel/LibRaw/lib/.libs/libraw_r.a
-        /Users/herwin/devel/exiv2/lib/libexiv2.a
+        ${LIBRAW_LIBRARY}
+        ${EXIV2_LIBRARY}
         z
         expat
         iconv
         "-framework DiskArbitration"
         "-framework Foundation"
     )
+
 endif()
 
 # ---- Windows specifics ----
@@ -191,17 +260,9 @@ if(WIN32)
         qdevicewatcher/qdevicewatcher_win32.cpp
     )
 
-    # Include & link dirs for LibRaw
-    target_include_directories(QuickImport PRIVATE
-        c:/Users/herwin/devel/LibRaw/
-    )
-    link_directories(
-        c:/Users/herwin/devel/LibRaw/lib/
-        c:/Users/herwin/devel/LibRaw/bin
-    )
-
     target_link_libraries(QuickImport PRIVATE
-        libraw
+        ${LIBRAW_LIBRARY}
+        ${EXIV2_LIBRARY}
         user32
     )
 endif()
@@ -215,11 +276,15 @@ set(DISTFILES
     readme.md
 )
 
+
+
 # You can attach them to the target if you want IDE visibility:
 # target_sources(QuickImport PRIVATE ${DISTFILES})
 
 # Note: Your .pro added a qmake subproject: qdevicewatcher/libQDeviceWatcher.pro.
 # In CMake we already compile its sources directly. If you later convert that
 # subproject to CMake, you can add_subdirectory(qdevicewatcher) and link it instead.
+
+
 
 qt_finalize_executable(QuickImport)

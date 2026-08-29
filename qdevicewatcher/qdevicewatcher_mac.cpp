@@ -32,65 +32,53 @@ static QStringList sDevices; //disk list, or mount point list?
 static void onDiskAppear(DADiskRef disk, void *context)
 {
     CFDictionaryRef description = DADiskCopyDescription(disk);
-    CFURLRef volumePathURL = (CFURLRef) CFDictionaryGetValue(description,
-                                                             kDADiskDescriptionVolumePathKey);
+    if (description == nullptr)
+        return; // disk vanished between callback and query
 
-    if (volumePathURL == nullptr) {
-        // qWarning() << "Cannot retrieve volume path.";
-        //   return;
-    }
+    QString protocol;
+    QString mediaContent;
+    bool removable = false;
+    bool ejectable = false;
+
     CFStringRef protocolString = (CFStringRef)
         CFDictionaryGetValue(description, kDADiskDescriptionDeviceProtocolKey);
+    if (protocolString != nullptr)
+        protocol = QString::fromCFString(protocolString);
 
     CFStringRef mediaContentString = (CFStringRef)
         CFDictionaryGetValue(description, kDADiskDescriptionMediaContentKey);
-
-    QString mediaContent;
-
     if (mediaContentString != nullptr)
         mediaContent = QString::fromCFString(mediaContentString);
 
-    if (mediaContent == "FDisk_partition_scheme") {
-        //qDebug() << "Partionion scheme";
+    CFBooleanRef removableRef = (CFBooleanRef)
+        CFDictionaryGetValue(description, kDADiskDescriptionMediaRemovableKey);
+    if (removableRef != nullptr)
+        removable = CFBooleanGetValue(removableRef);
+
+    CFBooleanRef ejectableRef = (CFBooleanRef)
+        CFDictionaryGetValue(description, kDADiskDescriptionMediaEjectableKey);
+    if (ejectableRef != nullptr)
+        ejectable = CFBooleanGetValue(ejectableRef);
+
+    CFRelease(description);
+
+    // Skip whole-disk container objects (FDisk_partition_scheme,
+    // GUID_partition_scheme, ...): the interesting event is the partition
+    // itself, and reporting both causes duplicate "card inserted" prompts.
+    if (mediaContent.endsWith(QLatin1String("_partition_scheme")))
         return;
-    }
 
-    /*        
-    CFStringRef volumePathString = CFURLCopyFileSystemPath(volumePathURL, kCFURLPOSIXPathStyle);
-    
-    if (volumePathString != nullptr) {
-        // Convert CFStringRef to QString
-        QString volumePath = QString::fromCFString(volumePathString);
-
-        // Check if the volume path is not empty
-        if (!volumePath.isEmpty()) {
-            qDebug() << "Volume path:" << volumePath;
-        } else {
-            qDebug() << "Volume path is empty.";
-            return;
-        }
-
-        // Release the CFStringRef when done
-        CFRelease(volumePathString);
-    } else {
-        qWarning() << "Failed to convert CFURLRef to CFStringRef.";
+    // Accept USB/SD readers by protocol, and any removable/ejectable medium
+    // (covers CFexpress readers on Thunderbolt/PCIe). Fixed internal disks
+    // are neither.
+    const bool protocolMatch = protocol == QLatin1String("USB")
+                               || protocol.contains(QLatin1String("Secure Digital"));
+    if (!protocolMatch && !removable && !ejectable)
         return;
-    }
-*/
-    if (protocolString != nullptr) {
-        QString protocol = QString::fromCFString(protocolString);
-
-        if (protocol != "USB" && !protocol.contains("Secure Digital")) {
-            //   qDebug() << "No USB";
-            return;
-        }
-    }
 
     QString disk_name = DADiskGetBSDName(disk);
-    if (disk_name.size() <= 0) {
-        //  qDebug() << "No Name";
+    if (disk_name.size() <= 0)
         return;
-    }
     if (sDevices.contains(disk_name))
         return;
     sDevices.append(disk_name);

@@ -24,9 +24,11 @@ deviceList::deviceList(QWidget *parent ) :
     // Configure once rather than on every expand
     setSelectionMode(QAbstractItemView::ExtendedSelection);
 
-    // Make columns auto-size to fit their content
+    // Interactive mode + explicit resizeColumnToContents() after loading:
+    // ResizeToContents would keep re-measuring every row on each change,
+    // which gets slow on trees with thousands of files.
     if (auto *hdr = header()) {
-        hdr->setSectionResizeMode(QHeaderView::ResizeToContents);
+        hdr->setSectionResizeMode(QHeaderView::Interactive);
         hdr->setStretchLastSection(false);
     }
 
@@ -46,6 +48,10 @@ void deviceList::setFiles(QList<QFileInfo> files)
     fileModel = new FileInfoModel(files, this);
 
     connect(fileModel, &FileInfoModel::dataChanged, this, &deviceList::updateSelectedCount);
+    // Bulk check changes are announced with layoutChanged (refreshChecks)
+    connect(fileModel, &FileInfoModel::layoutChanged, this, [this]() {
+        updateSelectedCount(QModelIndex(), QModelIndex(), {});
+    });
     connect(fileModel, &FileInfoModel::treeBuildingFinished, this, &deviceList::expandTree);
 
     this->setModel(fileModel);

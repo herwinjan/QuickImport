@@ -4,10 +4,40 @@
 #include <QDir>
 #include <QFile>
 #include <QMessageBox>
-#include <QRegularExpression>
 #include <QMap>
+#include <QRegularExpression>
+#include <QUuid>
 
-fileCopyWorker::fileCopyWorker(const QList<fileInfoStruct> &list,
+#if defined(Q_OS_UNIX)
+#include <fcntl.h>
+#include <unistd.h>
+#elif defined(Q_OS_WIN)
+#include <io.h>
+#endif
+
+// Force file contents to physical storage. Used before deleting the source:
+// a successful copy that only lives in the OS write cache is not a backup.
+static bool flushFileToDisk(const QString &path)
+{
+    QFile f(path);
+    if (!f.open(QIODevice::ReadOnly))
+        return false;
+    const int fd = f.handle();
+    if (fd < 0)
+        return false;
+#if defined(Q_OS_DARWIN)
+    // F_FULLFSYNC asks the drive itself to flush; fall back to fsync.
+    return ::fcntl(fd, F_FULLFSYNC) != -1 || ::fsync(fd) == 0;
+#elif defined(Q_OS_UNIX)
+    return ::fsync(fd) == 0;
+#elif defined(Q_OS_WIN)
+    return ::_commit(fd) == 0;
+#else
+    return true;
+#endif
+}
+
+fileCopyWorker::fileCopyWorker(std::shared_ptr<fileCopyQueue> queue,
                                const QString &importFolder,
                                const QString &projectName,
                                const QString &fileNameFormat,
@@ -15,7 +45,7 @@ fileCopyWorker::fileCopyWorker(const QList<fileInfoStruct> &list,
                                const bool &deleteAfterImport,
                                const bool &deleteExisting,
                                const QString &importBackupLocation)
-    : list(list)
+    : queue(std::move(queue))
     , importBackupLocation(importBackupLocation)
     , importFolder(importFolder)
     , projectName(projectName)
@@ -27,7 +57,12 @@ fileCopyWorker::fileCopyWorker(const QList<fileInfoStruct> &list,
 
 void fileCopyWorker::cancel()
 {
-    doCancel = true;
+    m_cancelRequested.store(true, std::memory_order_relaxed);
+}
+
+bool fileCopyWorker::wasCancelled() const
+{
+    return m_cancelRequested.load(std::memory_order_relaxed);
 }
 
 static QString replaceTokens(QString input, const QMap<QString, QString>& tokens)
@@ -36,6 +71,13 @@ static QString replaceTokens(QString input, const QMap<QString, QString>& tokens
         input.replace(it.key(), it.value());
     }
     return input;
+}
+
+QDateTime fileCopyWorker::captureTimestamp(const QFileInfo &info,
+                                           const imageInfoStruct &imageInfo)
+{
+    return imageInfo.dateTimeOriginal.isValid() ? imageInfo.dateTimeOriginal
+                                                : info.lastModified();
 }
 
 /*
@@ -112,145 +154,238 @@ QList<QString> fileCopyWorker::processNewFileName(QString importFolder,
     return ret;
 }
 
+namespace {
+// One destination (import or backup) of a tee-copy.
+struct CopyTarget
+{
+    QString finalPath;
+    QString dirPath;
+    bool existed = false;
+    bool blocked = false;        // existed and may not be replaced
+    bool alreadyMatched = false; // blocked, but identical content (MD5)
+    bool copied = false;         // temp written, verified and renamed
+    QString tempPath;
+    std::unique_ptr<QFile> temp;
+
+    bool succeeded() const { return copied || alreadyMatched; }
+};
+}
+
 void fileCopyWorker::copyImages()
 {
     int del = 0;
-
-    int totalFiles = list.size();
     int done = 0;
 
-    foreach (const fileInfoStruct &file, list) {
-        if (doCancel) {
-            emit copyingFinished();
-            qDebug() << "stop copieing";
-            return;
+    auto calcMd5 = [](const QString &path) -> QByteArray {
+        QFile f(path);
+        if (!f.open(QIODevice::ReadOnly))
+            return QByteArray();
+        QCryptographicHash hash(QCryptographicHash::Md5);
+        const qsizetype chunkSize = 16 * 1024 * 1024;
+        while (!f.atEnd()) {
+            const QByteArray chunk = f.read(chunkSize);
+            hash.addData(chunk);
         }
+        return hash.result();
+    };
+
+    auto makeTempPath = [](const QString &finalPath) {
+        return QString("%1.quickimport.%2.part")
+            .arg(finalPath, QUuid::createUuid().toString(QUuid::WithoutBraces));
+    };
+
+    // Read the source in chunks: allows cancelling mid-file, byte-level
+    // progress, hashing while copying (no second read of the card for MD5)
+    // and writing import + backup in one pass (tee).
+    constexpr qint64 kChunkSize = 8 * 1024 * 1024;
+
+    fileInfoStruct file;
+    while (!wasCancelled() && queue->next(file)) {
+        const QString sourcePath = file.fileInfo.filePath();
+        const qint64 sourceSize = file.fileInfo.size();
+        qint64 accounted = 0;
 
         QList<QString> fileTodo = fileCopyWorker::processNewFileName(importFolder,
                                                                      projectName,
-                                                                     file.fileInfo.lastModified(),
+                                                                     fileCopyWorker::captureTimestamp(file.fileInfo, file.imageInfo),
                                                                      file.imageInfo,
                                                                      file.fileInfo,
                                                                      fileNameFormat);
+        CopyTarget dest;
+        dest.finalPath = fileTodo[2];
+        dest.dirPath = fileTodo[1];
 
-        QList<QString> backupTodo;
-        bool doBackup = false;
-        QString newBackupFile;
-
-        if (!importBackupLocation.isEmpty()) {
-            doBackup = true;
-            backupTodo = fileCopyWorker::processNewFileName(importBackupLocation,
-                                                            projectName,
-                                                            file.fileInfo.lastModified(),
-                                                            file.imageInfo,
-                                                            file.fileInfo,
-                                                            fileNameFormat);
-            newBackupFile = backupTodo[2];
-
-            // create full backup path (mkpath creates intermediate directories)
-            if (!QDir().exists(backupTodo[1]))
-                QDir().mkpath(backupTodo[1]);
-        }
-
-        QString newFile = fileTodo[2];
-
-
-
-        // ensure destination directory exists (use mkpath)
-        if (!QDir().exists(fileTodo[1]))
-            QDir().mkpath(fileTodo[1]);
-
-        qDebug() << "Copy " << file.fileInfo.filePath() << newFile;
-        qDebug() << fileTodo;
-        qDebug() << fileTodo[0] << fileTodo[1] << fileTodo[2];
-
-        bool destExisted = QFile::exists(newFile);
-        bool ok = false;
-        // If we are going to delete the source anyway and no backup is required,
-        // try a fast rename (same-filesystem move). This is much faster than copy.
-        if (deleteAfterImport && !doBackup) {
-            ok = QFile::rename(file.fileInfo.filePath(), newFile);
-        }
-        if (!ok) {
-            ok = QFile::copy(file.fileInfo.filePath(), newFile);
-        }
-        bool backupOK = false;
-
+        const bool doBackup = !importBackupLocation.isEmpty();
+        CopyTarget backup;
         if (doBackup) {
-            backupOK = QFile::copy(file.fileInfo.filePath(), newBackupFile);
+            const QList<QString> backupTodo
+                = fileCopyWorker::processNewFileName(importBackupLocation,
+                                                     projectName,
+                                                     fileCopyWorker::captureTimestamp(file.fileInfo, file.imageInfo),
+                                                     file.imageInfo,
+                                                     file.fileInfo,
+                                                     fileNameFormat);
+            backup.finalPath = backupTodo[2];
+            backup.dirPath = backupTodo[1];
         }
 
-        if (ok) {
-            if (doBackup && backupOK != true) {
-                ok = false;
-                fail++;
+        CopyTarget *targets[2] = {&dest, doBackup ? &backup : nullptr};
+
+        qDebug() << "Copy" << sourcePath << dest.finalPath;
+
+        int activeCount = 0;
+        for (CopyTarget *t : targets) {
+            if (!t)
+                continue;
+            if (!QDir().exists(t->dirPath))
+                QDir().mkpath(t->dirPath);
+            t->existed = QFile::exists(t->finalPath);
+            t->blocked = t->existed && !deleteExisting;
+            if (!t->blocked)
+                ++activeCount;
+        }
+
+        QByteArray sourceMd5;
+        bool cancelled = false;
+
+        if (activeCount > 0) {
+            bool ioFailed = false;
+
+            QFile source(sourcePath);
+            if (!source.open(QIODevice::ReadOnly)) {
+                ioFailed = true;
             } else {
-                cnt++;
-            }
-        } else
-            fail++;
-        QFileInfo newFileInfo(newFile);
-
-        bool goDelete = true;
-        if (!ok) {
-            goDelete = false;
-            if (destExisted && deleteExisting) {
-                if (newFileInfo.size() == file.fileInfo.size()
-                    && newFileInfo.birthTime() == file.fileInfo.birthTime()) {
-                    goDelete = true;
+                for (CopyTarget *t : targets) {
+                    if (!t || t->blocked)
+                        continue;
+                    t->tempPath = makeTempPath(t->finalPath);
+                    QFile::remove(t->tempPath);
+                    t->temp.reset(new QFile(t->tempPath));
+                    if (!t->temp->open(QIODevice::WriteOnly))
+                        ioFailed = true;
                 }
-            }
-        }
-        QFile sourceFile(file.fileInfo.filePath());
 
-        if (md5Check && ok) {
-            // Stream MD5 to avoid loading entire files into memory
-            auto calcMd5 = [](const QString &path)->QByteArray {
-                QFile f(path);
-                if (!f.open(QIODevice::ReadOnly))
-                    return QByteArray();
                 QCryptographicHash hash(QCryptographicHash::Md5);
-                const qsizetype chunkSize = 16 * 1024 * 1024; // 16MB
-                while (!f.atEnd()) {
-                    QByteArray chunk = f.read(chunkSize);
-                    hash.addData(chunk);
+                while (!ioFailed && !source.atEnd()) {
+                    if (wasCancelled()) {
+                        cancelled = true;
+                        break;
+                    }
+                    const QByteArray chunk = source.read(kChunkSize);
+                    if (chunk.isEmpty()) {
+                        if (!source.atEnd())
+                            ioFailed = true;
+                        break;
+                    }
+                    if (md5Check)
+                        hash.addData(chunk);
+                    for (CopyTarget *t : targets) {
+                        if (!t || t->blocked)
+                            continue;
+                        if (t->temp->write(chunk) != chunk.size()) {
+                            ioFailed = true;
+                            break;
+                        }
+                    }
+                    accounted += chunk.size();
+                    emit bytesAccounted(chunk.size());
                 }
-                return hash.result();
-            };
 
-            QByteArray sourceMd5 = calcMd5(file.fileInfo.filePath());
-            QByteArray destinationMd5 = calcMd5(newFileInfo.filePath());
+                for (CopyTarget *t : targets) {
+                    if (t && t->temp)
+                        t->temp->close();
+                }
 
-            // Compare MD5 hashes
-            if (sourceMd5.isEmpty() || destinationMd5.isEmpty() || sourceMd5 != destinationMd5) {
-               // QMessageBox::critical(nullptr,
-               //                       tr("Error"),
-               //                       tr("MD5 check failed (files are different)."));
-                emit errorOccurred(tr("MD5 check failed for %1 -> %2")
-                                  .arg(file.fileInfo.fileName())
-                                  .arg(newFile));
-                qWarning() << "MD5 check failed for" << file.fileInfo.filePath() << "->" << newFile;
-                goDelete = false;
+                if (!ioFailed && !cancelled && md5Check)
+                    sourceMd5 = hash.result();
+            }
 
+            if (ioFailed || cancelled) {
+                for (CopyTarget *t : targets) {
+                    if (t && !t->tempPath.isEmpty())
+                        QFile::remove(t->tempPath);
+                }
+            } else {
+                // Verify each temp on its own disk, then commit atomically
+                for (CopyTarget *t : targets) {
+                    if (!t || t->blocked)
+                        continue;
+                    bool good = QFileInfo(t->tempPath).size() == sourceSize;
+                    if (good && md5Check)
+                        good = !sourceMd5.isEmpty() && calcMd5(t->tempPath) == sourceMd5;
+                    // When the source will be deleted afterwards, make sure
+                    // the copy is physically on disk before committing it.
+                    if (good && deleteAfterImport)
+                        good = flushFileToDisk(t->tempPath);
+                    if (good && t->existed)
+                        good = QFile::remove(t->finalPath);
+                    if (good)
+                        good = QFile::rename(t->tempPath, t->finalPath);
+                    if (good)
+                        t->copied = true;
+                    else
+                        QFile::remove(t->tempPath);
+                }
             }
         }
-        if (file.fileInfo.size() != newFileInfo.size()) {
-            qDebug() << "Do not Delete!! Size differs";
-            goDelete = false;
-        }
-        qDebug() << goDelete;
-        // ui->statusbar->showMessage(QString("copying, %1 files copied.").arg(cnt));
 
-        if (goDelete && deleteAfterImport) {
-            sourceFile.remove();
-            del++;
+        if (cancelled)
+            break; // file not counted; temps are already cleaned up
+
+        // A blocked target still counts as success when MD5 shows the
+        // existing file is identical to the source.
+        if (md5Check) {
+            for (CopyTarget *t : targets) {
+                if (!t || !t->blocked)
+                    continue;
+                if (sourceMd5.isEmpty())
+                    sourceMd5 = calcMd5(sourcePath);
+                if (!sourceMd5.isEmpty() && calcMd5(t->finalPath) == sourceMd5)
+                    t->alreadyMatched = true;
+            }
         }
-        //TODOui->status->setText(
-        //QString("Copy file %1 of %2. %3").arg(cnt).arg(list.count()).arg(err));
+
+        const bool ok = dest.succeeded() && (!doBackup || backup.succeeded());
+        if (ok)
+            cnt++;
+        else
+            fail++;
+
+        if (!ok) {
+            QString message;
+            if (dest.blocked && !dest.alreadyMatched) {
+                message = tr("Destination already exists for %1: %2")
+                              .arg(file.fileInfo.fileName())
+                              .arg(dest.finalPath);
+            } else if (doBackup && !backup.succeeded()) {
+                message = tr("Backup failed for %1 -> %2")
+                              .arg(file.fileInfo.fileName())
+                              .arg(backup.finalPath);
+            } else {
+                message = tr("Copy failed for %1 -> %2")
+                              .arg(file.fileInfo.fileName())
+                              .arg(dest.finalPath);
+            }
+            emit errorOccurred(message);
+        }
+
+        if (ok && deleteAfterImport) {
+            QFile sourceFile(sourcePath);
+            if (sourceFile.remove()) {
+                del++;
+            } else {
+                emit errorOccurred(tr("Failed to delete source file %1").arg(sourcePath));
+            }
+        }
+
         done = done + 1;
-        emit progressUpdated((done * 100) / totalFiles, done, cnt, fail, del);
+        // Account skipped/failed remainder so the byte-based progress bar
+        // still reaches 100%
+        if (accounted < sourceSize)
+            emit bytesAccounted(sourceSize - accounted);
+        emit progressUpdated(0, done, cnt, fail, del);
+        emit fileProcessed(ok && activeCount > 0 ? sourceSize : 0);
         emit lastLocationImportedTo(fileTodo[1]);
-        
     }
 
     emit copyingFinished();

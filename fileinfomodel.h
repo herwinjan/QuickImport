@@ -3,18 +3,15 @@
 
 #include <QDateTime>
 #include <QFileInfo>
+#include <QFutureWatcher>
 #include <QFileSystemModel>
 #include <QList>
 #include <QStyledItemDelegate>
+#include <QTimer>
 #include <QTreeView>
 #include <QVariant>
+#include <QtConcurrent/QtConcurrentRun>
 #include <libraw/libraw.h>
-
-#include <QFuture>
-#include <QFutureWatcher>
-#include <QMutex>
-#include <QMutexLocker>
-#include <QtConcurrent/QtConcurrent>
 #include <QAbstractItemModel>
 
 
@@ -39,21 +36,21 @@ struct imageInfoStruct
 struct TreeNode {
     QString data;
     QString filePath;
-    TreeNode* parent;
+    TreeNode* parent = nullptr;
     QFileInfo info;
-    bool isFile=false;
-
-    bool isSelected;
+    bool isFile = false;
+    bool isSelected = false;
     QList<TreeNode*> children;
-    int row() const { 
 
+    ~TreeNode() { qDeleteAll(children); }
+
+    int row() const {
         if (parent)
             return parent->children.indexOf(const_cast<TreeNode*>(this));
         return 0;
     }
 
     imageInfoStruct imageInfo;
-
 };
 
 struct fileInfoStruct
@@ -65,9 +62,8 @@ struct fileInfoStruct
 class FileInfoModel : public QAbstractItemModel {
     Q_OBJECT
 public:
-    QFutureWatcher<void> m_treeWatcher;
-    QMutex m_mutex;
     explicit FileInfoModel(const QList<QFileInfo> &fileInfoList, QObject *parent = nullptr);
+    ~FileInfoModel();
 
     QModelIndex index(int row, int column, const QModelIndex& parent = QModelIndex()) const override ;
 
@@ -105,11 +101,14 @@ public:
 
     void collectFileNodes(TreeNode *node, QList<TreeNode *> &fileNodes);
 
-    TreeNode *findOrCreateNode(const QString &text, TreeNode *parent);
+    // Tell attached views that check states changed somewhere in the tree
+    // (bulk select/deselect); emits layoutChanged so everything repaints.
+    void refreshChecks();
 
     QList<QFileInfo> m_fileInfoList;
     TreeNode* rootItem;
     QTreeView *view;
+    QFutureWatcher<TreeNode *> m_treeWatcher;
     QList<fileInfoStruct> getSelectedFilesChilds(TreeNode *node, QList<fileInfoStruct> list);
 public slots:
     void onTreeBuildingFinished();

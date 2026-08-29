@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include <QCryptographicHash>
 #include <QDir>
+#include <QFile>
 #include <QFileDialog>
 #include <QFileSystemModel>
 #include <QImageReader>
@@ -14,13 +15,6 @@
 #if defined(__APPLE__)
 #include "externalDriveFetcher.h"
 #endif
-
-// Check delete if backup failed
-// only delete is backup goed ok
-// check backup space before backup
-// - option add: start backup even if there is no space, only copy until disk is full
-//     cgeck also backup featrure for this
-//
 
 #include "filecopydialog.h"
 #include "fileinfomodel.h"
@@ -67,11 +61,12 @@ QFileInfoList MainWindow::getFileListFromDir(const QString &directory) {
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), ui(new Ui::MainWindow) {
+  m_appStartTimer.start();
   ui->setupUi(this);
   ui->menubar->hide();
   ui->presets->hide();
 
-  QSettings settings("HJ Steehouwer", "QuickImport");
+  QSettings settings;
   loadPresetsLocations();
   loadProjectName();
   loadFileNameFormat();
@@ -98,8 +93,6 @@ MainWindow::MainWindow(QWidget *parent)
 
   QFileInfo fileInfo(openApplicationLocation);
   QString applicationName = fileInfo.fileName();
-
-  // openApplicationLocation = openApplicationLocation;
   ui->openApplicationText->setText(applicationName);
 
   ui->deleteAfterImportBox->setCheckState(deleteAfterImport ? Qt::Checked : Qt::Unchecked);
@@ -127,6 +120,14 @@ MainWindow::MainWindow(QWidget *parent)
   connect(ui->deviceWidget, &deviceList::doneLoading, this, &MainWindow::doneLoadingCard);
 
   connect(ui->deviceWidget, &deviceList::selectedNode, this, &MainWindow::selectedNode);
+
+  // One persistent preview loader thread for the lifetime of the window
+  m_previewThread = new QThread(this);
+  m_previewLoader = new imageLoader();
+  m_previewLoader->moveToThread(m_previewThread);
+  connect(m_previewLoader, &imageLoader::imageLoaded, this, &MainWindow::previewLoaded);
+  connect(m_previewThread, &QThread::finished, m_previewLoader, &QObject::deleteLater);
+  m_previewThread->start();
 
   QKeySequence shortcutKey(Qt::CTRL | Qt::Key_I);
 
@@ -164,8 +165,6 @@ MainWindow::MainWindow(QWidget *parent)
   emptyMainWindow();
   loadPresets();
 
-  show();
-
   const bool showAbout = !settings.value("dontShowAboutDialog", false).toBool();
   QTimer::singleShot(0, this, [this, showAbout]() {
     if (showAbout) {
@@ -182,21 +181,20 @@ MainWindow::MainWindow(QWidget *parent)
 void MainWindow::updatePresetList() {
     ui->presetComboBox->clear();
 
-    // Avoid deleting a model owned elsewhere; detach first, then delete if orphaned
+    // Only delete models we created; never delete Qt's internal default model
     QAbstractItemModel *old = ui->presetComboBox->model();
     ui->presetComboBox->setModel(nullptr);
-    if (old && !old->parent()) {
+    if (qobject_cast<presetListModel *>(old)) {
         delete old;
     }
     auto *model = new presetListModel(presetList);
     ui->presetComboBox->setModel(model);
 
-    ui->presetComboBox->setPlaceholderText(QStringLiteral("--Select to load preset--"));
+    ui->presetComboBox->setPlaceholderText(tr("--Select to load preset--"));
     ui->presetComboBox->setCurrentIndex(-1);
 }
-void MainWindow::reloadPresetComboBox() {}
 void MainWindow::loadPresets() {
-  QSettings settings("HJ Steehouwer", "QuickImport");
+  QSettings settings;
 
   // Retrieve the stored QByteArray
   QByteArray storedByteArray = settings.value("presetSettings").toByteArray();
@@ -212,7 +210,7 @@ void MainWindow::loadPresets() {
   updatePresetList();
 }
 void MainWindow::loadPresetsLocations() {
-  QSettings settings("HJ Steehouwer", "QuickImport");
+  QSettings settings;
   // settings.setValue("locationPresets", QStringList());
   // settings.setValue("PresetLocationLastUsed", -1);
   importLocationList = settings.value("locationPresets",  QStringList()).toStringList();
@@ -224,20 +222,20 @@ void MainWindow::loadPresetsLocations() {
   resetBackupLocationPreset(sel);
 }
 void MainWindow::savePresetsLocations(int sel = -1) {
-  QSettings settings("HJ Steehouwer", "QuickImport");
+  QSettings settings;
   settings.setValue("locationPresets", importLocationList);
   settings.setValue("PresetLocationLastUsed", sel);
 }
 void MainWindow::saveBackupPresetsLocations(int sel = -1)
 {
-    QSettings settings("HJ Steehouwer", "QuickImport");
+    QSettings settings;
     settings.setValue("backupLocationPresets", importBackupLocationList);
     settings.setValue("PresetBackupLocationLastUsed", sel);
 }
 
 void MainWindow::savePresets() {
   qDebug() << "save Presets";
-  QSettings settings("HJ Steehouwer", "QuickImport");
+  QSettings settings;
 
   // Convert QList<presetSetting> to QJsonArray
   QJsonArray jsonArray = presetSettingsToJsonArray(presetList);
@@ -248,38 +246,73 @@ void MainWindow::savePresets() {
 }
 
 void MainWindow::slotDeviceAdded(const QString &dev) {
-  qDebug("add %s", qPrintable(dev));
-  QString devicePath = "/dev/";
-  devicePath.append(dev);
-  // QFileInfo fileInfo(devicePath);
+  qDebug() << "Device added:" << dev;
+  const QString devicePath = QStringLiteral("/dev/") + dev;
 
-  //  qDebug() << QStorageInfo::mountedVolumes();
+  // The disk-appeared event fires when the *device* shows up, usually
+  // before macOS has mounted the volume. On startup the watcher also
+  // enumerates the disks that are already present — ignore those, the
+  // constructor opens the card selection itself.
+  if (m_appStartTimer.isValid() && m_appStartTimer.elapsed() < 5000)
+    return;
+  if (m_pendingInsertedDevices.contains(devicePath))
+    return;
+  m_pendingInsertedDevices.insert(devicePath);
+  waitForVolumeMount(devicePath, 20); // poll up to ~10 s for the mount
+}
 
-  int cnt = 0;
-  // QString foundStr;
-  foreach (const QStorageInfo &storage, QStorageInfo::mountedVolumes()) {
-    qDebug() << storage.device() << devicePath << storage.isValid()
-             << storage.isReady();
-    if (storage.isValid() &&
-        storage.device() == devicePath) { //&& storage.isReady()
+// Poll until the freshly inserted device is mounted, then ask to open it.
+void MainWindow::waitForVolumeMount(const QString &devicePath, int attemptsLeft)
+{
+    if (!m_pendingInsertedDevices.contains(devicePath))
+        return; // device was removed again in the meantime
 
-      qDebug() << "found";
-      cnt++;
+    for (const QStorageInfo &storage : QStorageInfo::mountedVolumes()) {
+        if (!storage.isValid() || !storage.isReady())
+            continue;
+        const QString mountedDevice = QString::fromUtf8(storage.device());
+        // Match the device itself or one of its partitions (disk4 -> disk4s1)
+        if (mountedDevice != devicePath
+            && !mountedDevice.startsWith(devicePath + QStringLiteral("s")))
+            continue;
+
+        m_pendingInsertedDevices.remove(devicePath);
+
+        if (storage.isReadOnly())
+            return;
+        const QString fs = storage.fileSystemType().toLower();
+        if (!(fs.contains("exfat") || fs.contains("fat") || fs.contains("msdos")))
+            return; // not a memory card filesystem
+        if (selectedCard.isValid() && selectedCard.rootPath() == storage.rootPath())
+            return; // this card is already loaded
+
+        askToOpenInsertedCard();
+        return;
     }
-  }
-  if (cnt == 0) { // not found!
-    QMessageBox::StandardButton reply;
-    reply = QMessageBox::question(this, tr("Card inserted"),
-                                  tr("Do you want to open new inserter card?"),
-                                  QMessageBox::Yes | QMessageBox::No);
-    if (reply == QMessageBox::Yes) {
-      qDebug() << "Yes was clicked";
-      on_selectCard_clicked();
 
-    } else {
-      qDebug() << "Yes was *not* clicked";
+    if (attemptsLeft <= 0) {
+        // Never mounted (unformatted disk, mount refused, ...) — give up
+        m_pendingInsertedDevices.remove(devicePath);
+        return;
     }
-  }
+    QTimer::singleShot(500, this, [this, devicePath, attemptsLeft]() {
+        waitForVolumeMount(devicePath, attemptsLeft - 1);
+    });
+}
+
+void MainWindow::askToOpenInsertedCard()
+{
+    if (m_insertPromptOpen)
+        return; // one question at a time
+    m_insertPromptOpen = true;
+    const QMessageBox::StandardButton reply
+        = QMessageBox::question(this,
+                                tr("Card inserted"),
+                                tr("Do you want to open the newly inserted card?"),
+                                QMessageBox::Yes | QMessageBox::No);
+    m_insertPromptOpen = false;
+    if (reply == QMessageBox::Yes)
+        on_selectCard_clicked();
 }
 
 void MainWindow::slotDeviceChanged(const QString &dev) {
@@ -287,11 +320,10 @@ void MainWindow::slotDeviceChanged(const QString &dev) {
 }
 
 void MainWindow::slotDeviceRemoved(const QString &dev) {
-  qDebug("remove %s", qPrintable(dev));
+  qDebug() << "Device removed:" << dev;
 
-  QString devicePath = "/dev/";
-  devicePath.append(dev);
-  qDebug() << devicePath << selectedCard.device();
+  QString devicePath = QStringLiteral("/dev/") + dev;
+  m_pendingInsertedDevices.remove(devicePath);
   if (selectedCard.device() == devicePath) {
     qDebug() << "reload card";
     selectedCard = QStorageInfo();
@@ -306,6 +338,10 @@ void MainWindow::showAboutDialog() {
 
 MainWindow::~MainWindow() {
   savePresets();
+  if (m_previewThread) {
+    m_previewThread->quit();
+    m_previewThread->wait();
+  }
   delete ui;
 }
 
@@ -329,102 +365,65 @@ void MainWindow::selectedUpdated(int cnt, qint64 size) {
   }
 }
 
-void MainWindow::on_checkSelected_clicked() {
-  if (ui->deviceWidget->model()) {
-    // QModelIndexList list =
-    // ui->deviceWidget->selectionModel()->selectedIndexes();
-    QItemSelectionModel *selectionModel = ui->deviceWidget->selectionModel();
-    if (selectionModel) {
-      QModelIndexList selectedIndexes = selectionModel->selectedIndexes();
-      for (const QModelIndex &index : selectedIndexes) {
-        if (index.isValid()) {
-          // Map the index to get the corresponding QFileInfo
-          QModelIndex sourceIndex =
-              ui->deviceWidget->model()->index(index.row(), 0, index.parent());
-          if (sourceIndex.isValid()) {
-            TreeNode *node =
-                static_cast<TreeNode *>(sourceIndex.internalPointer());
-            node->isSelected = true;
+void MainWindow::applyCheckToSelection(CheckAction action) {
+  auto *model = qobject_cast<FileInfoModel *>(ui->deviceWidget->model());
+  if (!model)
+    return;
+  QItemSelectionModel *selectionModel = ui->deviceWidget->selectionModel();
+  if (!selectionModel)
+    return;
 
-            if (!node->isFile) {
-              static_cast<FileInfoModel *>(ui->deviceWidget->model())
-                  ->setSelect(node);
-            }
-            emit ui->deviceWidget->model()->dataChanged(QModelIndex(),
-                                                        QModelIndex());
-          }
-        }
+  // For Flip, the first item decides the target state for the whole selection
+  bool flipTarget = true;
+  bool flipTargetSet = false;
+
+  const QModelIndexList selectedIndexes = selectionModel->selectedIndexes();
+  for (const QModelIndex &index : selectedIndexes) {
+    if (!index.isValid())
+      continue;
+    const QModelIndex sourceIndex = model->index(index.row(), 0, index.parent());
+    if (!sourceIndex.isValid())
+      continue;
+    TreeNode *node = static_cast<TreeNode *>(sourceIndex.internalPointer());
+
+    bool selected = true;
+    switch (action) {
+    case CheckAction::Check:
+      selected = true;
+      break;
+    case CheckAction::Uncheck:
+      selected = false;
+      break;
+    case CheckAction::Flip:
+      if (!flipTargetSet) {
+        flipTargetSet = true;
+        flipTarget = !node->isSelected;
       }
+      selected = flipTarget;
+      break;
+    }
+
+    node->isSelected = selected;
+    if (!node->isFile) {
+      if (selected)
+        model->setSelect(node);
+      else
+        model->setDeselect(node);
     }
   }
+  model->refreshChecks();
 }
-void MainWindow::flipSelectedItems() {
-  if (ui->deviceWidget->model()) {
-    // QModelIndexList list =
-    // ui->deviceWidget->selectionModel()->selectedIndexes();
-    QItemSelectionModel *selectionModel = ui->deviceWidget->selectionModel();
-    if (selectionModel) {
-      QModelIndexList selectedIndexes = selectionModel->selectedIndexes();
-      bool selected = true;
-      bool set = false;
-      for (const QModelIndex &index : selectedIndexes) {
-        if (index.isValid()) {
-          // Map the index to get the corresponding QFileInfo
-          QModelIndex sourceIndex =
-              ui->deviceWidget->model()->index(index.row(), 0, index.parent());
-          if (sourceIndex.isValid()) {
-            TreeNode *node =
-                static_cast<TreeNode *>(sourceIndex.internalPointer());
-            if (!set) {
-              set = true;
-              selected = !node->isSelected;
-            }
-            node->isSelected = selected;
 
-            if (!node->isFile) {
-              if (!selected) {
-                static_cast<FileInfoModel *>(ui->deviceWidget->model())
-                    ->setDeselect(node);
-              } else {
-                static_cast<FileInfoModel *>(ui->deviceWidget->model())
-                    ->setSelect(node);
-              }
-            }
-            emit ui->deviceWidget->model()->dataChanged(QModelIndex(), QModelIndex());
-          }
-        }
-      }
-    }
-  }
+void MainWindow::on_checkSelected_clicked() {
+  applyCheckToSelection(CheckAction::Check);
 }
 
 void MainWindow::on_uncheckSelected_clicked() {
-  if (ui->deviceWidget->model()) {
-    // QModelIndexList list =
-    // ui->deviceWidget->selectionModel()->selectedIndexes();
-    QItemSelectionModel *selectionModel = ui->deviceWidget->selectionModel();
-    if (selectionModel) {
-      QModelIndexList selectedIndexes = selectionModel->selectedIndexes();
-      for (const QModelIndex &index : selectedIndexes) {
-        if (index.isValid()) {
-          // Map the index to get the corresponding QFileInfo
-          QModelIndex sourceIndex =
-              ui->deviceWidget->model()->index(index.row(), 0, index.parent());
-          if (sourceIndex.isValid()) {
-            TreeNode *node =
-                static_cast<TreeNode *>(sourceIndex.internalPointer());
-            node->isSelected = false;
-            if (!node->isFile) {
-              static_cast<FileInfoModel *>(ui->deviceWidget->model())
-                  ->setDeselect(node);
-            }
-            emit ui->deviceWidget->model()->dataChanged(QModelIndex(),
-                                                        QModelIndex());
-          }
-        }
-      }
-    }
-  }
+  applyCheckToSelection(CheckAction::Uncheck);
+}
+
+void MainWindow::flipSelectedItems() {
+  applyCheckToSelection(CheckAction::Flip);
 }
 
 QList<QFileInfo> MainWindow::getFiles(QString map) {
@@ -437,12 +436,25 @@ QList<QFileInfo> MainWindow::getFiles(QString map) {
 void MainWindow::displayNoCardDialog()
 {
     QMessageBox msgBox(this);
-    qDebug() << "here4";
     msgBox.setText(tr("No Card found, please insert card."));
     msgBox.setIcon(QMessageBox::Critical);
-    qDebug() << "here4i1";
     msgBox.exec();
-    qDebug() << "here5";
+}
+
+void MainWindow::setBackupUiEnabled(bool enabled)
+{
+    ui->importBackupLocation->setEnabled(enabled);
+    ui->deleteBackupLocationButton->setEnabled(enabled);
+    ui->selectBackupLocation->setEnabled(enabled);
+    ui->freeSpaceBackupLabel->setEnabled(enabled);
+    ui->freeSpaceBackup->setEnabled(enabled);
+}
+
+void MainWindow::saveBoolSetting(const QString &key, bool &member, int state)
+{
+    member = (state == Qt::Checked);
+    QSettings settings;
+    settings.setValue(key, member);
 }
 
 void MainWindow::on_selectCard_clicked() {
@@ -474,19 +486,9 @@ void MainWindow::on_selectCard_clicked() {
     }
   }
   if (cardList.count() < 1) {
-      qDebug() << "Here2";
-      try {
-          // QTimer::singleShot(0, [this]() { displayNoCardDialog(); });
-          displayNoCardDialog();
-      } catch (const std::exception &e) {
-          qDebug() << "Exception caught: " << e.what();
-      } catch (...) {
-          qDebug() << "Unknown exception caught";
-      }
-      qDebug() << "Here3";
+      displayNoCardDialog();
       return;
   }
-  qDebug() << "Here";
   if (cardList.count() == 1) {
       selectedCard = cardList.at(0);
   } else {
@@ -559,7 +561,7 @@ void MainWindow::reloadCard() {
 QImage requestImage(const QString &id, int height = 0, int width = 0) {
   LibRaw rawProc;
 
-  auto state = rawProc.open_file(id.toLatin1().data());
+  auto state = rawProc.open_file(QFile::encodeName(id).constData());
   qDebug() << "State loading Image:" << state;
   QImage thumbnail;
   if (LIBRAW_SUCCESS == state) {
@@ -587,7 +589,7 @@ void MainWindow::displayImage(QString rawFilePath, bool window = true,
   QImage image = requestImage(rawFilePath, h, w);
   if (window) {
     BorderlessDialog dialog2(image);
-    statusBar()->showMessage(tr(""));
+    statusBar()->clearMessage();
     dialog2.exec();
     int lastKey = dialog2.lastKey;
 
@@ -600,6 +602,7 @@ void MainWindow::displayImage(QString rawFilePath, bool window = true,
       QKeyEvent *key_press =
           new QKeyEvent(QKeyEvent::KeyPress, lastKey, Qt::NoModifier, keyStr);
       QApplication::sendEvent(ui->deviceWidget, key_press);
+      delete key_press;
     }
   } else {
     ui->image->setPixmap(QPixmap::fromImage(image));
@@ -610,6 +613,11 @@ void MainWindow::displayImage(QString rawFilePath, bool window = true,
 
 void MainWindow::emptyMainWindow() {
   ui->deviceWidget->setModel(nullptr);
+  // The tree nodes are about to be deleted; drop our pointer and any cached
+  // previews of the (possibly re-inserted, modified) card.
+  currentSelectedImage = nullptr;
+  if (m_previewLoader)
+    QMetaObject::invokeMethod(m_previewLoader, &imageLoader::clearCache, Qt::QueuedConnection);
   selectedUpdated(0, 0);
   ui->ejectButton->setDisabled(true);
   ui->reloadButton->setDisabled(true);
@@ -618,122 +626,51 @@ void MainWindow::emptyMainWindow() {
   ui->deviceWidget->setEnabled(false);
   ui->cardLabel->setText(QString(tr("No card loaded.")));
   ui->image->setPixmap(QPixmap());
-  qDebug() << "doBackupImport" << doBackupImport;
-  if (doBackupImport) {
-      // ui->backupLabel->setEnabled(true);
-      ui->importBackupLocation->setEnabled(true);
-      ui->deleteBackupLocationButton->setEnabled(true);
-      ui->selectBackupLocation->setEnabled(true);
-      ui->freeSpaceBackupLabel->setEnabled(true);
-      ui->freeSpaceBackup->setEnabled(true);
-
-  } else {
-      // ui->backupLabel->setEnabled(false);
-      ui->importBackupLocation->setEnabled(false);
-      ui->deleteBackupLocationButton->setEnabled(false);
-      ui->selectBackupLocation->setEnabled(false);
-      ui->freeSpaceBackupLabel->setEnabled(false);
-      ui->freeSpaceBackup->setEnabled(false);
-  }
+  setBackupUiEnabled(doBackupImport);
 }
 
 // SLOT for selection of node on ListWidget
 void MainWindow::selectedNode(TreeNode *image) {
-  imageSelected = image;
-  if (imageSelected && previewImage) {
-    qDebug() << "preview";
-    if (!imageSelected->isFile) {
-      // if not an image, try first child (guard against empty list)
-      qDebug() << "try first child";
-      if (imageSelected->children.isEmpty()) {
-        return;
+  if (!image || !previewImage)
+    return;
+
+  if (!image->isFile) {
+    // Not a file: preview the first child instead (guard against empty list)
+    if (image->children.isEmpty())
+      return;
+    selectedNode(image->children.first());
+    return;
+  }
+
+  currentSelectedImage = image;
+  updateImportToLabel();
+
+  // The persistent loader coalesces requests (latest wins) and serves
+  // repeats from its cache; stale results are dropped in previewLoaded().
+  m_previewLoader->requestImage(image->filePath);
+
+  // Prefetch neighbours in the same group so arrow-key browsing is instant
+  QStringList prefetch;
+  if (TreeNode *parent = image->parent) {
+    const int idx = parent->children.indexOf(image);
+    for (int offset : {1, -1, 2}) {
+      const int i = idx + offset;
+      if (i >= 0 && i < parent->children.count()) {
+        TreeNode *sibling = parent->children.at(i);
+        if (sibling && sibling->isFile)
+          prefetch << sibling->filePath;
       }
-      TreeNode *child = imageSelected->children.first();
-      qDebug() << child;
-      if (child) {
-        selectedNode(child);
-        return;
-      }
-    }
-    if (image->isFile) {
-        qDebug() << "Is File";
-        if (imageLoaderThread != nullptr) {
-            qDebug() << "try";
-            if (!imageLoaderThread->isFinished()) {
-                // Let current load finish; finshedImageLoading() will pick up the latest selection
-                return;
-            } else {
-                // Already finished; objects will be deleted via deleteLater; clear pointers
-                imageLoaderThread = nullptr;
-                imageLoaderObject = nullptr;
-            }
-        }
-        qDebug() << "here";
-        currentSelectedImage = image;
-        updateImportToLabel();
-        // imageLoader imageLoaderObject;
-        imageLoaderObject = new imageLoader();
-
-        // imageLoaderObject.loadImageFile(image->file);
-
-        imageLoaderThread = new QThread(this);
-
-        imageLoaderObject->moveToThread(imageLoaderThread);
-        imageShown = image;
-
-        QObject::connect(imageLoaderThread,
-                         &QThread::started,
-                         imageLoaderObject,
-                         &imageLoader::loadImage);
-
-        QObject::connect(imageLoaderObject,
-                         &imageLoader::finished,
-                         imageLoaderThread,
-                         &QThread::quit);
-
-        QObject::connect(imageLoaderObject,
-                         &imageLoader::finished,
-                         this,
-                         &MainWindow::finshedImageLoading);
-        QObject::connect(imageLoaderThread, &QThread::finished, imageLoaderThread, &QObject::deleteLater);
-        QObject::connect(imageLoaderObject, &imageLoader::finished, imageLoaderObject, &QObject::deleteLater);
-
-        /*QObject::connect(imageLoaderObject,
-                             &imageLoader::finished,
-                             imageLoaderThread,
-                             &QThread::deleteLater);
-      */
-
-        QObject::connect(imageLoaderObject, &imageLoader::imageLoaded, this, &MainWindow::showImage);
-        QObject::connect(imageLoaderObject, &imageLoader::loadingFailed, this, [=]() {
-            // ui->image->setPixmap(QPixmap());
-            // ui->image->setText(tr("Failed to load image."));
-            QImage img = QImage(1024, 1024, QImage::Format_RGB32);
-            img.fill(Qt::white);
-            img = img.scaled(1024, 1024, Qt::KeepAspectRatio);
-            showImage(img);
-        });
-
-        imageLoaderObject->loadImageFile(image);
-
-        imageLoaderThread->start();
-
-        //   displayImage(image->info.absoluteFilePath(),
-        //                false,
-        //                ui->groupBoxImport->width() - 10,
-        //                ui->groupBoxImport->width() - 10);
     }
   }
+  m_previewLoader->requestPrefetch(prefetch);
 }
 
-void MainWindow::finshedImageLoading() {
-  qDebug() << "Finished loading.. is latest slected? " << imageSelected << imageShown;
-  // Objects are cleaned up via deleteLater; clear our pointers
-  imageLoaderThread = nullptr;
-  imageLoaderObject = nullptr;
-  if (imageSelected != imageShown) {
-    selectedNode(imageSelected);
-  }
+void MainWindow::previewLoaded(const QString &path, const QImage &image, bool failed)
+{
+  // Drop results that no longer match the current selection
+  if (!currentSelectedImage || currentSelectedImage->filePath != path)
+    return;
+  showImage(image, failed);
 }
 
 void MainWindow::showImage(const QImage &image, bool failed)
@@ -754,15 +691,25 @@ void MainWindow::showImage(const QImage &image, bool failed)
     painter.setPen(QColor(Qt::white)); // You can customize the text color
 
     // Draw text at the specified position
+    const double shutterSpeed = currentSelectedImage->imageInfo.shutterSpeed;
+    QString shutterStr;
+    if (shutterSpeed >= 1.0) {
+        shutterStr = QString("%1s").arg(shutterSpeed, 0, 'f', 1);
+    } else if (shutterSpeed > 0.0) {
+        shutterStr = QString("1/%1s").arg(qRound(1.0 / shutterSpeed));
+    } else {
+        shutterStr = QStringLiteral("-");
+    }
+
     painter.drawText(10,
                      10,
                      1024,
                      1024,
                      Qt::AlignLeft,
-                     QString("%1\nf %2 - 1/%3s\nISO %4\n%5 mm")
+                     QString("%1\nf %2 - %3\nISO %4\n%5 mm")
                          .arg(currentSelectedImage->info.fileName())
                          .arg(currentSelectedImage->imageInfo.aperture, 0, 'f', 1)
-                         .arg(qRound(1.0 / currentSelectedImage->imageInfo.shutterSpeed))
+                         .arg(shutterStr)
                          .arg(currentSelectedImage->imageInfo.isoValue)
                          .arg(currentSelectedImage->imageInfo.focalLength)
 
@@ -805,13 +752,13 @@ void MainWindow::resizeEvent(QResizeEvent *event) {
 }
 
 void MainWindow::on_checkAll_clicked() {
-  if (ui->deviceWidget->model())
-    qobject_cast<FileInfoModel *>(ui->deviceWidget->model())->selectAll();
+  if (auto *model = qobject_cast<FileInfoModel *>(ui->deviceWidget->model()))
+    model->selectAll();
 }
 
 void MainWindow::on_uncheckAll_clicked() {
-  if (ui->deviceWidget->model())
-    qobject_cast<FileInfoModel *>(ui->deviceWidget->model())->deSelectAll();
+  if (auto *model = qobject_cast<FileInfoModel *>(ui->deviceWidget->model()))
+    model->deSelectAll();
 }
 
 void MainWindow::updateImportToLabel() {
@@ -824,7 +771,8 @@ void MainWindow::updateImportToLabel() {
 
   if (currentSelectedImage) {
     imageInfo = currentSelectedImage->imageInfo;
-    now = currentSelectedImage->info.lastModified();
+    now = fileCopyWorker::captureTimestamp(currentSelectedImage->info,
+                                           currentSelectedImage->imageInfo);
     fileinfo = currentSelectedImage->info;
   }
 
@@ -833,20 +781,32 @@ void MainWindow::updateImportToLabel() {
                                          imageInfo, fileinfo, fileNameFormat)
           .at(2);
   ui->importToLabel->setText(example);
-  QDir folder(importFolder);
-  QStorageInfo info(folder);
+
+  // QStorageInfo does real disk I/O and this function runs on every
+  // keystroke; refresh the free-space values at most every few seconds
+  // (or when the folders/backup setting change).
+  const bool refreshFreeSpace = !m_freeSpaceTimer.isValid()
+                                || m_freeSpaceTimer.elapsed() > 3000
+                                || importFolder != m_freeSpaceFolder
+                                || importBackupFolder != m_freeSpaceBackupFolder
+                                || doBackupImport != m_freeSpaceBackupEnabled;
+  if (refreshFreeSpace) {
+    m_freeSpaceTimer.start();
+    m_freeSpaceFolder = importFolder;
+    m_freeSpaceBackupFolder = importBackupFolder;
+    m_freeSpaceBackupEnabled = doBackupImport;
+    freeProjectSpace = QStorageInfo(QDir(importFolder)).bytesAvailable();
+    m_freeBackupSpace = doBackupImport
+                            ? QStorageInfo(QDir(importBackupFolder)).bytesAvailable()
+                            : -1;
+  }
 
   ui->freeDiskSpace->setText(QString("%1 GB").arg(
-      ((float)info.bytesAvailable() / 1000 / 1000 / 1000), 0, 'f', 2));
-  freeProjectSpace = info.bytesAvailable();
+      ((float)freeProjectSpace / 1000 / 1000 / 1000), 0, 'f', 2));
 
   if (doBackupImport) {
-      QDir Bfolder(importBackupFolder);
-      QStorageInfo Binfo(Bfolder);
-
       ui->freeSpaceBackup->setText(
-          QString("%1 GB").arg(((float) Binfo.bytesAvailable() / 1000 / 1000 / 1000), 0, 'f', 2));
-      // freeProjectSpace = info.bytesAvailable();
+          QString("%1 GB").arg(((float) m_freeBackupSpace / 1000 / 1000 / 1000), 0, 'f', 2));
   } else {
       ui->freeSpaceBackup->setText("");
   }
@@ -881,10 +841,36 @@ void MainWindow::on_moveButton_clicked()
         msgBox.exec();
         return;
     }
+    if (doBackupImport) {
+        if (importBackupFolder.isEmpty()) {
+            QMessageBox msgBox;
+            msgBox.setText(tr("No backup folder set, please set one first."));
+            msgBox.setIcon(QMessageBox::Critical);
+            msgBox.exec();
+            return;
+        }
 
-    if (ui->deviceWidget->model()) {
+        QStorageInfo backupInfo(importBackupFolder);
+        if (!backupInfo.isValid() || !backupInfo.isReady()) {
+            QMessageBox msgBox;
+            msgBox.setText(tr("Backup location is not available."));
+            msgBox.setIcon(QMessageBox::Critical);
+            msgBox.exec();
+            return;
+        }
+
+        if (backupInfo.bytesAvailable() < totalSelectedSize) {
+            QMessageBox msgBox;
+            msgBox.setText(tr("Not enough diskspace available on backup location!"));
+            msgBox.setIcon(QMessageBox::Critical);
+            msgBox.exec();
+            return;
+        }
+    }
+
+    if (auto *model = qobject_cast<FileInfoModel *>(ui->deviceWidget->model())) {
         QList<fileInfoStruct> list;
-        list = qobject_cast<FileInfoModel *>(ui->deviceWidget->model())->getSelectedFiles();
+        list = model->getSelectedFiles();
 
         if (list.count() <= 0) {
             QMessageBox msgBox;
@@ -910,15 +896,6 @@ void MainWindow::on_moveButton_clicked()
 
         bool ok = dialog.exec();
 
-        /*
-    QString delMsg;
-    if (didDelete) {
-        delMsg = QString(", %1 deleted").arg(del);
-    }
-    QMessageBox::information(this,
-                             "Copying done",
-                             QString("copying done, %1 files copied%2, %3
-    failed.") .arg(cnt) .arg(delMsg) .arg(fail));*/
         if (ejectAfterImport && ok) {
             qDebug() << "Eject after move";
             on_ejectButton_clicked();
@@ -959,19 +936,16 @@ void MainWindow::on_moveButton_clicked()
 }
 
 int MainWindow::doEject() {
-  // Construct the command to eject the USB drive
-  QString command = "diskutil";
-  QStringList args;
-  // Orig by HJ args
-  // selectedCard.device() << "unmountDisk" << selectedCard.rootPath();
-  // Fixed by AI
-  args << "unmountDisk" << selectedCard.device();
-
-  // Create a QProcess object and start the process
+#if defined(Q_OS_MACOS)
   QProcess process;
-  process.start(command, args);
+  process.start("diskutil", {"unmountDisk", QString::fromUtf8(selectedCard.device())});
   process.waitForFinished();
   return process.exitCode();
+#else
+  // Ejecting is not implemented for this platform yet
+  qWarning() << "Eject is only supported on macOS";
+  return -1;
+#endif
 }
 
 void MainWindow::returnButtonPressed() { on_quickViewButton_clicked(); }
@@ -1001,13 +975,11 @@ void MainWindow::on_quickViewButton_clicked() {
           if (node->isFile) {
             displayImage(node->info.absoluteFilePath(),0,0);
           } else {
+            if (node->children.isEmpty())
+              return;
             TreeNode *child = node->children.at(0);
-
-            qDebug() << child;
-            if (child) {
-              if (child->isFile) {
-                displayImage(child->info.absoluteFilePath(), true,0,0);
-              }
+            if (child && child->isFile) {
+              displayImage(child->info.absoluteFilePath(), true,0,0);
             }
           }
         }
@@ -1036,53 +1008,39 @@ void MainWindow::on_ejectButton_clicked() {
 }
 
 void MainWindow::on_previewImageCheckBox_stateChanged(int arg1) {
-  previewImage =  (arg1 == Qt::Checked);
-  QSettings settings("HJ Steehouwer", "QuickImport");
-  settings.setValue("previewImage", previewImage);
+  saveBoolSetting("previewImage", previewImage, arg1);
   if (!previewImage)
     ui->image->setPixmap(QPixmap());
 }
 
 void MainWindow::on_reloadButton_clicked() { reloadCard(); }
+
 void MainWindow::on_mdCheckBox_stateChanged(int arg1) {
-  md5Check =  (arg1 == Qt::Checked);
-  QSettings settings("HJ Steehouwer", "QuickImport");
-  settings.setValue("md5Check", md5Check);
+  saveBoolSetting("md5Check", md5Check, arg1);
 }
 
 void MainWindow::on_deleteAfterImportBox_stateChanged(int arg1) {
-  deleteAfterImport =  (arg1 == Qt::Checked);
-  QSettings settings("HJ Steehouwer", "QuickImport");
-  settings.setValue("deleteAfterImport", deleteAfterImport);
+  saveBoolSetting("deleteAfterImport", deleteAfterImport, arg1);
 }
 
 void MainWindow::on_ejectBox_stateChanged(int arg1) {
-  ejectAfterImport =  (arg1 == Qt::Checked);
-  QSettings settings("HJ Steehouwer", "QuickImport");
-  settings.setValue("ejectAfterImport", ejectAfterImport);
+  saveBoolSetting("ejectAfterImport", ejectAfterImport, arg1);
 }
+
 void MainWindow::on_deleteExistingBox_stateChanged(int arg1) {
-  deleteExisting =  (arg1 == Qt::Checked);
-  QSettings settings("HJ Steehouwer", "QuickImport");
-  settings.setValue("deleteExisting", deleteExisting);
+  saveBoolSetting("deleteExisting", deleteExisting, arg1);
 }
 
 void MainWindow::on_quitEmptyCardBox_stateChanged(int arg1) {
-  quitEmptyCard =  (arg1 == Qt::Checked);
-  QSettings settings("HJ Steehouwer", "QuickImport");
-  settings.setValue("quitEmptyCard", quitEmptyCard);
+  saveBoolSetting("quitEmptyCard", quitEmptyCard, arg1);
 }
 
 void MainWindow::on_ejectIfEmptyBox_stateChanged(int arg1) {
-  ejectIfEmpty =  (arg1 == Qt::Checked);
-  QSettings settings("HJ Steehouwer", "QuickImport");
-  settings.setValue("ejectIfEmpty", ejectIfEmpty);
+  saveBoolSetting("ejectIfEmpty", ejectIfEmpty, arg1);
 }
 
 void MainWindow::on_quitAfterImportBox_stateChanged(int arg1) {
-  quitAfterImport =  (arg1 == Qt::Checked);
-  QSettings settings("HJ Steehouwer", "QuickImport");
-  settings.setValue("quitAfterImport", quitAfterImport);
+  saveBoolSetting("quitAfterImport", quitAfterImport, arg1);
 }
 
 void MainWindow::on_toolButton_clicked() {
@@ -1093,8 +1051,8 @@ void MainWindow::on_toolButton_clicked() {
 
 void MainWindow::on_presetComboBox_activated(int index) {
   qDebug() << "Activated " << index;
-  if (index >= 0) {
-    presetSetting nw = presetList.at(ui->presetComboBox->currentIndex());
+  if (index >= 0 && index < presetList.count()) {
+    presetSetting nw = presetList.at(index);
     if (nw.name.length() > 0) {
       quitAfterImport = nw.quitAfterImport;
       ui->quitAfterImportBox->setCheckState(quitAfterImport ? Qt::Checked
@@ -1161,7 +1119,7 @@ void MainWindow::resetBackupLocationPreset(int sel = -1)
     ui->importBackupLocation->addItems(importBackupLocationList);
     if (importBackupLocationList.count() <= 0)
         ui->importBackupLocation->setPlaceholderText(
-            QStringLiteral("--Back-up location not set--"));
+            tr("--Back-up location not set--"));
 
     if (sel >= 0 && ui->importBackupLocation->count() > 0) {
         ui->importBackupLocation->setCurrentIndex(sel);
@@ -1178,7 +1136,7 @@ void MainWindow::resetLocationPreset(int sel = -1)
     ui->importLocation->clear();
     ui->importLocation->addItems(importLocationList);
     if (importLocationList.count() <= 0)
-        ui->importLocation->setPlaceholderText(QStringLiteral("--Location not set--"));
+        ui->importLocation->setPlaceholderText(tr("--Location not set--"));
 
     if (sel >= 0 && ui->importLocation->count() > 0) {
         ui->importLocation->setCurrentIndex(sel);
@@ -1209,7 +1167,7 @@ void MainWindow::on_selectImportLocation_clicked() {
       this, tr("Select a directory"), importFolder);
   if (!directory.isEmpty()) {
     importFolder = directory;
-    QSettings settings("HJ Steehouwer", "QuickImport");
+    QSettings settings;
     settings.setValue("Import Folder", importFolder);
     addLocationPreset(importFolder);
 
@@ -1236,13 +1194,13 @@ void MainWindow::on_saveProjectNameButton_clicked()
     resetProjectName(sel);
 }
 void MainWindow::saveProjectName(int sel = -1) {
-  QSettings settings("HJ Steehouwer", "QuickImport");
+  QSettings settings;
   settings.setValue("projectNameList", projectNameList);
   settings.setValue("projectNameLastUsed", sel);
 }
 
 void MainWindow::loadProjectName() {
-  QSettings settings("HJ Steehouwer", "QuickImport");
+  QSettings settings;
   // settings.setValue("locationPresets", QStringList());
   // settings.setValue("PresetLocationLastUsed", -1);
   projectNameList = settings.value("projectNameList").toStringList();
@@ -1257,7 +1215,7 @@ void MainWindow::resetProjectName(int sel = -1) {
   ui->projectName->addItems(projectNameList);
   if (projectNameList.count() <= 0) {
     ui->projectName->setPlaceholderText(
-        QStringLiteral("-- set project name --"));
+        tr("-- set project name --"));
     sel = -1;
   }
 
@@ -1296,7 +1254,7 @@ void MainWindow::on_safeFileNameFormat_clicked() {
     sel = 0;
   }
   saveFileNameFormat(sel);
-  resetFileNameFomat(sel);
+  resetFileNameFormat(sel);
 }
 void MainWindow::on_deleteFileNameFormat_clicked() {
   if (fileNameFormatList.count() > 0) {
@@ -1308,7 +1266,7 @@ void MainWindow::on_deleteFileNameFormat_clicked() {
   if (sel < 0)
     sel = 0;
   saveFileNameFormat(sel);
-  resetFileNameFomat(sel);
+  resetFileNameFormat(sel);
 }
 
 void MainWindow::on_fileNameFormat_currentIndexChanged(int index) {
@@ -1324,7 +1282,7 @@ void MainWindow::on_fileNameFormat_currentTextChanged(const QString &arg1) {
   updateImportToLabel();
 }
 void MainWindow::loadFileNameFormat() {
-  QSettings settings("HJ Steehouwer", "QuickImport");
+  QSettings settings;
   // settings.setValue("fileNameFormat", QStringList());
   // settings.setValue("fileNameFormatLastUsed", -1);
   fileNameFormatList = settings.value("fileNameFormat").toStringList();
@@ -1343,9 +1301,9 @@ void MainWindow::loadFileNameFormat() {
     ui->fileNameFormat->addItems(fileNameFormatList);
   }
 
-  resetFileNameFomat(sel);
+  resetFileNameFormat(sel);
 }
-void MainWindow::resetFileNameFomat(int sel = -1) {
+void MainWindow::resetFileNameFormat(int sel = -1) {
   if (fileNameFormatList.count() <= 0) {
     sel = -1;
   }
@@ -1357,7 +1315,8 @@ void MainWindow::resetFileNameFomat(int sel = -1) {
     fileNameFormat = fileNameFormatList.at(sel);
   } else {
     fileNameFormat = "{J}/{o}";
-    fileNameFormatList.append("{J}/{o}");
+    if (!fileNameFormatList.contains(fileNameFormat))
+      fileNameFormatList.append(fileNameFormat);
     ui->fileNameFormat->clear();
     ui->fileNameFormat->addItems(fileNameFormatList);
     ui->fileNameFormat->setCurrentIndex(0);
@@ -1367,7 +1326,7 @@ void MainWindow::resetFileNameFomat(int sel = -1) {
 }
 void MainWindow::saveFileNameFormat(int sel) {
   qDebug() << "FileNameFormat Save" << fileNameFormatList;
-  QSettings settings("HJ Steehouwer", "QuickImport");
+  QSettings settings;
   settings.setValue("fileNameFormat", fileNameFormatList);
   settings.setValue("fileNameFormatLastUsed", sel);
 }
@@ -1377,39 +1336,24 @@ void MainWindow::on_shortcutDialogButton_clicked() {
     shortcutDialogWindow = new shortcutDialog();
     shortcutDialogWindow->show();
     connect(shortcutDialogWindow, &shortcutDialog::finished, this,
-            &MainWindow::shortcutWindowFinisched);
+            &MainWindow::shortcutWindowFinished);
   } else {
     shortcutDialogWindow->hide();
     delete shortcutDialogWindow;
     shortcutDialogWindow = nullptr;
   }
 }
-void MainWindow::shortcutWindowFinisched(int) {
+void MainWindow::shortcutWindowFinished(int) {
+  if (!shortcutDialogWindow)
+    return;
   shortcutDialogWindow->hide();
   delete shortcutDialogWindow;
   shortcutDialogWindow = nullptr;
 }
 
 void MainWindow::on_backupBox_stateChanged(int arg1) {
-  QSettings settings("HJ Steehouwer", "QuickImport");
-  doBackupImport = (arg1 == Qt::Checked);
-  settings.setValue("doBackupImport", doBackupImport);
-  if (doBackupImport) {
-      // ui->backupLabel->setEnabled(true);
-      ui->importBackupLocation->setEnabled(true);
-      ui->deleteBackupLocationButton->setEnabled(true);
-      ui->selectBackupLocation->setEnabled(true);
-      ui->freeSpaceBackupLabel->setEnabled(true);
-      ui->freeSpaceBackup->setEnabled(true);
-
-  } else {
-      // ui->backupLabel->setEnabled(false);
-      ui->importBackupLocation->setEnabled(false);
-      ui->deleteBackupLocationButton->setEnabled(false);
-      ui->selectBackupLocation->setEnabled(false);
-      ui->freeSpaceBackupLabel->setEnabled(false);
-      ui->freeSpaceBackup->setEnabled(false);
-  }
+  saveBoolSetting("doBackupImport", doBackupImport, arg1);
+  setBackupUiEnabled(doBackupImport);
   updateImportToLabel();
 }
 
@@ -1420,7 +1364,7 @@ void MainWindow::on_selectBackupLocation_clicked()
                                                           importFolder);
     if (!directory.isEmpty()) {
         importBackupFolder = directory;
-        //QSettings settings("HJ Steehouwer", "QuickImport");
+        //QSettings settings;
         //settings.setValue("Import Backup Folder", importFolder);
         addBackupLocationPreset(importBackupFolder);
 
@@ -1476,7 +1420,7 @@ void MainWindow::on_OpenApplicationLocation_clicked()
         QString applicationName = fileInfo.fileName();
 
         openApplicationLocation = app;
-        QSettings settings("HJ Steehouwer", "QuickImport");
+        QSettings settings;
         settings.setValue("openApplicationLocation", openApplicationLocation);
         ui->openApplicationText->setText(applicationName);
     }
@@ -1484,8 +1428,6 @@ void MainWindow::on_OpenApplicationLocation_clicked()
 
 void MainWindow::on_openApplicationAfterImport_stateChanged(int arg1)
 {
-    openApplicationAfterImport = (arg1 == Qt::Checked);
-    QSettings settings("HJ Steehouwer", "QuickImport");
-    settings.setValue("openApplicationAfterImport", openApplicationAfterImport);
+    saveBoolSetting("openApplicationAfterImport", openApplicationAfterImport, arg1);
     ui->OpenApplicationLocation->setEnabled(openApplicationAfterImport);
 }
