@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to Quick Import are documented in this file.
+All notable changes to QuickImport are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [0.96] - 2026-08-29

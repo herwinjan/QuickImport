@@ -4,7 +4,7 @@ Guidance for Claude Code (and other AI assistants) working in this repository.
 
 ## What this project is
 
-Quick Import is a Qt 6 desktop app (C++17) for photographers: it imports
+QuickImport is a Qt 6 desktop app (C++17) for photographers: it imports
 photos from a memory card into project folders, with selective import, live
 preview, MD5-verified copies, an optional simultaneous backup copy, and
 token-based file/folder naming. Primary platform is macOS (app bundle);

@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Build a self-contained, distributable Quick Import.app.
+# Build a self-contained, distributable QuickImport.app.
 #
 # The normal development build resolves Qt through @rpath into ~/Qt and links
 # LibRaw by absolute path from ~/devel/LibRaw, so it only runs on this machine.
@@ -126,7 +126,7 @@ if [ "$MAKE_DMG" -eq 1 ]; then
     cp -R "$APP" "$STAGE/"
     ln -s /Applications "$STAGE/Applications"
     rm -f "$DMG"
-    hdiutil create -volname "Quick Import $VERSION" -srcfolder "$STAGE" \
+    hdiutil create -volname "QuickImport $VERSION" -srcfolder "$STAGE" \
         -ov -format UDZO "$DMG" >/dev/null
     rm -rf "$STAGE"
     echo "    $DMG"

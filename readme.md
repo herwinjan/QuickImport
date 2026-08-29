@@ -1,14 +1,14 @@
-# Quick Import #
+# QuickImport #
 
 ![alt text](https://raw.githubusercontent.com/herwinjan/QuickImport/master/images/QuickImport-1.png)
 
 
 **Streamline your workflow**  
-Quick Import makes it fast and simple to transfer photos from your memory card straight into your project folders. It’s a lightweight utility designed for photographers who want efficiency without the clutter.  
+QuickImport makes it fast and simple to transfer photos from your memory card straight into your project folders. It’s a lightweight utility designed for photographers who want efficiency without the clutter.  
 
 **Effortless photo workflow**  
 1. Capture your shots  
-2. Import them directly to your hard disk with Quick Import  
+2. Import them directly to your hard disk with QuickImport  
 3. Cull your selection in your favorite review tool  
 4. Edit seamlessly in your preferred image editor  
 
@@ -20,7 +20,7 @@ Quick Import makes it fast and simple to transfer photos from your memory card s
 - **Multi-Location Import:** Copy files to multiple destinations at once  
 - **Custom Naming:** Rename files and folders with flexible templates  
 
-Experience a smoother, safer, and faster photo import process with **Quick Import**.
+Experience a smoother, safer, and faster photo import process with **QuickImport**.
 
 ## Building from source
 
@@ -50,7 +50,7 @@ on macOS 14, build LibRaw and Exiv2 yourself with
 `MACOSX_DEPLOYMENT_TARGET=14.0` and point the `*_ROOT` options at those
 builds.
 
-LibRaw must be configured with `--disable-lcms`. Quick Import only reads
+LibRaw must be configured with `--disable-lcms`. QuickImport only reads
 metadata and embedded thumbnails, so it never touches LibRaw's colour
 pipeline — the only thing that needs Little-CMS — while Homebrew's
 `liblcms2` is built for the current macOS and would drag the deployment

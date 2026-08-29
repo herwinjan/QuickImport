@@ -11,7 +11,7 @@ aboutDialog::aboutDialog(QWidget *parent)
     QSettings settings;
     ui->dontshowCheckBox->setCheckState(
         settings.value("dontShowAboutDialog", false).toBool() ? Qt::Checked : Qt::Unchecked);
-    ui->aboutBox->setTitle(tr("About Quick Import (version %1)").arg(QCoreApplication::applicationVersion()));
+    ui->aboutBox->setTitle(tr("About QuickImport (version %1)").arg(QCoreApplication::applicationVersion()));
 }
 
 aboutDialog::~aboutDialog()

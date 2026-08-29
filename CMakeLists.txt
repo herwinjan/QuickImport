@@ -253,7 +253,7 @@ if(APPLE)
         MACOSX_BUNDLE_BUNDLE_VERSION "${PROJECT_VERSION}"
         MACOSX_BUNDLE_SHORT_VERSION_STRING "${PROJECT_VERSION}"
         MACOSX_BUNDLE_GUI_IDENTIFIER "nl.steehouwer.quickimport"
-        MACOSX_BUNDLE_BUNDLE_NAME "Quick Import"
+        MACOSX_BUNDLE_BUNDLE_NAME "QuickImport"
         MACOSX_BUNDLE_COPYRIGHT "© Herwin Jan Steehouwer"
         # Custom template: adds CFBundleLocalizations so macOS knows which
         # languages the app ships and offers a per-app language override

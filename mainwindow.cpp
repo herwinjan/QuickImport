@@ -117,7 +117,7 @@ MainWindow::MainWindow(QWidget *parent)
   loadFileNameFormat();
 
   //    updateImportToLabel();
-  setWindowTitle(QString("Quick Import %1").arg(QCoreApplication::applicationVersion()));
+  setWindowTitle(QString("QuickImport %1").arg(QCoreApplication::applicationVersion()));
 
   md5Check = settings.value("md5Check", false).toBool();
   ejectAfterImport = settings.value("ejectAfterImport", false).toBool();
@@ -199,7 +199,7 @@ MainWindow::MainWindow(QWidget *parent)
           &MainWindow::on_reloadButton_clicked);
 
   QMenu *aboutMenu = new QMenu("&About");
-  QAction *aboutAction = aboutMenu->addAction("About Quick Import", this,
+  QAction *aboutAction = aboutMenu->addAction("About QuickImport", this,
                                               &MainWindow::showAboutDialog);
 
   aboutAction->setMenuRole(QAction::ApplicationSpecificRole);
@@ -849,7 +849,7 @@ void MainWindow::on_languageComboBox_activated(int index)
 void MainWindow::retranslateDynamicText()
 {
     // retranslateUi() resets the title to the designer placeholder
-    setWindowTitle(QString("Quick Import %1").arg(QCoreApplication::applicationVersion()));
+    setWindowTitle(QString("QuickImport %1").arg(QCoreApplication::applicationVersion()));
 
     populateLanguageComboBox();
 

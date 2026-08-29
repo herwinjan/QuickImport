@@ -1,6 +1,6 @@
-# Quick Import — Uitleg van de code
+# QuickImport — Uitleg van de code
 
-Dit document beschrijft hoe Quick Import intern werkt: de flow van kaart tot
+Dit document beschrijft hoe QuickImport intern werkt: de flow van kaart tot
 geïmporteerd bestand, de belangrijkste klassen, het threading-model en de
 plekken waar je moet oppassen. (Repo-brede documentatie in het Engels staat in
 CLAUDE.md; openstaande punten in TODO.md; wijzigingen in CHANGELOG.md.)
