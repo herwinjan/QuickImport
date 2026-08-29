@@ -4,27 +4,27 @@
 <context>
     <name>FileInfoModel</name>
     <message>
-        <location filename="fileinfomodel.cpp" line="219"/>
+        <location filename="fileinfomodel.cpp" line="299"/>
         <source>Files</source>
         <translation>Bestanden</translation>
     </message>
     <message>
-        <location filename="fileinfomodel.cpp" line="221"/>
+        <location filename="fileinfomodel.cpp" line="301"/>
         <source>Time taken</source>
         <translation>Opnametijd</translation>
     </message>
     <message>
-        <location filename="fileinfomodel.cpp" line="223"/>
+        <location filename="fileinfomodel.cpp" line="303"/>
         <source>Size</source>
         <translation>Grootte</translation>
     </message>
     <message>
-        <location filename="fileinfomodel.cpp" line="225"/>
+        <location filename="fileinfomodel.cpp" line="305"/>
         <source>IPTC</source>
         <translation>IPTC</translation>
     </message>
     <message>
-        <location filename="fileinfomodel.cpp" line="371"/>
+        <location filename="fileinfomodel.cpp" line="466"/>
         <source>loading EXIF data #%1 of %2.</source>
         <translation>EXIF-gegevens laden #%1 van %2.</translation>
     </message>
@@ -48,7 +48,7 @@
     </message>
     <message>
         <location filename="mainwindow.ui" line="81"/>
-        <location filename="mainwindow.cpp" line="575"/>
+        <location filename="mainwindow.cpp" line="627"/>
         <source>No card loaded.</source>
         <translation>Geen kaart geladen.</translation>
     </message>
@@ -238,94 +238,94 @@
         <translation type="vanished">&lt;geen locatie aangegeven&gt;</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="304"/>
+        <location filename="mainwindow.cpp" line="351"/>
         <source>%1 GB</source>
         <translation>%1 GB</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="305"/>
+        <location filename="mainwindow.cpp" line="352"/>
         <source>%1 selected photos</source>
         <translation>%1 geselecteerde foto&apos;s</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="392"/>
+        <location filename="mainwindow.cpp" line="439"/>
         <source>No Card found, please insert card.</source>
         <translation>Geen kaart gevonden, plaats de kaart.</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="469"/>
-        <location filename="mainwindow.cpp" line="479"/>
+        <location filename="mainwindow.cpp" line="516"/>
+        <location filename="mainwindow.cpp" line="526"/>
         <source>Loading card...</source>
         <translation>Kaart laden...</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="483"/>
+        <location filename="mainwindow.cpp" line="530"/>
         <source>  (Used space: %1 GB)</source>
         <translation>  (Gebruikte ruimte: %1 GB)</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="462"/>
+        <location filename="mainwindow.cpp" line="509"/>
         <source>Done loading card.</source>
         <translation>Klaar met het laden van de kaart.</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="184"/>
+        <location filename="mainwindow.cpp" line="193"/>
         <source>--Select to load preset--</source>
         <translation>--Selecteer om voorinstelling te laden--</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="262"/>
+        <location filename="mainwindow.cpp" line="311"/>
         <source>Do you want to open the newly inserted card?</source>
         <translation>Wilt u de nieuw geplaatste kaart openen?</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="541"/>
+        <location filename="mainwindow.cpp" line="588"/>
         <source>Loading image, please wait.</source>
         <translation>Afbeelding wordt geladen, even geduld a.u.b.</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="731"/>
+        <location filename="mainwindow.cpp" line="737"/>
         <source>Failed to load image.</source>
         <translation>Kan afbeelding niet laden.</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="828"/>
+        <location filename="mainwindow.cpp" line="847"/>
         <source>No backup folder set, please set one first.</source>
         <translation>Geen back-upmap ingesteld, stel er eerst een in.</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="837"/>
+        <location filename="mainwindow.cpp" line="856"/>
         <source>Backup location is not available.</source>
         <translation>Back-uplocatie is niet beschikbaar.</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="845"/>
+        <location filename="mainwindow.cpp" line="864"/>
         <source>Not enough diskspace available on backup location!</source>
         <translation>Niet genoeg schijfruimte beschikbaar op de back-uplocatie!</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1103"/>
+        <location filename="mainwindow.cpp" line="1122"/>
         <source>--Back-up location not set--</source>
         <translation>--Back-uplocatie niet ingesteld--</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1120"/>
+        <location filename="mainwindow.cpp" line="1139"/>
         <source>--Location not set--</source>
         <translation>--Locatie niet ingesteld--</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1148"/>
-        <location filename="mainwindow.cpp" line="1344"/>
+        <location filename="mainwindow.cpp" line="1167"/>
+        <location filename="mainwindow.cpp" line="1363"/>
         <source>Select a directory</source>
         <translation>Selecteer een map</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="813"/>
+        <location filename="mainwindow.cpp" line="832"/>
         <source>No Import folder set, please set one first.</source>
         <translation>Er is geen importmap ingesteld. Stel eerst een map in.</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="261"/>
+        <location filename="mainwindow.cpp" line="310"/>
         <source>Card inserted</source>
         <translation>Kaart geplaatst</translation>
     </message>
@@ -334,37 +334,37 @@
         <translation type="vanished">Wilt u de nieuw geplaatste kaart openen?</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="820"/>
+        <location filename="mainwindow.cpp" line="839"/>
         <source>Not enough diskspace available on project location!</source>
         <translation>Niet genoeg schijfruimte beschikbaar op projectlocatie!</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="858"/>
+        <location filename="mainwindow.cpp" line="877"/>
         <source>No files selected, please check files to move/copy.</source>
         <translation>Geen bestanden geselecteerd. Controleer de bestanden die u wilt verplaatsen/kopiëren.</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1199"/>
+        <location filename="mainwindow.cpp" line="1218"/>
         <source>-- set project name --</source>
         <translation>-- stel projectnaam in --</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1387"/>
+        <location filename="mainwindow.cpp" line="1406"/>
         <source>Applications (*.exe)</source>
         <translation>Applicaties (*.exe)</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1390"/>
+        <location filename="mainwindow.cpp" line="1409"/>
         <source>Applications (*.app)</source>
         <translation>Applicaties (*.app)</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1393"/>
+        <location filename="mainwindow.cpp" line="1412"/>
         <source>Applications (*.sh *.bin *.run *.AppImage);;All Files (*)</source>
         <translation>Applicaties (*.sh *.bin *.run *.AppImage);;Alle bestanden (*)</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1397"/>
+        <location filename="mainwindow.cpp" line="1416"/>
         <source>Choose Application</source>
         <translation>Kies applicatie</translation>
     </message>
@@ -451,7 +451,7 @@
     <message>
         <location filename="aboutdialog.ui" line="38"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:18pt; font-weight:700;&quot;&gt;Quick Import&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Streamline your workflow:&lt;/span&gt; Quickly and efficiently transfer your photos from memory card to your chosen project folder with Quick Import, your dedicated photo import utility.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Effortless Photo workflow:&lt;/span&gt;&lt;/p&gt;&lt;p&gt;- Capture your photos&lt;/p&gt;&lt;p&gt;- Seamless import your photos your hard disk using Quick Import&lt;/p&gt;&lt;p&gt;- Select your best shots using your preferred culling application&lt;/p&gt;&lt;p&gt;- Edit with your favorite image editor&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Key Features:&lt;/span&gt;&lt;/p&gt;&lt;p&gt;- Selective Import: Choose the specific photos you want to import.&lt;/p&gt;&lt;p&gt;- Quick Preview: Press Enter on any image for a rapid preview (optional).&lt;/p&gt;&lt;p&gt;- Flexible Destination: Select the ideal import folder for your project organization.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;Experience the efficiency and ease of managing your photos with Quick Import!&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation></translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="aboutdialog.ui" line="56"/>
@@ -482,33 +482,47 @@
         <translation>Kopieer bestand %1 van %2.</translation>
     </message>
     <message>
-        <location filename="filecopydialog.cpp" line="107"/>
         <source>Error</source>
-        <translation>Fout</translation>
+        <translation type="vanished">Fout</translation>
     </message>
     <message>
-        <location filename="filecopydialog.cpp" line="173"/>
-        <location filename="filecopydialog.cpp" line="219"/>
+        <location filename="filecopydialog.cpp" line="190"/>
+        <location filename="filecopydialog.cpp" line="234"/>
         <source>%1 copied. </source>
         <translation>%1 gekopieerd. </translation>
     </message>
     <message>
-        <location filename="filecopydialog.cpp" line="176"/>
-        <location filename="filecopydialog.cpp" line="221"/>
+        <location filename="filecopydialog.cpp" line="193"/>
+        <location filename="filecopydialog.cpp" line="236"/>
         <source>%1 failed. </source>
         <translation>%1 mislukt. </translation>
     </message>
     <message>
-        <location filename="filecopydialog.cpp" line="179"/>
-        <location filename="filecopydialog.cpp" line="223"/>
+        <location filename="filecopydialog.cpp" line="196"/>
+        <location filename="filecopydialog.cpp" line="238"/>
         <source>%1 deleted. </source>
         <translation>%1 verwijderd. </translation>
     </message>
     <message>
-        <location filename="filecopydialog.cpp" line="182"/>
-        <location filename="filecopydialog.cpp" line="225"/>
+        <location filename="filecopydialog.cpp" line="199"/>
+        <location filename="filecopydialog.cpp" line="240"/>
         <source>Copying: %1 of %2 processed. %3</source>
         <translation>Kopiëren: %1 van %2 verwerkt. %3</translation>
+    </message>
+    <message>
+        <location filename="filecopydialog.cpp" line="306"/>
+        <source>... and %1 more.</source>
+        <translation>... en nog %1 meer.</translation>
+    </message>
+    <message>
+        <location filename="filecopydialog.cpp" line="310"/>
+        <source>Import finished with problems</source>
+        <translation>Import voltooid met problemen</translation>
+    </message>
+    <message>
+        <location filename="filecopydialog.cpp" line="311"/>
+        <source>%1 file(s) could not be imported.</source>
+        <translation>%1 bestand(en) konden niet worden geïmporteerd.</translation>
     </message>
 </context>
 <context>
@@ -522,22 +536,22 @@
         <translation type="vanished">MD5-controle mislukt voor %1 → %2</translation>
     </message>
     <message>
-        <location filename="filecopyworker.cpp" line="321"/>
+        <location filename="filecopyworker.cpp" line="357"/>
         <source>Destination already exists for %1: %2</source>
         <translation>Doelbestand bestaat al voor %1: %2</translation>
     </message>
     <message>
-        <location filename="filecopyworker.cpp" line="325"/>
+        <location filename="filecopyworker.cpp" line="361"/>
         <source>Backup failed for %1 -&gt; %2</source>
         <translation>Back-up mislukt voor %1 -&gt; %2</translation>
     </message>
     <message>
-        <location filename="filecopyworker.cpp" line="329"/>
+        <location filename="filecopyworker.cpp" line="365"/>
         <source>Copy failed for %1 -&gt; %2</source>
         <translation>Kopiëren mislukt voor %1 -&gt; %2</translation>
     </message>
     <message>
-        <location filename="filecopyworker.cpp" line="342"/>
+        <location filename="filecopyworker.cpp" line="377"/>
         <source>Failed to delete source file %1</source>
         <translation>Verwijderen van bronbestand %1 is mislukt</translation>
     </message>

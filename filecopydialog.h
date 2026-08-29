@@ -29,6 +29,9 @@ public:
     ~fileCopyDialog();
 
     QString getLastFilePath();
+    // Number of files actually copied (or verified identical) — 0 when the
+    // whole import failed or everything was skipped.
+    int copiedCount() const { return m_cnt[0] + m_cnt[1]; }
 private slots:
     void on_cancelButton_clicked();
 
@@ -54,6 +57,8 @@ private:
     void startWorker(int workerIndex);
     void handleFileProcessed(qint64 copiedBytes);
     void handleBytesAccounted(qint64 delta);
+    void showErrorSummary();
+    QStringList m_errors;
     void handleProgressFromWorker(int workerIndex, int progress, int done, int cnt, int fail, int del);
     void handleWorkerFinished();
     void handleThreadStopped(int workerIndex);

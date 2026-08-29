@@ -119,8 +119,10 @@ void fileCopyDialog::startWorker(int workerIndex)
             this, &fileCopyDialog::handleBytesAccounted);
     connect(worker, &fileCopyWorker::lastLocationImportedTo,
             this, &fileCopyDialog::lastLocationImportedToSlot);
+    // Collect errors instead of opening a modal box per failed file — a
+    // re-import of an existing set would otherwise stack dozens of dialogs.
     connect(worker, &fileCopyWorker::errorOccurred, this, [this](const QString &msg){
-               QMessageBox::critical(this, tr("Error"), msg);
+               m_errors.append(msg);
            }, Qt::QueuedConnection);
     connect(worker, &fileCopyWorker::copyingFinished, this, &fileCopyDialog::handleWorkerFinished);
     connect(thread, &QThread::finished, worker, &QObject::deleteLater);
@@ -285,9 +287,29 @@ void fileCopyDialog::finalizeIfReady()
         return;
 
     m_closeScheduled = true;
+    showErrorSummary();
     if (m_cancelRequested) {
         reject();
     } else {
         accept();
     }
+}
+
+void fileCopyDialog::showErrorSummary()
+{
+    if (m_errors.isEmpty())
+        return;
+
+    constexpr int kMaxShown = 12;
+    QString text = m_errors.mid(0, kMaxShown).join(QLatin1Char('\n'));
+    if (m_errors.size() > kMaxShown)
+        text += QLatin1Char('\n') + tr("... and %1 more.").arg(m_errors.size() - kMaxShown);
+
+    QMessageBox box(this);
+    box.setIcon(QMessageBox::Warning);
+    box.setWindowTitle(tr("Import finished with problems"));
+    box.setText(tr("%1 file(s) could not be imported.").arg(m_errors.size()));
+    box.setInformativeText(text);
+    box.setDetailedText(m_errors.join(QLatin1Char('\n')));
+    box.exec();
 }

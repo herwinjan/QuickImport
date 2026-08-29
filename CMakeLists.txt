@@ -255,6 +255,22 @@ if(APPLE)
         "-framework Foundation"
     )
 
+    # The locally built LibRaw dylib advertises /usr/local/lib as its install
+    # name, which does not exist; rewrite the reference to the real path so
+    # the app also starts outside Qt Creator. (For distribution, bundle the
+    # dylib with macdeployqt instead.)
+    get_filename_component(_libraw_real "${LIBRAW_LIBRARY}" REALPATH)
+    execute_process(COMMAND otool -D "${_libraw_real}"
+        OUTPUT_VARIABLE _libraw_id_out
+        OUTPUT_STRIP_TRAILING_WHITESPACE)
+    string(REGEX REPLACE ".*\n" "" _libraw_id "${_libraw_id_out}")
+    if(_libraw_id AND NOT _libraw_id STREQUAL "${_libraw_real}")
+        add_custom_command(TARGET QuickImport POST_BUILD
+            COMMAND install_name_tool -change "${_libraw_id}" "${_libraw_real}"
+                    "$<TARGET_FILE:QuickImport>"
+            COMMENT "Fix LibRaw dylib reference to ${_libraw_real}")
+    endif()
+
 endif()
 
 # ---- Windows specifics ----

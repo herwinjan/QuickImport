@@ -3,6 +3,40 @@
 All notable changes to Quick Import are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [Unreleased]
+
+### Fixed
+
+- **App quit/ejected with a full card**: the quit-if-empty and
+  eject-if-empty checks read the model's `rowCount()` immediately after the
+  reload, but the tree is built asynchronously and still reports 0 rows at
+  that moment — so the app quit (looking like a crash, but without a crash
+  report) or ejected even though the card still held files. The checks now
+  use the synchronous card scan's file count.
+- **External application no longer opens when nothing was imported**: a
+  re-import where every file already existed (0 copied) used to launch the
+  review application anyway.
+- **Error dialog flood**: every failed file opened its own modal error box —
+  re-importing an existing set stacked dozens of dialogs on top of each
+  other. Errors are now collected and shown once, in a single summary
+  dialog after the import (first 12 inline, full list under Details).
+- **Crash on quit right after an import** (SIGSEGV in
+  `FileInfoModel::~FileInfoModel`): with quit-after-import/quit-if-empty
+  enabled, the app quits before the freshly created model's deferred tree
+  build ever ran; the destructor then called `result()` on a default future
+  whose result store is empty. The destructor now checks `resultCount()`
+  before touching the result.
+- **Startup crash on the "No Card found" dialog (SIGBUS in ImageIO)**: the
+  app icon (`QuickImportLogo-1024.icns`) contained a single 1024px
+  representation encoded as legacy JPEG 2000; macOS 26's IconServices
+  crashes decoding it whenever a native alert renders the app icon. The
+  icon was regenerated with `iconutil` as a complete PNG-based icns (all
+  ten standard sizes). Crash reports: QuickImport-2026-08-29-085813/095832.
+- **App would not start outside Qt Creator**: the locally built LibRaw
+  dylib advertises `/usr/local/lib/libraw_r.24.dylib` as its install name,
+  which does not exist. A post-build `install_name_tool` step now rewrites
+  the reference to the dylib's real path.
+
 ## [0.7.0] - 2026-08-29
 
 ### Fixed

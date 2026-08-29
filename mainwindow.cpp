@@ -30,7 +30,6 @@
 #include <QTimer>
 
 QFileInfoList MainWindow::getFileListFromDir(const QString &directory) {
-    qDebug() << "Search" << directory;
     QDir qdir(directory);
     // Files only, readable, do not follow symlinks (prevents odd loops)
     qdir.setFilter(QDir::Files | QDir::NoSymLinks | QDir::Readable);
@@ -48,7 +47,6 @@ QFileInfoList MainWindow::getFileListFromDir(const QString &directory) {
         << "*.avi" << "*.wmv" << "*.wav" << "*.avchd" << "*.srt";
 
     QFileInfoList fileList = qdir.entryInfoList(patterns, QDir::Files);
-    qDebug() << "Found:" << fileList.count();
 
     // Recurse into subdirectories (no dot entries, no symlinks)
     QDir subdirIter(directory);
@@ -519,6 +517,7 @@ void MainWindow::updateProcessStatus(QString str)
 void MainWindow::reloadCard() {
     qDebug() << "Reload Card";
     emptyMainWindow();
+    m_lastCardFileCount = 0; // no card = treat as empty
 
     if (selectedCard.isValid()) {
         QList<QFileInfo> files;
@@ -534,6 +533,7 @@ void MainWindow::reloadCard() {
                        'f',
                        2));
         files = getFiles(selectedCard.rootPath());
+        m_lastCardFileCount = files.count();
         ui->deviceWidget->setFiles(files);
         connect(ui->deviceWidget->fileModel,
                 &FileInfoModel::updateProcessStatus,
@@ -675,7 +675,6 @@ void MainWindow::previewLoaded(const QString &path, const QImage &image, bool fa
 
 void MainWindow::showImage(const QImage &image, bool failed)
 {
-    qDebug() << "Show Image";
     if (!currentSelectedImage) {
         qWarning() << "showImage(): currentSelectedImage is null";
         return;
@@ -901,7 +900,10 @@ void MainWindow::on_moveButton_clicked()
             on_ejectButton_clicked();
         }
 
-        if (openApplicationAfterImport && ok) {
+        // Only open the external application when something was actually
+        // imported (a re-import where every file already existed copies
+        // nothing, so there is nothing new to review).
+        if (openApplicationAfterImport && ok && dialog.copiedCount() > 0) {
             QString path = dialog.getLastFilePath();
             QStringList arguments;
             arguments << path;
@@ -912,25 +914,17 @@ void MainWindow::on_moveButton_clicked()
             qApp->quit();
         }
 
+        // reloadCard() rescans the card synchronously and updates
+        // m_lastCardFileCount; the model's rowCount() is NOT usable here
+        // because the tree is built asynchronously (it reads 0 until done,
+        // which used to quit/eject with a full card).
         reloadCard();
-        if (ejectIfEmpty && ok) {
-            if (ui->deviceWidget->model()) {
-                if (ui->deviceWidget->model()->rowCount(QModelIndex()) <= 0) {
-                    doEject();
-                }
-            } else {
-                doEject();
-            }
+        if (ejectIfEmpty && ok && m_lastCardFileCount <= 0) {
+            doEject();
         }
 
-        if (quitEmptyCard && ok) {
-            if (ui->deviceWidget->model()) {
-                if (ui->deviceWidget->model()->rowCount(QModelIndex()) <= 0) {
-                    qApp->quit();
-                }
-            } else {
-                qApp->quit();
-            }
+        if (quitEmptyCard && ok && m_lastCardFileCount <= 0) {
+            qApp->quit();
         }
     }
 }
@@ -1044,13 +1038,11 @@ void MainWindow::on_quitAfterImportBox_stateChanged(int arg1) {
 }
 
 void MainWindow::on_toolButton_clicked() {
-  qDebug() << "Preset clicked";
   presetDialog preset(this);
   preset.exec();
 }
 
 void MainWindow::on_presetComboBox_activated(int index) {
-  qDebug() << "Activated " << index;
   if (index >= 0 && index < presetList.count()) {
     presetSetting nw = presetList.at(index);
     if (nw.name.length() > 0) {

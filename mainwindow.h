@@ -187,5 +187,10 @@ private:
     QSet<QString> m_pendingInsertedDevices;
     bool m_insertPromptOpen = false;
     QElapsedTimer m_appStartTimer; // suppress the startup device enumeration
+
+    // File count from the last synchronous card scan. The model's
+    // rowCount() is 0 until the async tree build finishes, so the
+    // quit/eject-when-empty decisions must use this instead.
+    int m_lastCardFileCount = 0;
 };
 

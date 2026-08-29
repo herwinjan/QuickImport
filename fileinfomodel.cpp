@@ -241,8 +241,14 @@ FileInfoModel::~FileInfoModel()
     if (m_treeWatcher.isRunning())
         m_treeWatcher.waitForFinished();
 
-    if (m_treeWatcher.future().isFinished()) {
-        TreeNode *pendingRoot = m_treeWatcher.result();
+    // Only touch result() when the future actually holds one. When the app
+    // quits right after the model is created (e.g. quit-after-import), the
+    // deferred setupModelData() never ran: the watcher then holds a default
+    // future that reports finished but has an EMPTY result store, and
+    // calling result() on it crashes (SIGSEGV in QtPrivate::ResultItem).
+    const QFuture<TreeNode *> future = m_treeWatcher.future();
+    if (future.isFinished() && future.resultCount() > 0) {
+        TreeNode *pendingRoot = future.result();
         if (pendingRoot && pendingRoot != rootItem)
             delete pendingRoot;
     }
@@ -568,7 +574,6 @@ qint64 FileInfoModel::countSelectedSize()
 {
     qint64 size = 0;
     size = getCountSelectedSize(this->rootItem, size);
-    qDebug() << "2" << size;
     return size;
 }
 qint64 FileInfoModel::getCountSelectedSize(TreeNode *node, qint64 size)
