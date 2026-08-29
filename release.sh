@@ -21,7 +21,13 @@ fail()  { printf '\033[31mERROR: %s\033[0m\n' "$1" >&2; exit 1; }
 
 confirm() {
     printf '\033[36m?\033[0m %s [j/N] ' "$1"
-    read -r reply </dev/tty
+    # Read from the terminal when there is one, so the prompts still work if
+    # the script's stdout is piped somewhere.
+    if [ -r /dev/tty ]; then
+        read -r reply </dev/tty
+    else
+        read -r reply || reply=""
+    fi
     case "$reply" in [jJyY]) return 0 ;; *) echo "Gestopt."; exit 0 ;; esac
 }
 
