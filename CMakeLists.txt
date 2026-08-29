@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(QuickImport VERSION 0.7.1 LANGUAGES CXX)
+project(QuickImport VERSION 0.96 LANGUAGES CXX)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # ---- Qt automoc/uic/rcc ----
@@ -22,7 +22,9 @@ if(APPLE AND NOT TARGET WrapOpenGL::WrapOpenGL)
 endif()
 
 # ---- Qt 6 ----
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Concurrent Widgets LinguistTools)
+# 6.11 or newer: older Qt draws the pre-Tahoe control style, which looks
+# wrong next to native controls on macOS 26.
+find_package(Qt6 6.11 REQUIRED COMPONENTS Core Gui Concurrent Widgets LinguistTools)
 
 set(LIBRAW_ROOT "" CACHE PATH "Optional root path for a LibRaw installation")
 set(EXIV2_ROOT "" CACHE PATH "Optional root path for an Exiv2 installation")

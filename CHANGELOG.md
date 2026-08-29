@@ -3,7 +3,7 @@
 All notable changes to Quick Import are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
-## [Unreleased]
+## [0.96] - 2026-08-29
 
 ### Added
 
@@ -34,6 +34,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Fixed
 
+- **Buttons looked wrong on macOS 26**: square push buttons and a default
+  button whose focus ring sat detached above and below it. Qt below 6.11
+  draws the pre-Tahoe macOS control style; the build now requires Qt 6.11.
 - **English source text corrections**: "Delete files afer import" ->
   "after", "Don't show on statup" -> "startup", "uncheck Selected" ->
   "Uncheck Selected", and the leftover Dutch label "verwijder" in the
@@ -83,10 +86,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   dylib advertises `/usr/local/lib/libraw_r.24.dylib` as its install name,
   which does not exist. A post-build `install_name_tool` step now rewrites
   the reference to the dylib's real path.
-
-## [0.7.0] - 2026-08-29
-
-### Fixed
 
 - **Card-insertion detection was timing-dependent**: the disk event fires
   before macOS mounts the volume, and the old check only asked to open the

@@ -14,6 +14,7 @@ there is partial Windows/Linux support.
 
 ```sh
 cmake -S . -B build \
+    -DCMAKE_PREFIX_PATH=/Users/herwin/Qt/6.11.0/macos \
     -DLIBRAW_ROOT=/Users/herwin/devel/LibRaw \
     -DEXIV2_ROOT=/Users/herwin/devel/exiv2
 cmake --build build -j 8
@@ -22,6 +23,9 @@ open build/QuickImport.app
 
 Important build facts:
 
+- **Qt 6.11 or newer is required** (enforced in `find_package`). Older Qt
+  draws the pre-Tahoe macOS control style: on macOS 26 push buttons come out
+  square and the default button's focus ring detaches into two thick bars.
 - **Deployment target is macOS 14.0** (forced in CMakeLists.txt). Homebrew
   libraries are built for the *host* macOS only, so linking against
   `/opt/homebrew` produces "built for newer version" warnings and binaries
@@ -76,6 +80,19 @@ The result may contain `/` — directories are created with `mkpath`.
 Date tokens use the capture time via `fileCopyWorker::captureTimestamp()`
 (EXIF `DateTimeOriginal`, falling back to `lastModified`); the tree grouping
 uses the same rule — keep them consistent.
+
+## Versioning
+
+The single source of truth is `project(QuickImport VERSION ...)` in
+CMakeLists.txt; it feeds `QUICKIMPORT_VERSION`, the window title and the
+bundle's `CFBundleVersion` / `CFBundleShortVersionString`. Nothing else
+hardcodes a version.
+
+Released versions are the `vX.Y` git tags. Check the tags before bumping:
+the 0.7.x numbers that briefly appeared in 2026 were *lower* than the
+already-published `v0.95` from 2024, which would have made a new release
+look older than the one users already had. Every release must be numbered
+above the highest existing tag, and tagged `vX.Y` when it ships.
 
 ## Conventions & gotchas
 

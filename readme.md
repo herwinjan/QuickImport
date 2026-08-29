@@ -24,10 +24,16 @@ Experience a smoother, safer, and faster photo import process with **Quick Impor
 
 ## Building from source
 
-Requirements: CMake ≥ 3.21, Qt 6 (Core, Gui, Concurrent, Widgets, LinguistTools), [LibRaw](https://www.libraw.org/) and [Exiv2](https://exiv2.org/).
+Requirements: CMake ≥ 3.21, Qt ≥ 6.11 (Core, Gui, Concurrent, Widgets,
+LinguistTools), [LibRaw](https://www.libraw.org/) and [Exiv2](https://exiv2.org/).
+
+Qt 6.11 is a hard requirement, not a preference: older Qt draws the
+pre-Tahoe macOS control style, which on macOS 26 gives square push buttons
+and a focus ring that sits detached above and below the default button.
 
 ```sh
 cmake -S . -B build \
+    -DCMAKE_PREFIX_PATH=/path/to/Qt/6.11.0/macos \
     -DLIBRAW_ROOT=/path/to/libraw \
     -DEXIV2_ROOT=/path/to/exiv2
 cmake --build build

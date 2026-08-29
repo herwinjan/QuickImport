@@ -15,7 +15,7 @@ set -euo pipefail
 
 SRC_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BUILD_DIR="${BUILD_DIR:-$SRC_DIR/build-release}"
-QT_DIR="${QT_DIR:-$HOME/Qt/6.9.0/macos}"
+QT_DIR="${QT_DIR:-$HOME/Qt/6.11.0/macos}"
 LIBRAW_ROOT="${LIBRAW_ROOT:-$HOME/devel/LibRaw}"
 EXIV2_ROOT="${EXIV2_ROOT:-$HOME/devel/exiv2}"
 APP="$BUILD_DIR/QuickImport.app"
