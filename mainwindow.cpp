@@ -7,6 +7,7 @@
 #include <QImageReader>
 #include <QMessageBox>
 #include <QProcess>
+#include "language.h"
 #include <QSettings>
 #include <QStorageInfo>
 
@@ -135,9 +136,9 @@ MainWindow::MainWindow(QWidget *parent)
 
   openApplicationLocation = settings.value("openApplicationLocation", "").toString();
 
-  QFileInfo fileInfo(openApplicationLocation);
-  QString applicationName = fileInfo.fileName();
-  ui->openApplicationText->setText(applicationName);
+  updateOpenApplicationLabel();
+
+  populateLanguageComboBox();
 
   ui->deleteAfterImportBox->setCheckState(deleteAfterImport ? Qt::Checked : Qt::Unchecked);
   ui->ejectBox->setCheckState(ejectAfterImport ? Qt::Checked : Qt::Unchecked);
@@ -396,6 +397,7 @@ MainWindow::~MainWindow() {
 
 void MainWindow::selectedUpdated(int cnt, qint64 size) {
   totalSelectedSize = size;
+  m_selectedCount = cnt;
   ui->spaceFilesCopy->setText(
       QString(tr("%1 GB")).arg(((float)size / 1000 / 1000 / 1000), 0, 'f', 2));
   ui->updateLabel->setText(QString(tr("%1 selected photos")).arg(cnt));
@@ -572,17 +574,8 @@ void MainWindow::reloadCard() {
 
     if (selectedCard.isValid()) {
         QList<QFileInfo> files;
-        QString label;
         statusBar()->showMessage(tr("Loading card..."));
-        label = selectedCard.name();
-        ui->cardLabel->setText(
-            label
-            + QString(tr("  (Used space: %1 GB)"))
-                  .arg(((float) (selectedCard.bytesTotal() - selectedCard.bytesAvailable()) / 1000
-                        / 1000 / 1000),
-                       0,
-                       'f',
-                       2));
+        updateCardLabel();
         files = getFiles(selectedCard.rootPath());
         m_lastCardFileCount = files.count();
         ui->deviceWidget->setFiles(files);
@@ -675,7 +668,7 @@ void MainWindow::emptyMainWindow() {
   ui->moveButton->setDisabled(true);
   ui->pixmapLabel->setPixmap(QPixmap());
   ui->deviceWidget->setEnabled(false);
-  ui->cardLabel->setText(QString(tr("No card loaded.")));
+  updateCardLabel();
   ui->image->setPixmap(QPixmap());
   m_currentPreviewImage = QImage();
   setBackupUiEnabled(doBackupImport);
@@ -819,6 +812,82 @@ void MainWindow::changeEvent(QEvent *event)
         || event->type() == QEvent::ApplicationPaletteChange) {
         updateThemedIcons();
     }
+    if (event->type() == QEvent::LanguageChange) {
+        ui->retranslateUi(this);
+        retranslateDynamicText();
+    }
+}
+
+void MainWindow::populateLanguageComboBox()
+{
+    const QSignalBlocker blocker(ui->languageComboBox);
+    const QString current = AppLanguage::currentCode();
+
+    ui->languageComboBox->clear();
+    ui->languageComboBox->addItem(tr("System language"), AppLanguage::systemCode());
+    for (const QString &code : AppLanguage::availableCodes())
+        ui->languageComboBox->addItem(AppLanguage::nativeName(code), code);
+
+    const int index = ui->languageComboBox->findData(current);
+    ui->languageComboBox->setCurrentIndex(index >= 0 ? index : 0);
+}
+
+void MainWindow::on_languageComboBox_activated(int index)
+{
+    const QString code = ui->languageComboBox->itemData(index).toString();
+    if (code.isEmpty() || code == AppLanguage::currentCode())
+        return;
+
+    AppLanguage::setCurrentCode(code);
+    // Installing/removing a translator posts a LanguageChange event to every
+    // widget, which is what drives retranslateDynamicText() below.
+    AppLanguage::install();
+}
+
+// retranslateUi() only covers strings that came from the .ui file. Everything
+// that is set from code has to be re-applied by hand after a language change.
+void MainWindow::retranslateDynamicText()
+{
+    // retranslateUi() resets the title to the designer placeholder
+    setWindowTitle(QString("Quick Import %1").arg(QCoreApplication::applicationVersion()));
+
+    populateLanguageComboBox();
+
+    ui->presetComboBox->setPlaceholderText(tr("--Select to load preset--"));
+    if (importLocationList.isEmpty())
+        ui->importLocation->setPlaceholderText(tr("--Location not set--"));
+    if (importBackupLocationList.isEmpty())
+        ui->importBackupLocation->setPlaceholderText(tr("--Back-up location not set--"));
+    if (projectNameList.isEmpty())
+        ui->projectName->setPlaceholderText(tr("-- set project name --"));
+
+    updateCardLabel();
+    updateOpenApplicationLabel();
+    selectedUpdated(m_selectedCount, totalSelectedSize);
+    updateImportToLabel();
+
+    if (auto *model = qobject_cast<FileInfoModel *>(ui->deviceWidget->model()))
+        model->retranslate();
+}
+
+// The .ui leaves this label empty, so retranslateUi() blanks it on a language
+// change; it has to be re-filled from the stored setting.
+void MainWindow::updateOpenApplicationLabel()
+{
+    ui->openApplicationText->setText(QFileInfo(openApplicationLocation).fileName());
+}
+
+void MainWindow::updateCardLabel()
+{
+    if (!selectedCard.isValid()) {
+        ui->cardLabel->setText(tr("No card loaded."));
+        return;
+    }
+
+    const float usedGb = (float) (selectedCard.bytesTotal() - selectedCard.bytesAvailable())
+                         / 1000 / 1000 / 1000;
+    ui->cardLabel->setText(selectedCard.name()
+                           + QString(tr("  (Used space: %1 GB)")).arg(usedGb, 0, 'f', 2));
 }
 
 void MainWindow::resizeEvent(QResizeEvent *event) {
@@ -1539,13 +1608,10 @@ void MainWindow::on_OpenApplicationLocation_clicked()
     QString app = QFileDialog::getOpenFileName(this, tr("Choose Application"), defaultPath, filter);
 
     if (!app.isEmpty()) {
-        QFileInfo fileInfo(app);
-        QString applicationName = fileInfo.fileName();
-
         openApplicationLocation = app;
         QSettings settings;
         settings.setValue("openApplicationLocation", openApplicationLocation);
-        ui->openApplicationText->setText(applicationName);
+        updateOpenApplicationLabel();
     }
 }
 

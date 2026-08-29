@@ -30,10 +30,24 @@ Important build facts:
 - Exiv2 is linked **statically** from a source/build tree; the generated
   header `exiv2lib_export.h` lives in the tree root, which CMakeLists finds
   via `EXIV2_EXPORT_INCLUDE_DIR`.
-- LibRaw is linked **dynamically** from `~/devel/LibRaw/lib/.libs/`. For
-  distribution the dylib must be bundled (macdeployqt / install_name_tool).
-- Translations: `.ts` files are compiled by lrelease into `build/translations/`
-  and embedded at `:/translation` via a generated qrc.
+- LibRaw is linked **dynamically** from `~/devel/LibRaw/lib/.libs/` and must
+  be configured with `--disable-lcms`: the app never uses LibRaw's colour
+  pipeline (only `open_file`, `unpack_thumb` and the EXIF callback), while
+  Homebrew's `liblcms2` is built for the host macOS and would break the 14.0
+  deployment target.
+- `./package-macos.sh` builds the distributable bundle: clean release build in
+  `build-release/`, macdeployqt, LibRaw copied into `Contents/Frameworks`,
+  then it verifies that nothing resolves outside the bundle and that no
+  binary needs a newer macOS than the deployment target, and ad-hoc signs.
+  `--dmg` also produces a DMG. There is no Developer ID / notarisation step.
+- Translations: `.ts` files (listed in `TS_FILES`) are compiled by lrelease
+  into `build/translations/` and embedded at `:/translation` via a generated
+  qrc, together with Qt's own `qtbase_<lang>.qm` copied from the Qt install.
+  Languages: en, nl, de, es. Refresh with
+  `lupdate -no-obsolete $(ls *.cpp *.h *.ui *.mm qdevicewatcher/*.cpp qdevicewatcher/*.h) -ts quickimport_*.ts`
+  and keep every catalogue at zero unfinished entries.
+- `MacOSXBundleInfo.plist.in` is the bundle's Info.plist template; its
+  `CFBundleLocalizations` array must list the same languages as `TS_FILES`.
 - The project directory is reachable via two paths
   (`~/devel/Desktop/Devel/...` is the real one). If CMake complains the
   cache was created in a different directory, delete `build/` and reconfigure.
@@ -47,6 +61,7 @@ Important build facts:
 | `filecopydialog.cpp` | Copy progress dialog; workers pull from a shared `fileCopyQueue`. Starts with 1 worker, measures throughput over the first ~200 MB and starts a 2nd worker only on fast readers (~300+ MB/s); always 1 worker when destination paths collide |
 | `filecopyworker.cpp` | The actual copy: chunked tee-copy (8 MB) that reads the source once, hashes while copying and writes import + backup temp files simultaneously → per-target size/MD5 verify → atomic rename; deletes source only after verification. `processNewFileName()` resolves the naming tokens |
 | `imageloader.cpp` | Persistent preview loader on one worker thread: latest-wins request coalescing, ~100 MB LRU cache, neighbour prefetch (QImageReader for normal formats, LibRaw thumbnail for RAW) |
+| `language.cpp/.h` | Interface language: the "language" QSettings key (`system` or `en`/`nl`/`de`/`es`), loading `quickimport_*.qm` plus Qt's own `qtbase_*.qm` from `:/translation`. `install()` is called at start-up and again from the picker in Import Settings; re-installing a translator posts `LanguageChange`, which `MainWindow::changeEvent` turns into `retranslateUi` + `retranslateDynamicText()` |
 | `devicelist.cpp` | The tree view widget for the card contents |
 | `qdevicewatcher/` | Third-party hotplug watcher (per-platform backends) |
 | `externDriveFetcher.mm` | macOS-only: fetch the volume icon (Objective-C++) |

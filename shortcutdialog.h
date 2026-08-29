@@ -15,6 +15,11 @@ public:
     explicit shortcutDialog(QWidget *parent = nullptr);
     ~shortcutDialog();
 
+protected:
+    // This dialog is modeless and stays open, so it has to pick up a
+    // language change while it is on screen.
+    void changeEvent(QEvent *event) override;
+
 private:
     Ui::shortcutDialog *ui;
 };

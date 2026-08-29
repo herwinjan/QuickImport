@@ -1,9 +1,9 @@
 
+#include "language.h"
 #include "mainwindow.h"
 
 #include <QApplication>
 #include <QImageReader>
-#include <QTranslator>
 #include <QDebug>
 #include <QThread>
 #include <QObject>
@@ -17,14 +17,8 @@ int main(int argc, char *argv[])
     // Single source of truth: the version is set in CMakeLists.txt (project VERSION)
     QCoreApplication::setApplicationVersion(QUICKIMPORT_VERSION);
     QCoreApplication::setOrganizationName("HJ Steehouwer");
-    QTranslator translator;
-    
-
-    if (translator.load(QLocale(),
-                        QLatin1String("quickimport"),
-                        QLatin1String("_"),
-                        QLatin1String(":/translation")))
-        QCoreApplication::installTranslator(&translator);
+    // Uses the "language" setting, falling back to the system locale.
+    AppLanguage::install();
 
     // QPixmap image("://QuickImportLogo-klein.png");
     // a.setWindowIcon(image);

@@ -69,6 +69,10 @@ public:
 
     QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override ;
 
+    // headerData() calls tr() on every request, so a language change only
+    // needs the views to re-ask for the header labels.
+    void retranslate();
+
     QModelIndex parent(const QModelIndex& index) const override;
 
     int rowCount(const QModelIndex& parent = QModelIndex()) const override ;

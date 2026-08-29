@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(QuickImport VERSION 0.7.0 LANGUAGES CXX)
+project(QuickImport VERSION 0.7.1 LANGUAGES CXX)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # ---- Qt automoc/uic/rcc ----
@@ -85,7 +85,8 @@ endif()
 set(TS_FILES
     quickimport_en.ts
     quickimport_nl.ts
-    
+    quickimport_de.ts
+    quickimport_es.ts
 )
 
 # ---- Sources & headers ----
@@ -93,6 +94,7 @@ set(PROJECT_SOURCES
     # .cpp
     aboutdialog.cpp
     fileinfomodel.cpp
+    language.cpp
     metadatadialog.cpp
     metadatatemplatedialog.cpp
     presetdialog.cpp
@@ -111,6 +113,7 @@ set(PROJECT_SOURCES
 
     # .h
     aboutdialog.h
+    language.h
     devicelist.h
     externalDriveFetcher.h
     filecopydialog.h
@@ -206,10 +209,29 @@ endforeach()
 # Aggregate target to build all .qm files
 add_custom_target(QuickImport_ts ALL DEPENDS ${QM_FILES})
 
+# Qt's own catalogue (standard dialog buttons, file dialog) for the same
+# languages, copied straight from the Qt installation. Missing catalogues are
+# not fatal: those strings simply stay English.
+if(NOT DEFINED QT_TRANSLATIONS_DIR)
+    set(QT_TRANSLATIONS_DIR "${QT6_INSTALL_PREFIX}/${QT6_INSTALL_TRANSLATIONS}")
+endif()
+
+set(QTBASE_QM_FILES)
+foreach(_ts ${TS_FILES})
+    get_filename_component(_ts_name ${_ts} NAME_WE)
+    string(REGEX REPLACE "^quickimport_" "" _lang ${_ts_name})
+    set(_src ${QT_TRANSLATIONS_DIR}/qtbase_${_lang}.qm)
+    if(EXISTS ${_src})
+        list(APPEND QTBASE_QM_FILES ${_src})
+    else()
+        message(STATUS "No qtbase translation for '${_lang}' in ${QT_TRANSLATIONS_DIR}")
+    endif()
+endforeach()
+
 # Generate a QRC that lists the compiled .qm files and embed it via AUTORCC
 set(GENERATED_QM_QRC ${CMAKE_CURRENT_BINARY_DIR}/translations.qrc)
 file(WRITE ${GENERATED_QM_QRC} "<RCC>\n  <qresource prefix=\"/translation\">\n")
-foreach(_qm ${QM_FILES})
+foreach(_qm ${QM_FILES} ${QTBASE_QM_FILES})
     get_filename_component(_qm_name ${_qm} NAME)
     file(APPEND ${GENERATED_QM_QRC} "    <file alias=\"${_qm_name}\">${_qm}</file>\n")
 endforeach()
@@ -231,6 +253,9 @@ if(APPLE)
         MACOSX_BUNDLE_GUI_IDENTIFIER "nl.steehouwer.quickimport"
         MACOSX_BUNDLE_BUNDLE_NAME "Quick Import"
         MACOSX_BUNDLE_COPYRIGHT "© Herwin Jan Steehouwer"
+        # Custom template: adds CFBundleLocalizations so macOS knows which
+        # languages the app ships and offers a per-app language override
+        MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/MacOSXBundleInfo.plist.in"
     )
     # Place the .icns into the app bundle Resources
     set_source_files_properties(QuickImportLogo-1024.icns

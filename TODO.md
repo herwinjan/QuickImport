@@ -78,9 +78,12 @@ Still open:
 
 ## Build / packaging
 
-- [ ] Bundle `libraw_r.dylib` into the app bundle for distribution
-      (macdeployqt or install_name_tool) — the app currently links the dylib
-      from `~/devel/LibRaw/lib/.libs/`.
+- [x] ~~Bundle `libraw_r.dylib` into the app bundle for distribution~~ (done
+      2026-08-29: `package-macos.sh` deploys Qt, copies LibRaw into
+      `Contents/Frameworks` and verifies the bundle is self-contained).
+- [ ] Notarisation: the packaged app is only ad-hoc signed, so other people
+      hit Gatekeeper. Needs a "Developer ID Application" certificate and a
+      `notarytool` step in `package-macos.sh`.
 - [x] ~~Document `LIBRAW_ROOT` / `EXIV2_ROOT` in readme.md~~ (done
       2026-08-29: "Building from source" section added).
 - [ ] Exiv2 is linked but barely used (`xmpengine.cpp` only) — decide whether

@@ -290,6 +290,11 @@ QModelIndex FileInfoModel::index(int row, int column, const QModelIndex& parent 
             return QModelIndex();
 }
 
+void FileInfoModel::retranslate()
+{
+    emit headerDataChanged(Qt::Horizontal, 0, columnCount(QModelIndex()) - 1);
+}
+
 QVariant FileInfoModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
     if (orientation == Qt::Horizontal && role == Qt::DisplayRole) {
@@ -463,7 +468,7 @@ void FileInfoModel::setupModelData()
             const int done = counter->fetch_add(1, std::memory_order_relaxed) + 1;
             if (self && (done % kStatusEvery == 0 || done == total)) {
                 const QString message =
-                    self->tr("loading EXIF data #%1 of %2.").arg(done).arg(total);
+                    FileInfoModel::tr("loading EXIF data #%1 of %2.").arg(done).arg(total);
                 QMetaObject::invokeMethod(
                     self,
                     [self, message]() {

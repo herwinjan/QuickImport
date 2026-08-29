@@ -7,6 +7,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **`package-macos.sh`**: produces a self-contained, ad-hoc signed app
+  bundle (optionally a DMG). It verifies that nothing in the bundle resolves
+  outside it and that no bundled binary needs a newer macOS than the
+  deployment target; either check failing aborts the build. LibRaw is now
+  bundled instead of linked from the build tree.
+
+- **German and Spanish translations**: the interface is now available in
+  English, Dutch, German and Spanish. All 111 interface strings are
+  translated in all four languages.
+- **Language picker** in Import Settings: pick a language explicitly or
+  leave it on "System language". The change is applied immediately -- no
+  restart -- and is remembered in the "language" setting.
+- Qt's own translations (standard dialog buttons, file dialog) are now
+  bundled for the same four languages, so those strings follow the
+  interface language too.
+- The macOS bundle declares `CFBundleLocalizations`, which is what lets
+  macOS offer a per-app language under System Settings > General >
+  Language & Region.
 - **Adjustable divider between the file table and the preview/settings
   pane** (QSplitter); divider position and window size/position are
   remembered across sessions. The preview now rescales with the available
@@ -15,6 +33,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   the divider left really does give you a bigger preview.
 
 ### Fixed
+
+- **English source text corrections**: "Delete files afer import" ->
+  "after", "Don't show on statup" -> "startup", "uncheck Selected" ->
+  "Uncheck Selected", and the leftover Dutch label "verwijder" in the
+  preset dialog is now "Delete".
+- **Filename token help was wrong**: the shortcut dialog listed `{yy}` for
+  the 4-digit year (the token is `{Y}`) and described `{h}` and `{H}` as
+  2- and 4-digit hours; they are hour without and with a leading zero.
+  "file extention" is now "file extension".
 
 - **Missing import/backup folder handled properly**: free space showed
   "-0.00 GB" and the import was blocked with "not enough disk space" when

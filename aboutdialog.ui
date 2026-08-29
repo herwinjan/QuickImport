@@ -53,7 +53,7 @@
      <item>
       <widget class="QCheckBox" name="dontshowCheckBox">
        <property name="text">
-        <string>Don't show on statup</string>
+        <string>Don't show on startup</string>
        </property>
       </widget>
      </item>

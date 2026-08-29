@@ -75,7 +75,7 @@
         <item>
          <widget class="QPushButton" name="removeButton">
           <property name="text">
-           <string>verwijder</string>
+           <string>Delete</string>
           </property>
          </widget>
         </item>

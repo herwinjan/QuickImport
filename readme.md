@@ -42,5 +42,45 @@ source/build tree; without them CMake falls back to common locations such as
 libraries for your current macOS version only. To produce a binary that runs
 on macOS 14, build LibRaw and Exiv2 yourself with
 `MACOSX_DEPLOYMENT_TARGET=14.0` and point the `*_ROOT` options at those
-builds. For distribution, bundle the LibRaw dylib into the app bundle
-(e.g. with `macdeployqt`).
+builds.
+
+LibRaw must be configured with `--disable-lcms`. Quick Import only reads
+metadata and embedded thumbnails, so it never touches LibRaw's colour
+pipeline — the only thing that needs Little-CMS — while Homebrew's
+`liblcms2` is built for the current macOS and would drag the deployment
+target up with it:
+
+```sh
+cd /path/to/LibRaw
+MACOSX_DEPLOYMENT_TARGET=14.0 ./configure --disable-lcms
+MACOSX_DEPLOYMENT_TARGET=14.0 make -j8
+```
+
+## Packaging a release build (macOS)
+
+The development build resolves Qt through `@rpath` into your Qt installation
+and links LibRaw by absolute path, so it only runs on the machine that built
+it. `package-macos.sh` produces a self-contained bundle:
+
+```sh
+./package-macos.sh          # build, deploy, verify and ad-hoc sign
+./package-macos.sh --dmg    # ... and wrap it in a DMG
+```
+
+It does a clean release build in `build-release/`, runs `macdeployqt`,
+copies the LibRaw dylib into `Contents/Frameworks`, and then verifies two
+things that are easy to get wrong and hard to notice:
+
+- every binary in the bundle resolves only to system libraries or
+  bundle-relative paths, so nothing is picked up from the build machine;
+- nothing inside the bundle needs a newer macOS than the deployment target,
+  which would make the app refuse to launch on the versions it claims to
+  support.
+
+Either check failing aborts the script. `QT_DIR`, `LIBRAW_ROOT`, `EXIV2_ROOT`
+and `BUILD_DIR` override the defaults.
+
+The result is **ad-hoc signed**: fine for your own machines, but other people
+will hit Gatekeeper. Distributing more widely needs a "Developer ID
+Application" certificate (a paid Apple Developer Program membership) and a
+notarisation step, neither of which the script does yet.

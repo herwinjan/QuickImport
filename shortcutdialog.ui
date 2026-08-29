@@ -23,7 +23,7 @@
       <item>
        <widget class="QLabel" name="label">
         <property name="text">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;{D} : day (2 digits)&lt;/p&gt;&lt;p&gt;{m} : month (2 digits)&lt;/p&gt;&lt;p&gt;{y} : year (2 digits)&lt;/p&gt;&lt;p&gt;{yy} : year (4 digits)&lt;/p&gt;&lt;p&gt;{W} : week number&lt;/p&gt;&lt;p&gt;{h} : hour (2 digits)&lt;/p&gt;&lt;p&gt;{H} : hour (4 digits)&lt;/p&gt;&lt;p&gt;{M}: minute (2 digits)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;{D} : day (2 digits)&lt;/p&gt;&lt;p&gt;{m} : month (2 digits)&lt;/p&gt;&lt;p&gt;{y} : year (2 digits)&lt;/p&gt;&lt;p&gt;{Y} : year (4 digits)&lt;/p&gt;&lt;p&gt;{W} : week number&lt;/p&gt;&lt;p&gt;{h} : hour&lt;/p&gt;&lt;p&gt;{H} : hour (2 digits)&lt;/p&gt;&lt;p&gt;{M} : minute (2 digits)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="wordWrap">
          <bool>true</bool>
@@ -36,7 +36,7 @@
       <item>
        <widget class="QLabel" name="label_2">
         <property name="text">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;{i} : ISO&lt;/p&gt;&lt;p&gt;{c} : camera Serial&lt;/p&gt;&lt;p&gt;{T} : camera Model&lt;/p&gt;&lt;p&gt;{O} : owner&lt;/p&gt;&lt;p&gt;{o} : filename&lt;/p&gt;&lt;p&gt;{J} : project name&lt;/p&gt;&lt;p&gt;{e} : file extention&lt;/p&gt;&lt;p&gt;{r} : image number&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;{i} : ISO&lt;/p&gt;&lt;p&gt;{c} : camera Serial&lt;/p&gt;&lt;p&gt;{T} : camera Model&lt;/p&gt;&lt;p&gt;{O} : owner&lt;/p&gt;&lt;p&gt;{o} : filename&lt;/p&gt;&lt;p&gt;{J} : project name&lt;/p&gt;&lt;p&gt;{e} : file extension&lt;/p&gt;&lt;p&gt;{r} : image number&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
        </widget>
       </item>

@@ -161,6 +161,7 @@ private slots:
     void on_projectName_activated(int index);
     void on_OpenApplicationLocation_clicked();
     void on_openApplicationAfterImport_stateChanged(int arg1);
+    void on_languageComboBox_activated(int index);
 
 private:
     void displayNoCardDialog();
@@ -176,6 +177,15 @@ private:
 
     // Re-tint monochrome icons to the current palette (light/dark mode)
     void updateThemedIcons();
+
+    // Interface language: fill the combo box from AppLanguage and re-apply
+    // every string that is set from code (retranslateUi only covers the
+    // strings that come from the .ui file)
+    void populateLanguageComboBox();
+    void retranslateDynamicText();
+    void updateCardLabel();
+    void updateOpenApplicationLabel();
+    int m_selectedCount = 0;
 
     // Full-size preview (with EXIF overlay) rescaled to fit the label when
     // the splitter or window is resized
