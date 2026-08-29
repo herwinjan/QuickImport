@@ -5,8 +5,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+
+- **Adjustable divider between the file table and the preview/settings
+  pane** (QSplitter); divider position and window size/position are
+  remembered across sessions. The preview now rescales with the available
+  space instead of forcing a fixed minimum width on the window (which made
+  the window impossible to shrink and the divider immovable), so dragging
+  the divider left really does give you a bigger preview.
+
 ### Fixed
 
+- **Refresh icon invisible in dark mode**: the black glyph is now tinted to
+  the palette's text colour at runtime and re-tinted when the system
+  switches between light and dark mode.
+- **File names truncated after expanding a group**: the interactive column
+  sizing only measured the initially visible rows; columns are now
+  re-measured whenever a branch is expanded.
 - **App quit/ejected with a full card**: the quit-if-empty and
   eject-if-empty checks read the model's `rowCount()` immediately after the
   reload, but the tree is built asynchronously and still reports 0 rows at

@@ -32,6 +32,15 @@ deviceList::deviceList(QWidget *parent ) :
         hdr->setStretchLastSection(false);
     }
 
+    // resizeColumnToContents() only measures the rows that are visible, so
+    // re-measure whenever a branch is expanded — otherwise file names under
+    // a freshly opened hour group stay truncated.
+    connect(this, &QTreeView::expanded, this, [this](const QModelIndex &) {
+        const int cols = model() ? model()->columnCount() : 0;
+        for (int c = 0; c < cols; ++c)
+            resizeColumnToContents(c);
+    });
+
     // Optional performance hint for tree views with consistent row heights
     setUniformRowHeights(true);
 }

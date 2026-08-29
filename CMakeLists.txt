@@ -228,6 +228,9 @@ if(APPLE)
         MACOSX_BUNDLE_ICON_FILE QuickImportLogo-1024.icns
         MACOSX_BUNDLE_BUNDLE_VERSION "${PROJECT_VERSION}"
         MACOSX_BUNDLE_SHORT_VERSION_STRING "${PROJECT_VERSION}"
+        MACOSX_BUNDLE_GUI_IDENTIFIER "nl.steehouwer.quickimport"
+        MACOSX_BUNDLE_BUNDLE_NAME "Quick Import"
+        MACOSX_BUNDLE_COPYRIGHT "© Herwin Jan Steehouwer"
     )
     # Place the .icns into the app bundle Resources
     set_source_files_properties(QuickImportLogo-1024.icns

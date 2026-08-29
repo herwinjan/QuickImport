@@ -78,4 +78,4 @@ CMakeLists.txt.user*
 .vscode/tasks.json
 
 # CMake build tree (never track anything in here)
-build/
+build*/

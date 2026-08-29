@@ -54,6 +54,7 @@ public slots:
 
 protected:
     void resizeEvent(QResizeEvent *event);
+    void changeEvent(QEvent *event) override;
 
     int doEject();
 
@@ -171,6 +172,14 @@ private:
     // Shared implementation of check/uncheck/flip on the view selection
     enum class CheckAction { Check, Uncheck, Flip };
     void applyCheckToSelection(CheckAction action);
+
+    // Re-tint monochrome icons to the current palette (light/dark mode)
+    void updateThemedIcons();
+
+    // Full-size preview (with EXIF overlay) rescaled to fit the label when
+    // the splitter or window is resized
+    void rescalePreview();
+    QImage m_currentPreviewImage;
 
     // Free-space labels: QStorageInfo does real disk I/O, so cache the
     // values briefly instead of querying on every keystroke

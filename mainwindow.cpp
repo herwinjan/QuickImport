@@ -57,12 +57,58 @@ QFileInfoList MainWindow::getFileListFromDir(const QString &directory) {
     return fileList;
 }
 
+// Tint a monochrome glyph (black with alpha) to the given colour, so icons
+// stay visible in both light and dark mode.
+static QIcon tintedIcon(const QString &resourcePath, const QColor &color)
+{
+    QPixmap pixmap(resourcePath);
+    QPainter painter(&pixmap);
+    painter.setCompositionMode(QPainter::CompositionMode_SourceIn);
+    painter.fillRect(pixmap.rect(), color);
+    painter.end();
+    return QIcon(pixmap);
+}
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), ui(new Ui::MainWindow) {
   m_appStartTimer.start();
   ui->setupUi(this);
   ui->menubar->hide();
   ui->presets->hide();
+  updateThemedIcons();
+
+  // The preview label must not claim its pixmap size as minimum size,
+  // otherwise the splitter cannot move and the window cannot shrink. The
+  // explicit 1x1 minimum overrides the pixmap-based minimumSizeHint;
+  // Expanding lets it take the available space (Ignored would let the
+  // spacers collapse it to zero height). The pixmap is rescaled to the
+  // label in rescalePreview().
+  ui->image->setMinimumSize(1, 1);
+  ui->image->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+  // All extra vertical space in the right pane goes to the preview group
+  ui->verticalLayout_2->setStretchFactor(ui->groupBox_2, 1);
+
+  // Labels with long dynamic text (card name, example output path) must not
+  // dictate the pane's minimum width; an explicit minimum lets them be
+  // clipped instead of blocking the splitter.
+  ui->cardLabel->setMinimumWidth(50);
+  ui->importToLabel->setMinimumWidth(50);
+
+  // Divider between the file table and the preview/settings pane; the
+  // position is restored from the previous session.
+  ui->mainSplitter->setStretchFactor(0, 1);
+  ui->mainSplitter->setStretchFactor(1, 1);
+  connect(ui->mainSplitter, &QSplitter::splitterMoved, this,
+          [this](int, int) { rescalePreview(); });
+  {
+    QSettings uiSettings;
+    const QByteArray state = uiSettings.value("mainSplitterState").toByteArray();
+    if (!state.isEmpty())
+      ui->mainSplitter->restoreState(state);
+    const QByteArray geometry = uiSettings.value("mainWindowGeometry").toByteArray();
+    if (!geometry.isEmpty())
+      restoreGeometry(geometry);
+  }
 
   QSettings settings;
   loadPresetsLocations();
@@ -336,6 +382,11 @@ void MainWindow::showAboutDialog() {
 
 MainWindow::~MainWindow() {
   savePresets();
+  {
+    QSettings settings;
+    settings.setValue("mainSplitterState", ui->mainSplitter->saveState());
+    settings.setValue("mainWindowGeometry", saveGeometry());
+  }
   if (m_previewThread) {
     m_previewThread->quit();
     m_previewThread->wait();
@@ -626,6 +677,7 @@ void MainWindow::emptyMainWindow() {
   ui->deviceWidget->setEnabled(false);
   ui->cardLabel->setText(QString(tr("No card loaded.")));
   ui->image->setPixmap(QPixmap());
+  m_currentPreviewImage = QImage();
   setBackupUiEnabled(doBackupImport);
 }
 
@@ -735,19 +787,43 @@ void MainWindow::showImage(const QImage &image, bool failed)
                          Qt::AlignCenter,
                          QString(tr("Failed to load image.")));
     }
-    ui->image->setPixmap(QPixmap::fromImage(img.scaled(ui->projectGroupBox->width() - 30,
-                                                       ui->projectGroupBox->width() - 30,
-                                                       Qt::KeepAspectRatio)));
-    ui->image->show();
+    // Keep the full-size overlaid image so the preview can rescale when the
+    // splitter or the window is resized.
+    m_currentPreviewImage = img;
+    rescalePreview();
+}
+
+void MainWindow::rescalePreview()
+{
+    if (m_currentPreviewImage.isNull())
+        return;
+    const QSize target = ui->image->size();
+    if (target.width() < 2 || target.height() < 2)
+        return;
+    ui->image->setPixmap(QPixmap::fromImage(
+        m_currentPreviewImage.scaled(target, Qt::KeepAspectRatio, Qt::SmoothTransformation)));
+}
+
+void MainWindow::updateThemedIcons()
+{
+    ui->reloadButton->setIcon(
+        tintedIcon(QStringLiteral(":/icons8-Refresh-64.png"),
+                   palette().color(QPalette::ButtonText)));
+}
+
+void MainWindow::changeEvent(QEvent *event)
+{
+    QMainWindow::changeEvent(event);
+    // Re-tint icons when the system switches between light and dark mode
+    if (event->type() == QEvent::PaletteChange
+        || event->type() == QEvent::ApplicationPaletteChange) {
+        updateThemedIcons();
+    }
 }
 
 void MainWindow::resizeEvent(QResizeEvent *event) {
   QMainWindow::resizeEvent(event);
-  // ui->image->setFixedSize((int) ui->groupBoxImport->width() - 30,
-  //                         ui->groupBoxImport->width() - 30);
-
-  // ui->image->show();
-  // qDebug() << ui->groupBoxImport->width() - 30;
+  rescalePreview();
 }
 
 void MainWindow::on_checkAll_clicked() {
