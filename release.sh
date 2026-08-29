@@ -46,6 +46,9 @@ fi
 git rev-parse "$TAG" >/dev/null 2>&1 && fail "tag $TAG already exists"
 [ -f "$NOTES" ] || fail "no release notes at $NOTES"
 info "Release notes: $NOTES ($(grep -c '' "$NOTES") lines)"
+grep -q "^## \[$VERSION\]" CHANGELOG.md \
+    || fail "CHANGELOG.md has no '## [$VERSION]' section — rename [Unreleased] first"
+info "CHANGELOG.md has a section for $VERSION."
 
 # ------------------------------------------------------------- 2. work tree
 bold "2. Working tree"

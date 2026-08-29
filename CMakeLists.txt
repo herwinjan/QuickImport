@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(QuickImport VERSION 0.96 LANGUAGES CXX)
+project(QuickImport VERSION 0.96.1 LANGUAGES CXX)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # ---- Qt automoc/uic/rcc ----

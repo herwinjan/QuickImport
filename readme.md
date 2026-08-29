@@ -62,6 +62,34 @@ MACOSX_DEPLOYMENT_TARGET=14.0 ./configure --disable-lcms
 MACOSX_DEPLOYMENT_TARGET=14.0 make -j8
 ```
 
+## Making a release
+
+The version in `CMakeLists.txt` is what you are *working on*; the `vX.Y` git
+tags are what has *shipped*. Never create a tag by hand and never move one
+that already exists — `release.sh` creates it as the very last step.
+
+Day to day:
+
+1. Commit as usual. Add anything a user would notice under `## [Unreleased]`
+   in CHANGELOG.md while it is fresh.
+2. Straight after a release, bump `project(QuickImport VERSION ...)` to the
+   next patch number, so builds from the main branch can never be confused
+   with the released version.
+
+When you want to ship:
+
+1. Decide the number. Bug fixes only → bump the last part (0.96.1). New
+   features → bump the middle (0.97). It only has to be higher than the
+   highest existing tag; `release.sh` refuses otherwise.
+2. Set it in `CMakeLists.txt` if it is not already right.
+3. In CHANGELOG.md, rename `## [Unreleased]` to `## [X.Y.Z] - <date>` and
+   start a fresh empty `## [Unreleased]` above it.
+4. Write `release-notes/X.Y.Z.md` — the user-facing story, not the commit
+   log. Look at `release-notes/0.96.md` for the shape.
+5. Run `./release.sh`. It walks through version and working-tree checks, the
+   build, a look at the app, the notes, and only then tags and publishes.
+   `./release.sh --dry-run` does everything except the publishing.
+
 ## Packaging a release build (macOS)
 
 The development build resolves Qt through `@rpath` into your Qt installation

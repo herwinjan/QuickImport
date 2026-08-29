@@ -3,6 +3,11 @@
 All notable changes to QuickImport are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [Unreleased]
+
+Nothing yet. Add user-visible changes here as you make them; this section
+becomes the next release's notes.
+
 ## [0.96] - 2026-08-29
 
 ### Added
