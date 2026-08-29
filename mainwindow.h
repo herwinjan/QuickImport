@@ -164,6 +164,7 @@ private slots:
 
 private:
     void displayNoCardDialog();
+    bool ensureFolderExists(const QString &folder, const QString &description);
 
     // Persist a checkbox-backed bool setting and update the member
     void saveBoolSetting(const QString &key, bool &member, int state);

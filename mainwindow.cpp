@@ -865,23 +865,45 @@ void MainWindow::updateImportToLabel() {
                                 || importFolder != m_freeSpaceFolder
                                 || importBackupFolder != m_freeSpaceBackupFolder
                                 || doBackupImport != m_freeSpaceBackupEnabled;
+  // Free space of the volume the folder lives on. When the folder itself
+  // does not exist yet, walk up to the nearest existing parent — that is
+  // where mkpath will create it, so its volume is the right one (and
+  // QStorageInfo on a missing path would report -1 → "-0.00 GB").
+  auto availableForPath = [](const QString &path) -> qint64 {
+    QString probe = QDir::cleanPath(path);
+    while (!probe.isEmpty() && !QFileInfo::exists(probe)) {
+      const int idx = probe.lastIndexOf(QLatin1Char('/'));
+      if (idx <= 0) {
+        probe = QStringLiteral("/");
+        break;
+      }
+      probe = probe.left(idx);
+    }
+    return QStorageInfo(probe).bytesAvailable();
+  };
+
   if (refreshFreeSpace) {
     m_freeSpaceTimer.start();
     m_freeSpaceFolder = importFolder;
     m_freeSpaceBackupFolder = importBackupFolder;
     m_freeSpaceBackupEnabled = doBackupImport;
-    freeProjectSpace = QStorageInfo(QDir(importFolder)).bytesAvailable();
-    m_freeBackupSpace = doBackupImport
-                            ? QStorageInfo(QDir(importBackupFolder)).bytesAvailable()
-                            : -1;
+    freeProjectSpace = availableForPath(importFolder);
+    m_freeBackupSpace = doBackupImport ? availableForPath(importBackupFolder) : -1;
   }
 
-  ui->freeDiskSpace->setText(QString("%1 GB").arg(
-      ((float)freeProjectSpace / 1000 / 1000 / 1000), 0, 'f', 2));
+  const bool importFolderMissing = !importFolder.isEmpty() && !QDir(importFolder).exists();
+  QString freeText = QString("%1 GB").arg(
+      ((float)freeProjectSpace / 1000 / 1000 / 1000), 0, 'f', 2);
+  if (importFolderMissing)
+      freeText += tr(" (new folder)");
+  ui->freeDiskSpace->setText(freeText);
 
   if (doBackupImport) {
-      ui->freeSpaceBackup->setText(
-          QString("%1 GB").arg(((float) m_freeBackupSpace / 1000 / 1000 / 1000), 0, 'f', 2));
+      QString backupText = QString("%1 GB").arg(((float) m_freeBackupSpace / 1000 / 1000 / 1000),
+                                                0, 'f', 2);
+      if (!importBackupFolder.isEmpty() && !QDir(importBackupFolder).exists())
+          backupText += tr(" (new folder)");
+      ui->freeSpaceBackup->setText(backupText);
   } else {
       ui->freeSpaceBackup->setText("");
   }
@@ -900,6 +922,35 @@ void MainWindow::updateImportToLabel() {
   }
 }
 
+// Ask to create a missing destination folder; returns false when the user
+// declines or creation fails.
+bool MainWindow::ensureFolderExists(const QString &folder, const QString &description)
+{
+    if (folder.isEmpty() || QDir(folder).exists())
+        return !folder.isEmpty();
+
+    const QMessageBox::StandardButton reply
+        = QMessageBox::question(this,
+                                tr("Folder does not exist"),
+                                tr("The %1 does not exist:\n%2\n\nCreate it?")
+                                    .arg(description, folder),
+                                QMessageBox::Yes | QMessageBox::No);
+    if (reply != QMessageBox::Yes)
+        return false;
+
+    if (!QDir().mkpath(folder)) {
+        QMessageBox msgBox(this);
+        msgBox.setText(tr("Could not create folder %1").arg(folder));
+        msgBox.setIcon(QMessageBox::Critical);
+        msgBox.exec();
+        return false;
+    }
+    // Refresh the free-space labels now that the folder exists
+    m_freeSpaceTimer.invalidate();
+    updateImportToLabel();
+    return true;
+}
+
 void MainWindow::on_moveButton_clicked()
 {
     if (importFolder.length() <= 0) {
@@ -909,6 +960,10 @@ void MainWindow::on_moveButton_clicked()
         msgBox.exec();
         return;
     }
+    if (!ensureFolderExists(importFolder, tr("import folder")))
+        return;
+    if (doBackupImport && !ensureFolderExists(importBackupFolder, tr("backup folder")))
+        return;
     if (freeProjectSpace < totalSelectedSize) {
         QMessageBox msgBox;
         msgBox.setText(tr("Not enough diskspace available on project location!"));

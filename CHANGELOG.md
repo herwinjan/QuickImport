@@ -16,6 +16,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Fixed
 
+- **Missing import/backup folder handled properly**: free space showed
+  "-0.00 GB" and the import was blocked with "not enough disk space" when
+  the chosen folder did not exist. The free-space labels now use the
+  nearest existing parent folder's volume and show "(new folder)", and the
+  import asks to create the missing folder before starting.
 - **Refresh icon invisible in dark mode**: the black glyph is now tinted to
   the palette's text colour at runtime and re-tinted when the system
   switches between light and dark mode.
