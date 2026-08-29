@@ -1,6 +1,6 @@
 # QuickImport #
 
-![alt text](https://raw.githubusercontent.com/herwinjan/QuickImport/master/images/QuickImport-1.png)
+![QuickImport importing photos from a memory card](images/QuickImport-1.png)
 
 
 **Streamline your workflow**  
