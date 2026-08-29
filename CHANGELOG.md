@@ -3,7 +3,7 @@
 All notable changes to Quick Import are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
-## [Unreleased]
+## [0.7.0] - 2026-08-29
 
 ### Fixed
 

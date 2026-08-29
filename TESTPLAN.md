@@ -23,7 +23,7 @@ console-uitvoer ziet — een aantal tests kijkt daarnaar.
 
 | # | Test | Verwacht resultaat |
 |---|---|---|
-| 1.1 | Start de app | Venster verschijnt één keer (geen dubbele show/flikkering), titel "Quick Import 0.1.0", about-dialog (tenzij uitgevinkt), daarna kaartselectie |
+| 1.1 | Start de app | Venster verschijnt één keer (geen dubbele show/flikkering), titel "Quick Import 0.7.0", about-dialog (tenzij uitgevinkt), daarna kaartselectie |
 | 1.2 | Geen kaart aanwezig | Nette melding "No Card found, please insert card." — geen crash |
 | 1.3 | Systeemtaal Nederlands | UI in het Nederlands, inclusief de placeholders ("--Locatie niet ingesteld--", "--Selecteer om voorinstelling te laden--", "-- stel projectnaam in --") |
 

@@ -14,7 +14,8 @@ int main(int argc, char *argv[])
     QApplication a(argc, argv);
 
     QCoreApplication::setApplicationName("QuickImport");
-    QCoreApplication::setApplicationVersion("0.1.0");
+    // Single source of truth: the version is set in CMakeLists.txt (project VERSION)
+    QCoreApplication::setApplicationVersion(QUICKIMPORT_VERSION);
     QCoreApplication::setOrganizationName("HJ Steehouwer");
     QTranslator translator;
     

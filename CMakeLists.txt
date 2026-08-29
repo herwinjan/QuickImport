@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(QuickImport LANGUAGES CXX)
+project(QuickImport VERSION 0.7.0 LANGUAGES CXX)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # ---- Qt automoc/uic/rcc ----
@@ -168,6 +168,7 @@ endif()
 target_compile_definitions(QuickImport PRIVATE
     CONFIG_DEBUG
     QT_DISABLE_DEPRECATED_BEFORE=0x060000
+    QUICKIMPORT_VERSION="${PROJECT_VERSION}"
 )
 
 
@@ -225,6 +226,8 @@ if(APPLE)
     set_target_properties(QuickImport PROPERTIES
         MACOSX_BUNDLE TRUE
         MACOSX_BUNDLE_ICON_FILE QuickImportLogo-1024.icns
+        MACOSX_BUNDLE_BUNDLE_VERSION "${PROJECT_VERSION}"
+        MACOSX_BUNDLE_SHORT_VERSION_STRING "${PROJECT_VERSION}"
     )
     # Place the .icns into the app bundle Resources
     set_source_files_properties(QuickImportLogo-1024.icns
