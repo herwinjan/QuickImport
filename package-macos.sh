@@ -30,6 +30,7 @@ done
 
 step() { printf '\n\033[1m==> %s\033[0m\n' "$1"; }
 fail() { printf '\033[31mERROR: %s\033[0m\n' "$1" >&2; exit 1; }
+warn() { printf '\033[33m    %s\033[0m\n' "$1"; }
 
 [ -x "$QT_DIR/bin/macdeployqt" ] || fail "macdeployqt not found at $QT_DIR/bin (set QT_DIR)"
 
@@ -111,6 +112,29 @@ if [ "$BAD" -eq 0 ]; then
 else
     fail "the bundle contains libraries that need a newer macOS than $DEPLOYMENT_TARGET"
 fi
+
+step "Architectures"
+# The release notes state which Macs the build runs on, so report what is
+# actually in it rather than trusting the notes.
+ARCHS=$(lipo -archs "$APP/Contents/MacOS/QuickImport")
+echo "    executable: $ARCHS"
+for lib in "$APP/Contents/Frameworks"/*.dylib; do
+    if [ -f "$lib" ]; then
+        LIBARCHS=$(lipo -archs "$lib" 2>/dev/null || echo "?")
+        echo "    $(basename "$lib"): $LIBARCHS"
+        for a in $ARCHS; do
+            case " $LIBARCHS " in
+                *" $a "*) ;;
+                *) fail "$(basename "$lib") is missing $a, which the executable needs" ;;
+            esac
+        done
+    fi
+done
+case "$ARCHS" in
+    *x86_64*arm64*|*arm64*x86_64*) echo "    -> universal: runs on Apple Silicon and Intel" ;;
+    arm64)  warn "-> Apple Silicon only; this will not run on an Intel Mac" ;;
+    x86_64) warn "-> Intel only; Apple Silicon will run it through Rosetta" ;;
+esac
 
 step "Signing (ad-hoc)"
 # Ad-hoc: good enough for your own machines. Distributing to others needs a

@@ -26,6 +26,12 @@ Important build facts:
 - **Qt 6.11 or newer is required** (enforced in `find_package`). Older Qt
   draws the pre-Tahoe macOS control style: on macOS 26 push buttons come out
   square and the default button's focus ring detaches into two thick bars.
+- **The build is arm64 only.** LibRaw and Exiv2 are both built for arm64, so
+  the app does not run on Intel Macs. `package-macos.sh` reports the
+  architectures and warns about this; say so in the release notes. Going
+  universal means rebuilding both dependencies for `x86_64;arm64` (Exiv2 via
+  `CMAKE_OSX_ARCHITECTURES`, LibRaw twice plus `lipo -create`, since autotools
+  cannot do multi-arch in one pass) and setting `CMAKE_OSX_ARCHITECTURES`.
 - **Deployment target is macOS 14.0** (forced in CMakeLists.txt). Homebrew
   libraries are built for the *host* macOS only, so linking against
   `/opt/homebrew` produces "built for newer version" warnings and binaries
