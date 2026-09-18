@@ -357,6 +357,11 @@ void MainWindow::askToOpenInsertedCard()
     if (m_insertPromptOpen)
         return; // one question at a time
     m_insertPromptOpen = true;
+    // The autostart agent no longer activates a running instance (that
+    // stole focus on every write to a mounted volume), so come forward
+    // here, where we know a card really was inserted.
+    raise();
+    activateWindow();
     const QMessageBox::StandardButton reply
         = QMessageBox::question(this,
                                 tr("Card inserted"),
@@ -554,6 +559,9 @@ void MainWindow::on_selectCard_clicked() {
           selectedCard = window.getSelected();
       }
   }
+  // Remember this card mount so the autostart agent does not bring the
+  // app back for it after the user quits (see cardautostart.h).
+  CardAutostart::markHandled(selectedCard);
   reloadCard();
   raise();
   activateWindow();

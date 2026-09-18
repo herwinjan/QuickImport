@@ -6,6 +6,8 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QProcess>
+#include <QSettings>
+#include <QStorageInfo>
 #include <QStandardPaths>
 
 #ifdef Q_OS_MACOS
@@ -23,6 +25,16 @@ QString plistPath()
     return QDir::homePath() + QStringLiteral("/Library/LaunchAgents/") + kLabel
            + QStringLiteral(".plist");
 }
+
+// launchd's WatchPaths on /Volumes fires not only for mounts and unmounts
+// but for every write or delete inside any mounted volume (verified on
+// macOS 26: deleting a file on the card or writing to an SMB share both
+// trigger it; reading does not). During an import that means an event
+// every few seconds. So the agent (1) only runs `open` when no QuickImport
+// process exists — `open -a` on a running app would yank it to the front
+// each time — and (2) the app itself remembers which card mounts it has
+// already shown (handledKey/markHandled below), so a later spurious start
+// for the same card quits again silently.
 
 // .../QuickImport.app — empty when not running from a bundle (e.g. a bare
 // build-tree executable), in which case there is nothing sensible to launch.
@@ -54,11 +66,10 @@ QString plistContents(const QString &bundle)
         "\t<string>%1</string>\n"
         "\t<key>ProgramArguments</key>\n"
         "\t<array>\n"
-        "\t\t<string>/usr/bin/open</string>\n"
-        "\t\t<string>-a</string>\n"
+        "\t\t<string>/bin/sh</string>\n"
+        "\t\t<string>-c</string>\n"
+        "\t\t<string>pgrep -xq QuickImport || exec /usr/bin/open -a \"$0\" --args %3</string>\n"
         "\t\t<string>%2</string>\n"
-        "\t\t<string>--args</string>\n"
-        "\t\t<string>%3</string>\n"
         "\t</array>\n"
         "\t<key>WatchPaths</key>\n"
         "\t<array>\n"
@@ -202,6 +213,51 @@ void refresh()
 QString launchArgument()
 {
     return kArgument;
+}
+
+// One mount of one card: the device node plus the mount point. Disk numbers
+// are handed out afresh on every insertion, and the record is pruned as soon
+// as the app is started for an unmount, so a re-inserted card is new again.
+static QString handledKey(const QStorageInfo &card)
+{
+    return QString::fromUtf8(card.device()) + QLatin1Char('|') + card.rootPath();
+}
+
+static const QString kHandledSetting = QStringLiteral("autostartHandledCards");
+
+bool wasHandled(const QStorageInfo &card)
+{
+    return QSettings().value(kHandledSetting).toStringList().contains(handledKey(card));
+}
+
+void markHandled(const QStorageInfo &card)
+{
+    if (!card.isValid())
+        return;
+    QSettings settings;
+    QStringList handled = settings.value(kHandledSetting).toStringList();
+    const QString key = handledKey(card);
+    if (handled.contains(key))
+        return;
+    handled.append(key);
+    settings.setValue(kHandledSetting, handled);
+}
+
+void pruneHandled(const QList<QStorageInfo> &mountedCards)
+{
+    QSettings settings;
+    const QStringList handled = settings.value(kHandledSetting).toStringList();
+    QStringList kept;
+    for (const QString &key : handled) {
+        for (const QStorageInfo &card : mountedCards) {
+            if (handledKey(card) == key) {
+                kept.append(key);
+                break;
+            }
+        }
+    }
+    if (kept != handled)
+        settings.setValue(kHandledSetting, kept);
 }
 
 } // namespace CardAutostart

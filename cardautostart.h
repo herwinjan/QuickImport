@@ -1,7 +1,9 @@
 #ifndef CARDAUTOSTART_H
 #define CARDAUTOSTART_H
 
+#include <QList>
 #include <QString>
+#include <QStorageInfo>
 
 // "Start QuickImport when a card is inserted".
 //
@@ -33,6 +35,16 @@ void refresh();
 
 // Command-line argument the agent starts the app with.
 QString launchArgument();
+
+// The agent also fires for writes inside mounted volumes, so a start for a
+// card that is already on screen (or was, before the user quit) must not
+// bring the window back. These remember the card mounts already shown:
+// markHandled() when a card is loaded, pruneHandled() with the cards that
+// are mounted right now (a removed card drops out, so re-inserting it counts
+// as new), wasHandled() to decide whether to quit silently.
+bool wasHandled(const QStorageInfo &card);
+void markHandled(const QStorageInfo &card);
+void pruneHandled(const QList<QStorageInfo> &mountedCards);
 
 } // namespace CardAutostart
 

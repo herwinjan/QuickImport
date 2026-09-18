@@ -9,6 +9,7 @@
 #include <QThread>
 #include <QObject>
 #include <QCoreApplication>
+#include <QStorageInfo>
 
 int main(int argc, char *argv[])
 {
@@ -28,14 +29,22 @@ int main(int argc, char *argv[])
     // to /Volumes (any mount or unmount), so only carry on when a memory
     // card is really there; give the mount a few seconds to complete.
     if (a.arguments().contains(CardAutostart::launchArgument())) {
-        bool cardPresent = false;
-        for (int attempt = 0; attempt < 20 && !cardPresent; ++attempt) {
+        QList<QStorageInfo> cards;
+        for (int attempt = 0; attempt < 20 && cards.isEmpty(); ++attempt) {
             if (attempt > 0)
                 QThread::msleep(250);
-            cardPresent = !MainWindow::mountedCards().isEmpty();
+            cards = MainWindow::mountedCards();
         }
-        if (!cardPresent) {
-            qDebug() << "Started for a card insertion but no card is mounted; quitting";
+        // Forget cards that are no longer mounted, then quit unless there
+        // is a card we have not shown yet. The agent also fires for writes
+        // inside mounted volumes (deleting imported files from the card,
+        // writing to a network share), so most starts are not insertions.
+        CardAutostart::pruneHandled(cards);
+        bool newCard = false;
+        for (const QStorageInfo &card : cards)
+            newCard = newCard || !CardAutostart::wasHandled(card);
+        if (!newCard) {
+            qDebug() << "Started for a card insertion but there is no new card; quitting";
             return 0;
         }
     }

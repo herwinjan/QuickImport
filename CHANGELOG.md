@@ -16,12 +16,16 @@ becomes the next release's notes.
   Settings. Ticking it installs a per-user launch agent
   (`~/Library/LaunchAgents/nl.steehouwer.quickimport.cardwatch.plist`) that
   watches `/Volumes` and opens QuickImport whenever a volume is mounted.
-  Started this way, the app quits again silently when no writable
-  FAT/exFAT card is mounted, so unrelated disks and unmounts do not pop it
-  up. If QuickImport is already running, macOS just brings it to the front
-  and the existing "open the newly inserted card?" prompt takes over. The
-  agent is rewritten automatically when the app has been moved or updated.
-  Unticking removes the agent again.
+  Started this way, the app quits again silently unless a writable
+  FAT/exFAT card is mounted that it has not shown yet, so unrelated disks,
+  unmounts, and a card that is still in the reader after you quit do not
+  pop it up. launchd's watch also fires for every write or delete *inside*
+  a mounted volume (deleting imported files from the card, writing to a
+  network share), so the agent does nothing at all while QuickImport is
+  already running; the existing "open the newly inserted card?" prompt
+  handles insertions in that case and now brings the window to the front.
+  The agent is rewritten automatically when the app has been moved or
+  updated. Unticking removes the agent again.
 
 ## [0.96] - 2026-08-29
 
