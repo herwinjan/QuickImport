@@ -21,9 +21,12 @@ becomes the next release's notes.
   unmounts, and a card that is still in the reader after you quit do not
   pop it up. launchd's watch also fires for every write or delete *inside*
   a mounted volume (deleting imported files from the card, writing to a
-  network share), so the agent does nothing at all while QuickImport is
-  already running; the existing "open the newly inserted card?" prompt
-  handles insertions in that case and now brings the window to the front.
+  network share), so the agent checks for itself, without starting the
+  app, that QuickImport is not already running and that a writable
+  FAT/exFAT volume is mounted; otherwise nothing happens, not even a
+  bouncing Dock icon. The existing "open the newly inserted card?" prompt
+  handles insertions while the app is running and now brings the window
+  to the front.
   The agent is rewritten automatically when the app has been moved or
   updated. Unticking removes the agent again.
 

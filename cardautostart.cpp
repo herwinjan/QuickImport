@@ -11,6 +11,8 @@
 #include <QStandardPaths>
 
 #ifdef Q_OS_MACOS
+#include <IOKit/IOBSD.h>
+#include <IOKit/IOKitLib.h>
 #include <unistd.h>
 #endif
 
@@ -54,6 +56,22 @@ QString xmlEscape(QString s)
             .replace(QLatin1Char('>'), QStringLiteral("&gt;"));
 }
 
+// What launchd runs, as a /bin/sh -c script with the bundle path in $0.
+// Starting the app just to have it discover there is no card makes the
+// Dock icon bounce for five seconds on every write to a network share, so
+// the checks that need no Qt happen here: do nothing while QuickImport is
+// running, and only open it when a writable FAT/exFAT volume is mounted.
+// The mount may complete a moment after launchd fires, hence the retries.
+QString agentScript()
+{
+    return QStringLiteral(
+        "if pgrep -xq QuickImport; then exit 0; fi; "
+        "for i in 1 2 3 4 5 6 7 8 9 10; do "
+        "if mount | grep -E '\\((exfat|msdos)' | grep -vq read-only; then "
+        "exec /usr/bin/open -a \"$0\" --args %1; fi; sleep 0.5; done")
+        .arg(kArgument);
+}
+
 QString plistContents(const QString &bundle)
 {
     return QStringLiteral(
@@ -68,7 +86,7 @@ QString plistContents(const QString &bundle)
         "\t<array>\n"
         "\t\t<string>/bin/sh</string>\n"
         "\t\t<string>-c</string>\n"
-        "\t\t<string>pgrep -xq QuickImport || exec /usr/bin/open -a \"$0\" --args %3</string>\n"
+        "\t\t<string>%3</string>\n"
         "\t\t<string>%2</string>\n"
         "\t</array>\n"
         "\t<key>WatchPaths</key>\n"
@@ -79,7 +97,7 @@ QString plistContents(const QString &bundle)
         "\t<false/>\n"
         "</dict>\n"
         "</plist>\n")
-        .arg(kLabel, xmlEscape(bundle), kArgument);
+        .arg(kLabel, xmlEscape(bundle), xmlEscape(agentScript()));
 }
 
 QString domain()
@@ -215,13 +233,43 @@ QString launchArgument()
     return kArgument;
 }
 
-// One mount of one card: the device node plus the mount point. Disk numbers
-// are handed out afresh on every insertion, and the record is pruned as soon
-// as the app is started for an unmount, so a re-inserted card is new again.
+#ifdef Q_OS_MACOS
+// IOKit registry entry id of the block device behind /dev/diskNsM. Every
+// hotplug creates a new IOMedia entry with a new id, whereas the disk
+// number is reused as soon as it is free. 0 when the device is not found.
+static quint64 registryEntryId(const QByteArray &device)
+{
+    QByteArray bsdName = device;
+    if (bsdName.startsWith("/dev/"))
+        bsdName.remove(0, 5);
+    CFMutableDictionaryRef match = IOBSDNameMatching(kIOMainPortDefault, 0, bsdName.constData());
+    if (!match)
+        return 0;
+    io_service_t service = IOServiceGetMatchingService(kIOMainPortDefault, match); // consumes match
+    if (!service)
+        return 0;
+    quint64 id = 0;
+    IORegistryEntryGetRegistryEntryID(service, &id);
+    IOObjectRelease(service);
+    return id;
+}
+#endif
+
+// One insertion of one card. The device node and mount point alone are not
+// enough: the disk number is reused by the next card, and nothing runs at
+// removal time to prune the record (the agent only starts the app when a
+// card is mounted). The IOKit registry id makes the key unique per hotplug.
 static QString handledKey(const QStorageInfo &card)
 {
-    return QString::fromUtf8(card.device()) + QLatin1Char('|') + card.rootPath();
+    QString key = QString::fromUtf8(card.device()) + QLatin1Char('|') + card.rootPath();
+#ifdef Q_OS_MACOS
+    key += QLatin1Char('|') + QString::number(registryEntryId(card.device()));
+#endif
+    return key;
 }
+
+// Keep the setting bounded; entries for long-gone cards are harmless.
+static const int kMaxHandled = 20;
 
 static const QString kHandledSetting = QStringLiteral("autostartHandledCards");
 
@@ -240,7 +288,12 @@ void markHandled(const QStorageInfo &card)
     if (handled.contains(key))
         return;
     handled.append(key);
+    while (handled.size() > kMaxHandled)
+        handled.removeFirst();
     settings.setValue(kHandledSetting, handled);
+    // Write it out now: QSettings otherwise flushes lazily, and a process
+    // that is killed rather than quit would lose the record.
+    settings.sync();
 }
 
 void pruneHandled(const QList<QStorageInfo> &mountedCards)
@@ -256,8 +309,10 @@ void pruneHandled(const QList<QStorageInfo> &mountedCards)
             }
         }
     }
-    if (kept != handled)
+    if (kept != handled) {
         settings.setValue(kHandledSetting, kept);
+        settings.sync();
+    }
 }
 
 } // namespace CardAutostart

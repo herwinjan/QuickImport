@@ -284,6 +284,7 @@ if(APPLE)
         expat
         iconv
         "-framework DiskArbitration"
+        "-framework IOKit"
         "-framework Foundation"
     )
 
