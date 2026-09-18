@@ -48,7 +48,7 @@
     </message>
     <message>
         <location filename="mainwindow.ui" line="79"/>
-        <location filename="mainwindow.cpp" line="883"/>
+        <location filename="mainwindow.cpp" line="888"/>
         <source>No card loaded.</source>
         <translation>Geen kaart geladen.</translation>
     </message>
@@ -73,7 +73,17 @@
         <translation>Voorbeeldafbeelding laden</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="754"/>
+        <location filename="mainwindow.ui" line="737"/>
+        <source>Installs a launch agent that opens QuickImport whenever a memory card is mounted.</source>
+        <translation>Installeert een launch agent die QuickImport opent zodra een geheugenkaart wordt aangekoppeld.</translation>
+    </message>
+    <message>
+        <location filename="mainwindow.ui" line="740"/>
+        <source>Start QuickImport when a card is inserted</source>
+        <translation>QuickImport starten als een kaart wordt ingestoken</translation>
+    </message>
+    <message>
+        <location filename="mainwindow.ui" line="764"/>
         <source>Open application after import</source>
         <translation>Applicatie openen na import</translation>
     </message>
@@ -121,7 +131,7 @@
         <location filename="mainwindow.ui" line="476"/>
         <location filename="mainwindow.ui" line="609"/>
         <location filename="mainwindow.ui" line="619"/>
-        <location filename="mainwindow.ui" line="761"/>
+        <location filename="mainwindow.ui" line="771"/>
         <source>...</source>
         <translation>...</translation>
     </message>
@@ -182,106 +192,106 @@
         <translation>Taal:</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="849"/>
+        <location filename="mainwindow.ui" line="859"/>
         <source>Import</source>
         <translation>Importeren</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="881"/>
+        <location filename="mainwindow.ui" line="891"/>
         <source>Quick View</source>
         <translation>Snelle weergave</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="888"/>
+        <location filename="mainwindow.ui" line="898"/>
         <source>Check all</source>
         <translation>Alles aanvinken</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="895"/>
+        <location filename="mainwindow.ui" line="905"/>
         <source>Uncheck all</source>
         <translation>Alles uitvinken</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="902"/>
+        <location filename="mainwindow.ui" line="912"/>
         <source>Check Selected</source>
         <translation>Geselecteerde aanvinken</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="909"/>
+        <location filename="mainwindow.ui" line="919"/>
         <source>Uncheck Selected</source>
         <oldsource>uncheck Selected</oldsource>
         <translation>Geselecteerde uitvinken</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="402"/>
+        <location filename="mainwindow.cpp" line="409"/>
         <source>%1 GB</source>
         <translation>%1 GB</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="403"/>
+        <location filename="mainwindow.cpp" line="410"/>
         <source>%1 selected photos</source>
         <translation>%1 geselecteerde foto&apos;s</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="490"/>
+        <location filename="mainwindow.cpp" line="497"/>
         <source>No Card found, please insert card.</source>
         <translation>Geen kaart gevonden, plaats een kaart.</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="567"/>
-        <location filename="mainwindow.cpp" line="577"/>
+        <location filename="mainwindow.cpp" line="572"/>
+        <location filename="mainwindow.cpp" line="582"/>
         <source>Loading card...</source>
         <translation>Kaart laden...</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="890"/>
+        <location filename="mainwindow.cpp" line="895"/>
         <source>  (Used space: %1 GB)</source>
         <translation>  (Gebruikte ruimte: %1 GB)</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="560"/>
+        <location filename="mainwindow.cpp" line="565"/>
         <source>Done loading card.</source>
         <translation>Kaart is geladen.</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="238"/>
-        <location filename="mainwindow.cpp" line="856"/>
+        <location filename="mainwindow.cpp" line="245"/>
+        <location filename="mainwindow.cpp" line="861"/>
         <source>--Select to load preset--</source>
         <translation>--Selecteer om voorinstelling te laden--</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="356"/>
+        <location filename="mainwindow.cpp" line="363"/>
         <source>Do you want to open the newly inserted card?</source>
         <translation>Wilt u de nieuw geplaatste kaart openen?</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="632"/>
+        <location filename="mainwindow.cpp" line="637"/>
         <source>Loading image, please wait.</source>
         <translation>Afbeelding wordt geladen, even geduld.</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="781"/>
+        <location filename="mainwindow.cpp" line="786"/>
         <source>Failed to load image.</source>
         <translation>Kan afbeelding niet laden.</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="827"/>
+        <location filename="mainwindow.cpp" line="832"/>
         <source>System language</source>
         <translation>Systeemtaal</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="967"/>
-        <location filename="mainwindow.cpp" line="974"/>
+        <location filename="mainwindow.cpp" line="972"/>
+        <location filename="mainwindow.cpp" line="979"/>
         <source> (new folder)</source>
         <translation> (nieuwe map)</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1003"/>
+        <location filename="mainwindow.cpp" line="1008"/>
         <source>Folder does not exist</source>
         <translation>Map bestaat niet</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1004"/>
+        <location filename="mainwindow.cpp" line="1009"/>
         <source>The %1 does not exist:
 %2
 
@@ -292,96 +302,108 @@ Create it?</source>
 Aanmaken?</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1012"/>
+        <location filename="mainwindow.cpp" line="1017"/>
         <source>Could not create folder %1</source>
         <translation>Kan map %1 niet aanmaken</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1032"/>
+        <location filename="mainwindow.cpp" line="1037"/>
         <source>import folder</source>
         <translation>importmap</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1034"/>
+        <location filename="mainwindow.cpp" line="1039"/>
         <source>backup folder</source>
         <translation>back-upmap</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1046"/>
+        <location filename="mainwindow.cpp" line="1051"/>
         <source>No backup folder set, please set one first.</source>
         <translation>Geen back-upmap ingesteld, stel er eerst een in.</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1055"/>
+        <location filename="mainwindow.cpp" line="1060"/>
         <source>Backup location is not available.</source>
         <translation>Back-uplocatie is niet beschikbaar.</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1063"/>
+        <location filename="mainwindow.cpp" line="1068"/>
         <source>Not enough diskspace available on backup location!</source>
         <translation>Niet genoeg schijfruimte beschikbaar op de back-uplocatie!</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="860"/>
-        <location filename="mainwindow.cpp" line="1314"/>
+        <location filename="mainwindow.cpp" line="865"/>
+        <location filename="mainwindow.cpp" line="1333"/>
         <source>--Back-up location not set--</source>
         <translation>--Back-uplocatie niet ingesteld--</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="858"/>
-        <location filename="mainwindow.cpp" line="1331"/>
+        <location filename="mainwindow.cpp" line="863"/>
+        <location filename="mainwindow.cpp" line="1350"/>
         <source>--Location not set--</source>
         <translation>--Locatie niet ingesteld--</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1359"/>
-        <location filename="mainwindow.cpp" line="1555"/>
+        <location filename="mainwindow.cpp" line="1378"/>
+        <location filename="mainwindow.cpp" line="1574"/>
         <source>Select a directory</source>
         <translation>Selecteer een map</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1027"/>
+        <location filename="mainwindow.cpp" line="1032"/>
         <source>No Import folder set, please set one first.</source>
         <translation>Geen importmap ingesteld, stel er eerst een in.</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="355"/>
+        <location filename="mainwindow.cpp" line="362"/>
         <source>Card inserted</source>
         <translation>Kaart geplaatst</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1038"/>
+        <location filename="mainwindow.cpp" line="1043"/>
         <source>Not enough diskspace available on project location!</source>
         <translation>Niet genoeg schijfruimte beschikbaar op de projectlocatie!</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1076"/>
+        <location filename="mainwindow.cpp" line="1081"/>
         <source>No files selected, please check files to move/copy.</source>
         <translation>Geen bestanden geselecteerd, vink de bestanden aan die u wilt verplaatsen/kopiëren.</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="862"/>
-        <location filename="mainwindow.cpp" line="1410"/>
+        <location filename="mainwindow.cpp" line="867"/>
+        <location filename="mainwindow.cpp" line="1429"/>
         <source>-- set project name --</source>
         <translation>-- stel projectnaam in --</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1598"/>
+        <location filename="mainwindow.cpp" line="1227"/>
+        <source>Start when a card is inserted</source>
+        <translation>Starten bij insteken van een kaart</translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1228"/>
+        <source>Could not change the automatic start setting:
+%1</source>
+        <translation>De instelling voor automatisch starten kon niet worden gewijzigd:
+%1</translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1617"/>
         <source>Applications (*.exe)</source>
         <translation>Applicaties (*.exe)</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1601"/>
+        <location filename="mainwindow.cpp" line="1620"/>
         <source>Applications (*.app)</source>
         <translation>Applicaties (*.app)</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1604"/>
+        <location filename="mainwindow.cpp" line="1623"/>
         <source>Applications (*.sh *.bin *.run *.AppImage);;All Files (*)</source>
         <translation>Applicaties (*.sh *.bin *.run *.AppImage);;Alle bestanden (*)</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1608"/>
+        <location filename="mainwindow.cpp" line="1627"/>
         <source>Choose Application</source>
         <translation>Kies applicatie</translation>
     </message>

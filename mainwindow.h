@@ -31,6 +31,10 @@ public:
 
     QList<QFileInfo> getFiles(QString);
 
+    // Writable FAT/exFAT volumes currently mounted — what counts as a
+    // "memory card" for card selection and for the autostart check.
+    static QList<QStorageInfo> mountedCards();
+
     void updateImportToLabel();
 
     void reloadCard();
@@ -162,6 +166,7 @@ private slots:
     void on_OpenApplicationLocation_clicked();
     void on_openApplicationAfterImport_stateChanged(int arg1);
     void on_languageComboBox_activated(int index);
+    void on_autostartBox_stateChanged(int arg1);
 
 private:
     void displayNoCardDialog();

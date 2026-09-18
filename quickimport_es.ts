@@ -48,7 +48,7 @@
     </message>
     <message>
         <location filename="mainwindow.ui" line="79"/>
-        <location filename="mainwindow.cpp" line="883"/>
+        <location filename="mainwindow.cpp" line="888"/>
         <source>No card loaded.</source>
         <translation>Ninguna tarjeta cargada.</translation>
     </message>
@@ -90,7 +90,7 @@
         <location filename="mainwindow.ui" line="476"/>
         <location filename="mainwindow.ui" line="609"/>
         <location filename="mainwindow.ui" line="619"/>
-        <location filename="mainwindow.ui" line="761"/>
+        <location filename="mainwindow.ui" line="771"/>
         <source>...</source>
         <translation>...</translation>
     </message>
@@ -172,7 +172,17 @@
         <translation>Expulsar si la tarjeta está vacía</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="754"/>
+        <location filename="mainwindow.ui" line="737"/>
+        <source>Installs a launch agent that opens QuickImport whenever a memory card is mounted.</source>
+        <translation>Instala un agente de inicio que abre QuickImport cada vez que se monta una tarjeta de memoria.</translation>
+    </message>
+    <message>
+        <location filename="mainwindow.ui" line="740"/>
+        <source>Start QuickImport when a card is inserted</source>
+        <translation>Iniciar QuickImport al insertar una tarjeta</translation>
+    </message>
+    <message>
+        <location filename="mainwindow.ui" line="764"/>
         <source>Open application after import</source>
         <translation>Abrir la aplicación después de importar</translation>
     </message>
@@ -182,111 +192,111 @@
         <translation>Idioma:</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="849"/>
+        <location filename="mainwindow.ui" line="859"/>
         <source>Import</source>
         <translation>Importar</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="881"/>
+        <location filename="mainwindow.ui" line="891"/>
         <source>Quick View</source>
         <translation>Vista rápida</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="888"/>
+        <location filename="mainwindow.ui" line="898"/>
         <source>Check all</source>
         <translation>Marcar todo</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="895"/>
+        <location filename="mainwindow.ui" line="905"/>
         <source>Uncheck all</source>
         <translation>Desmarcar todo</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="902"/>
+        <location filename="mainwindow.ui" line="912"/>
         <source>Check Selected</source>
         <translation>Marcar los seleccionados</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="909"/>
+        <location filename="mainwindow.ui" line="919"/>
         <source>Uncheck Selected</source>
         <oldsource>uncheck Selected</oldsource>
         <translation>Desmarcar los seleccionados</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="238"/>
-        <location filename="mainwindow.cpp" line="856"/>
+        <location filename="mainwindow.cpp" line="245"/>
+        <location filename="mainwindow.cpp" line="861"/>
         <source>--Select to load preset--</source>
         <translation>--Seleccione para cargar un ajuste--</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="355"/>
+        <location filename="mainwindow.cpp" line="362"/>
         <source>Card inserted</source>
         <translation>Tarjeta insertada</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="356"/>
+        <location filename="mainwindow.cpp" line="363"/>
         <source>Do you want to open the newly inserted card?</source>
         <translation>¿Desea abrir la tarjeta que acaba de insertar?</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="402"/>
+        <location filename="mainwindow.cpp" line="409"/>
         <source>%1 GB</source>
         <translation>%1 GB</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="403"/>
+        <location filename="mainwindow.cpp" line="410"/>
         <source>%1 selected photos</source>
         <translation>%1 fotos seleccionadas</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="490"/>
+        <location filename="mainwindow.cpp" line="497"/>
         <source>No Card found, please insert card.</source>
         <translation>No se ha encontrado ninguna tarjeta; inserte una.</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="560"/>
+        <location filename="mainwindow.cpp" line="565"/>
         <source>Done loading card.</source>
         <translation>Tarjeta cargada.</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="567"/>
-        <location filename="mainwindow.cpp" line="577"/>
+        <location filename="mainwindow.cpp" line="572"/>
+        <location filename="mainwindow.cpp" line="582"/>
         <source>Loading card...</source>
         <translation>Cargando tarjeta...</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="890"/>
+        <location filename="mainwindow.cpp" line="895"/>
         <source>  (Used space: %1 GB)</source>
         <translation>  (Espacio usado: %1 GB)</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="632"/>
+        <location filename="mainwindow.cpp" line="637"/>
         <source>Loading image, please wait.</source>
         <translation>Cargando la imagen, espere.</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="781"/>
+        <location filename="mainwindow.cpp" line="786"/>
         <source>Failed to load image.</source>
         <translation>No se ha podido cargar la imagen.</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="827"/>
+        <location filename="mainwindow.cpp" line="832"/>
         <source>System language</source>
         <translation>Idioma del sistema</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="967"/>
-        <location filename="mainwindow.cpp" line="974"/>
+        <location filename="mainwindow.cpp" line="972"/>
+        <location filename="mainwindow.cpp" line="979"/>
         <source> (new folder)</source>
         <translation> (carpeta nueva)</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1003"/>
+        <location filename="mainwindow.cpp" line="1008"/>
         <source>Folder does not exist</source>
         <translation>La carpeta no existe</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1004"/>
+        <location filename="mainwindow.cpp" line="1009"/>
         <source>The %1 does not exist:
 %2
 
@@ -297,91 +307,103 @@ Create it?</source>
 ¿Desea crearla?</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1012"/>
+        <location filename="mainwindow.cpp" line="1017"/>
         <source>Could not create folder %1</source>
         <translation>No se ha podido crear la carpeta %1</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1027"/>
+        <location filename="mainwindow.cpp" line="1032"/>
         <source>No Import folder set, please set one first.</source>
         <translation>No hay ninguna carpeta de importación configurada; configure una primero.</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1032"/>
+        <location filename="mainwindow.cpp" line="1037"/>
         <source>import folder</source>
         <translation>carpeta de importación</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1034"/>
+        <location filename="mainwindow.cpp" line="1039"/>
         <source>backup folder</source>
         <translation>carpeta de copia de seguridad</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1038"/>
+        <location filename="mainwindow.cpp" line="1043"/>
         <source>Not enough diskspace available on project location!</source>
         <translation>¡No hay suficiente espacio en disco en la ubicación del proyecto!</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1046"/>
+        <location filename="mainwindow.cpp" line="1051"/>
         <source>No backup folder set, please set one first.</source>
         <translation>No hay ninguna carpeta de copia de seguridad configurada; configure una primero.</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1055"/>
+        <location filename="mainwindow.cpp" line="1060"/>
         <source>Backup location is not available.</source>
         <translation>La ubicación de la copia de seguridad no está disponible.</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1063"/>
+        <location filename="mainwindow.cpp" line="1068"/>
         <source>Not enough diskspace available on backup location!</source>
         <translation>¡No hay suficiente espacio en disco en la ubicación de la copia de seguridad!</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1076"/>
+        <location filename="mainwindow.cpp" line="1081"/>
         <source>No files selected, please check files to move/copy.</source>
         <translation>No hay archivos seleccionados; marque los archivos que desea mover o copiar.</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="860"/>
-        <location filename="mainwindow.cpp" line="1314"/>
+        <location filename="mainwindow.cpp" line="865"/>
+        <location filename="mainwindow.cpp" line="1333"/>
         <source>--Back-up location not set--</source>
         <translation>--Ubicación de copia de seguridad sin configurar--</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="858"/>
-        <location filename="mainwindow.cpp" line="1331"/>
+        <location filename="mainwindow.cpp" line="863"/>
+        <location filename="mainwindow.cpp" line="1350"/>
         <source>--Location not set--</source>
         <translation>--Ubicación sin configurar--</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1359"/>
-        <location filename="mainwindow.cpp" line="1555"/>
+        <location filename="mainwindow.cpp" line="1378"/>
+        <location filename="mainwindow.cpp" line="1574"/>
         <source>Select a directory</source>
         <translation>Seleccione una carpeta</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="862"/>
-        <location filename="mainwindow.cpp" line="1410"/>
+        <location filename="mainwindow.cpp" line="867"/>
+        <location filename="mainwindow.cpp" line="1429"/>
         <source>-- set project name --</source>
         <translation>-- defina el nombre del proyecto --</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1598"/>
+        <location filename="mainwindow.cpp" line="1227"/>
+        <source>Start when a card is inserted</source>
+        <translation>Iniciar al insertar una tarjeta</translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1228"/>
+        <source>Could not change the automatic start setting:
+%1</source>
+        <translation>No se pudo cambiar el ajuste de inicio automático:
+%1</translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1617"/>
         <source>Applications (*.exe)</source>
         <translation>Aplicaciones (*.exe)</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1601"/>
+        <location filename="mainwindow.cpp" line="1620"/>
         <source>Applications (*.app)</source>
         <translation>Aplicaciones (*.app)</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1604"/>
+        <location filename="mainwindow.cpp" line="1623"/>
         <source>Applications (*.sh *.bin *.run *.AppImage);;All Files (*)</source>
         <translation>Aplicaciones (*.sh *.bin *.run *.AppImage);;Todos los archivos (*)</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1608"/>
+        <location filename="mainwindow.cpp" line="1627"/>
         <source>Choose Application</source>
         <translation>Elegir aplicación</translation>
     </message>

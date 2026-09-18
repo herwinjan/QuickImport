@@ -95,6 +95,7 @@ set(TS_FILES
 set(PROJECT_SOURCES
     # .cpp
     aboutdialog.cpp
+    cardautostart.cpp
     fileinfomodel.cpp
     language.cpp
     metadatadialog.cpp
@@ -115,6 +116,7 @@ set(PROJECT_SOURCES
 
     # .h
     aboutdialog.h
+    cardautostart.h
     language.h
     devicelist.h
     externalDriveFetcher.h

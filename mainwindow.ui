@@ -731,6 +731,16 @@
                </property>
               </widget>
              </item>
+             <item row="3" column="1">
+              <widget class="QCheckBox" name="autostartBox">
+               <property name="toolTip">
+                <string>Installs a launch agent that opens QuickImport whenever a memory card is mounted.</string>
+               </property>
+               <property name="text">
+                <string>Start QuickImport when a card is inserted</string>
+               </property>
+              </widget>
+             </item>
              <item row="4" column="0">
               <layout class="QHBoxLayout" name="horizontalLayout_8" stretch="0,0">
                <property name="spacing">

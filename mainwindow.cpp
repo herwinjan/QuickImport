@@ -7,6 +7,7 @@
 #include <QImageReader>
 #include <QMessageBox>
 #include <QProcess>
+#include "cardautostart.h"
 #include "language.h"
 #include <QSettings>
 #include <QStorageInfo>
@@ -155,6 +156,12 @@ MainWindow::MainWindow(QWidget *parent)
   ui->ejectIfEmptyBox->setCheckState(ejectIfEmpty ? Qt::Checked
                                                   : Qt::Unchecked);
   ui->backupBox->setCheckState(doBackupImport ? Qt::Checked : Qt::Unchecked);
+
+  // Not a QSettings value: the checkbox mirrors whether the LaunchAgent is
+  // installed. Hidden where launchd is not available (other platforms, or
+  // a bare build-tree executable outside an .app bundle).
+  ui->autostartBox->setVisible(CardAutostart::isSupported());
+  ui->autostartBox->setCheckState(CardAutostart::isEnabled() ? Qt::Checked : Qt::Unchecked);
 
   connect(ui->deviceWidget, &deviceList::selectedUpdated, this, &MainWindow::selectedUpdated);
   connect(ui->deviceWidget, &deviceList::spaceButtonPressed, this, &MainWindow::spaceButtonPressed);
@@ -508,34 +515,32 @@ void MainWindow::saveBoolSetting(const QString &key, bool &member, int state)
     settings.setValue(key, member);
 }
 
-void MainWindow::on_selectCard_clicked() {
-
+QList<QStorageInfo> MainWindow::mountedCards() {
   QList<QStorageInfo> cardList;
-  ui->deviceWidget->setEnabled(false);
-
   foreach (const QStorageInfo &storage, QStorageInfo::mountedVolumes()) {
-    if (storage.isReadOnly())
-    {
-      qDebug() << "isReadOnly:" << storage.isReadOnly();
+    if (!storage.isValid() || !storage.isReady() || storage.isReadOnly())
       continue;
-    }
 
     qDebug() << "name:" << storage.name();
     qDebug() << "fileSystemType:" << storage.fileSystemType();
     qDebug() << "size:" << storage.bytesTotal() / 1000 / 1000 << "MB";
     qDebug() << "availableSize:" << storage.bytesAvailable() / 1000 / 1000
              << "MB";
-    QString fs = storage.fileSystemType().toLower();
-    if ((fs.contains("exfat") ||
-         fs.contains("fat") ||    // fat, fat32, vfat, msdos
-         fs.contains("vfat") ||
-         fs.contains("msdos")) 
-         
-        //       && !storage.isReadOnly()
-      ) {
+    const QString fs = storage.fileSystemType().toLower();
+    if (fs.contains("exfat") ||
+        fs.contains("fat") ||    // fat, fat32, vfat, msdos
+        fs.contains("msdos")) {
       cardList.append(storage);
     }
   }
+  return cardList;
+}
+
+void MainWindow::on_selectCard_clicked() {
+
+  ui->deviceWidget->setEnabled(false);
+
+  const QList<QStorageInfo> cardList = mountedCards();
   if (cardList.count() < 1) {
       displayNoCardDialog();
       return;
@@ -1208,6 +1213,20 @@ void MainWindow::on_previewImageCheckBox_stateChanged(int arg1) {
 }
 
 void MainWindow::on_reloadButton_clicked() { reloadCard(); }
+
+void MainWindow::on_autostartBox_stateChanged(int arg1) {
+  const bool enable = (arg1 == Qt::Checked);
+  if (enable == CardAutostart::isEnabled())
+    return;
+  QString error;
+  if (CardAutostart::setEnabled(enable, &error))
+    return;
+  // Put the checkbox back to what launchd really does
+  const QSignalBlocker blocker(ui->autostartBox);
+  ui->autostartBox->setCheckState(CardAutostart::isEnabled() ? Qt::Checked : Qt::Unchecked);
+  QMessageBox::warning(this, tr("Start when a card is inserted"),
+                       tr("Could not change the automatic start setting:\n%1").arg(error));
+}
 
 void MainWindow::on_mdCheckBox_stateChanged(int arg1) {
   saveBoolSetting("md5Check", md5Check, arg1);

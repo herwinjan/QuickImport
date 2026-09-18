@@ -8,6 +8,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 Nothing yet. Add user-visible changes here as you make them; this section
 becomes the next release's notes.
 
+## [0.96.1] - 2026-09-18
+
+### Added
+
+- **"Start QuickImport when a card is inserted"** (macOS) in Import
+  Settings. Ticking it installs a per-user launch agent
+  (`~/Library/LaunchAgents/nl.steehouwer.quickimport.cardwatch.plist`) that
+  watches `/Volumes` and opens QuickImport whenever a volume is mounted.
+  Started this way, the app quits again silently when no writable
+  FAT/exFAT card is mounted, so unrelated disks and unmounts do not pop it
+  up. If QuickImport is already running, macOS just brings it to the front
+  and the existing "open the newly inserted card?" prompt takes over. The
+  agent is rewritten automatically when the app has been moved or updated.
+  Unticking removes the agent again.
+
 ## [0.96] - 2026-08-29
 
 ### Added
